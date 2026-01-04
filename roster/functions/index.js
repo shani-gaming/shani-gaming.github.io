@@ -7,10 +7,11 @@ const cors = require('cors');
 const blizzardClientId = defineSecret('BLIZZARD_CLIENT_ID');
 const blizzardClientSecret = defineSecret('BLIZZARD_CLIENT_SECRET');
 
-// CORS configuration - Only allow your GitHub Pages domain
+// CORS configuration - Allow GitHub Pages and custom domain
 const corsOptions = {
   origin: [
     'https://shani-gaming.github.io',
+    'https://www.sagesdepandarie.ovh',
     'http://localhost:8000',
     'http://127.0.0.1:8000'
   ],
