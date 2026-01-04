@@ -6,19 +6,26 @@
     <title>Les Sages de Pandarie - Guilde WoW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #0a0e17;
-            --bg-secondary: #151925;
-            --bg-elevated: #1a1f2e;
-            --text-primary: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --border: #2d3748;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
+            /* WoW Class Colors */
+            --tank: #C41E3A;
+            --healer: #00FF98;
+            --melee: #C69B6D;
+            --ranged: #3FC7EB;
+
+            /* UI Colors */
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-elevated: #1a1a25;
+            --border: #2a2a3a;
+            --border-glow: #4a4a6a;
+            --text-primary: #e8e6e3;
+            --text-secondary: #8a8a9a;
+            --gold: #f8b700;
+            --gold-dim: #c4920a;
             --success: #10b981;
-            --warning: #f59e0b;
         }
 
         * {
@@ -28,11 +35,14 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--bg-primary);
+            font-family: 'Crimson Text', Georgia, serif;
+            background: var(--bg-dark);
             color: var(--text-primary);
-            line-height: 1.6;
             min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse at 20% 0%, rgba(196, 30, 58, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(63, 199, 235, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(248, 183, 0, 0.03) 0%, transparent 70%);
         }
 
         .container {
@@ -41,41 +51,69 @@
             padding: 2rem;
         }
 
-        header {
-            text-align: center;
-            padding: 4rem 0 2rem 0;
-            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .guild-logo {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 1.5rem auto;
-            background: var(--bg-elevated);
-            border: 3px solid var(--accent);
-            border-radius: 50%;
+        /* Hero Section */
+        .hero {
+            position: relative;
+            min-height: 80vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3rem;
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+            text-align: center;
+            padding: 4rem 2rem;
+            overflow: hidden;
         }
 
-        h1 {
-            font-size: 3rem;
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 0;
+            opacity: 0.08;
+        }
+
+        .hero-bg-logo {
+            width: 60%;
+            max-width: 800px;
+            object-fit: contain;
+            filter: blur(2px);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+        }
+
+        .hero-logo {
+            width: 320px;
+            height: 320px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 40px rgba(212, 175, 55, 0.5));
+            animation: float 6s ease-in-out infinite;
+            margin-bottom: 2rem;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .hero-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
             font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            background: linear-gradient(180deg, var(--gold) 0%, #d4af37 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-        }
-
-        .subtitle {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
+            margin-bottom: 3rem;
+            letter-spacing: 0.05em;
+            text-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
         }
 
         .hero-buttons {
@@ -83,32 +121,35 @@
             gap: 1rem;
             justify-content: center;
             flex-wrap: wrap;
+            margin-bottom: 3rem;
         }
 
         .btn {
-            padding: 0.875rem 2rem;
+            padding: 1rem 2.5rem;
             border: none;
             border-radius: 8px;
+            font-family: 'Cinzel', serif;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         .btn-primary {
-            background: var(--accent);
-            color: white;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+            color: #000;
+            box-shadow: 0 8px 30px rgba(248, 183, 0, 0.3);
         }
 
         .btn-primary:hover {
-            background: var(--accent-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(248, 183, 0, 0.5);
         }
 
         .btn-secondary {
@@ -118,16 +159,16 @@
         }
 
         .btn-secondary:hover {
-            border-color: var(--accent);
+            border-color: var(--gold);
             transform: translateY(-2px);
         }
 
         main {
-            padding: 3rem 0;
+            padding: 2rem 0 3rem 0;
         }
 
         .section {
-            background: var(--bg-secondary);
+            background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 2rem;
@@ -135,20 +176,23 @@
         }
 
         .section-title {
+            font-family: 'Cinzel', serif;
             font-size: 1.75rem;
             font-weight: 700;
-            margin-bottom: 1rem;
-            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            color: var(--gold);
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         .section-title::before {
             content: '';
             width: 4px;
             height: 1.75rem;
-            background: var(--accent);
+            background: var(--gold);
             border-radius: 2px;
         }
 
@@ -160,7 +204,7 @@
 
         .highlight-box {
             background: var(--bg-elevated);
-            border-left: 4px solid var(--accent);
+            border-left: 4px solid var(--gold);
             padding: 1.5rem;
             margin: 1.5rem 0;
             border-radius: 8px;
@@ -181,7 +225,7 @@
             content: '✓';
             position: absolute;
             left: 0;
-            color: var(--success);
+            color: var(--gold);
             font-weight: 700;
         }
 
@@ -194,7 +238,7 @@
         }
 
         .news-item:hover {
-            border-color: var(--accent);
+            border-color: var(--gold);
             transform: translateX(4px);
         }
 
@@ -205,10 +249,11 @@
         }
 
         .news-title {
+            font-family: 'Cinzel', serif;
             font-size: 1.25rem;
             font-weight: 600;
             margin-bottom: 0.75rem;
-            color: var(--text-primary);
+            color: var(--gold);
         }
 
         .news-description {
@@ -220,9 +265,9 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            color: var(--accent);
+            color: var(--gold);
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
             transition: gap 0.2s ease;
         }
 
@@ -248,6 +293,10 @@
             gap: 1rem;
         }
 
+        .battletag-item:hover {
+            border-color: var(--gold);
+        }
+
         .battletag-name {
             font-family: 'Courier New', monospace;
             font-size: 1.1rem;
@@ -262,20 +311,23 @@
 
         .btn-copy {
             padding: 0.5rem 1rem;
-            background: var(--accent);
-            color: white;
+            background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+            color: #000;
             border: none;
             border-radius: 6px;
+            font-family: 'Cinzel', serif;
             font-size: 0.875rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .btn-copy:hover {
-            background: var(--accent-hover);
             transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(248, 183, 0, 0.4);
         }
 
         .btn-copy.copied {
@@ -296,6 +348,7 @@
             transition: all 0.3s ease;
             pointer-events: none;
             z-index: 1000;
+            font-family: 'Cinzel', serif;
         }
 
         .toast.show {
@@ -312,12 +365,13 @@
         }
 
         @media (max-width: 768px) {
-            h1 {
+            .hero-title {
                 font-size: 2rem;
             }
 
-            .subtitle {
-                font-size: 1rem;
+            .hero-logo {
+                width: 200px;
+                height: 200px;
             }
 
             .hero-buttons {
@@ -341,11 +395,13 @@
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="guild-logo">🐼</div>
-            <h1>Les Sages de Pandarie</h1>
-            <p class="subtitle">Oui, même toi derrière ton écran !</p>
+    <header class="hero">
+        <div class="hero-background">
+            <img src="pandaria.png" alt="Pandaria" class="hero-bg-logo">
+        </div>
+        <div class="hero-content">
+            <img src="pandaria.png" alt="Les Sages de Pandarie" class="hero-logo">
+            <h1 class="hero-title">Les Sages de Pandarie</h1>
             <div class="hero-buttons">
                 <a href="/roster/" class="btn btn-primary">
                     <span>📋</span>
@@ -364,15 +420,15 @@
             <h2 class="section-title">Pourquoi nous rejoindre ?</h2>
             <div class="section-content">
                 <p style="margin-bottom: 1rem; font-size: 1.1rem;">
-                    <strong>Marre des guildes ultra tryhard où rater un sort = drama ?</strong><br>
-                    Envie de préparer <strong>Midnight</strong> sans sacrifier ton sommeil, ton couple ou ton chat ?
+                    <strong style="color: var(--text-primary);">Marre des guildes ultra tryhard où rater un sort = drama ?</strong><br>
+                    Envie de préparer <strong style="color: var(--gold);">Midnight</strong> sans sacrifier ton sommeil, ton couple ou ton chat ?
                 </p>
-                <p style="margin-bottom: 1.5rem;">
-                    Bienvenue chez <strong>Les Sages de Pandarie</strong> !
+                <p style="margin-bottom: 1.5rem; color: var(--text-primary);">
+                    Bienvenue chez <strong style="color: var(--gold);">Les Sages de Pandarie</strong> !
                 </p>
 
                 <div class="highlight-box">
-                    <strong style="font-size: 1.1rem; color: var(--text-primary);">Chez nous :</strong>
+                    <strong style="font-size: 1.1rem; color: var(--gold);">Chez nous :</strong>
                     <ul>
                         <li>On joue pour s'amuser (et parfois pour looter, soyons honnêtes)</li>
                         <li>1 jour fixe par semaine pour des sorties raids / Mythiques+</li>
@@ -382,7 +438,7 @@
                 </div>
 
                 <div class="highlight-box">
-                    <strong style="font-size: 1.1rem; color: var(--text-primary);">On recherche :</strong>
+                    <strong style="font-size: 1.1rem; color: var(--gold);">On recherche :</strong>
                     <ul>
                         <li>Joueurs matures (dans la tête, pas forcément sur l'acte de naissance)</li>
                         <li>Débutants, retours de pause ou vétérans fatigués du tryhard</li>
@@ -391,7 +447,7 @@
                 </div>
 
                 <p style="margin-top: 1.5rem; font-size: 1.05rem; color: var(--text-primary);">
-                    <strong>Objectif :</strong> Avancer tranquillement sur Midnight, ensemble, dans la bonne humeur et le respect.
+                    <strong style="color: var(--gold);">Objectif :</strong> Avancer tranquillement sur Midnight, ensemble, dans la bonne humeur et le respect.
                 </p>
             </div>
         </section>
@@ -405,7 +461,7 @@
                 <p class="news-description">
                     Pour bien préparer Midnight, on a besoin de connaître les classes que vous allez jouer et vos disponibilités ! Remplis notre sondage pour nous aider à organiser nos raids et Mythiques+.
                 </p>
-                <a href="https://forms.gle/votre-sondage" class="news-link" target="_blank">
+                <a href="https://shani-gaming.github.io/roster/" class="news-link">
                     Participer au sondage →
                 </a>
             </div>
@@ -414,8 +470,8 @@
         <section class="section" id="nous-rejoindre">
             <h2 class="section-title">Nous Rejoindre</h2>
             <div class="section-content">
-                <p style="margin-bottom: 1rem;">
-                    Si tu penses que WoW est meilleur quand on joue détendu et entouré de gens sympas, alors <strong>Les Sages de Pandarie t'attendent !</strong>
+                <p style="margin-bottom: 1rem; color: var(--text-primary);">
+                    Si tu penses que WoW est meilleur quand on joue détendu et entouré de gens sympas, alors <strong style="color: var(--gold);">Les Sages de Pandarie t'attendent !</strong>
                 </p>
                 <p style="margin-bottom: 1.5rem;">
                     Pour nous rejoindre, contacte-nous directement en jeu en ajoutant l'un de ces Battle Tags :
