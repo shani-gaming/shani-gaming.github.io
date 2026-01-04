@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guild Roster - Midnight</title>
+    <link rel="icon" type="image/png" href="logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
@@ -2657,14 +2658,16 @@
             updateSpecs();
             setTimeout(() => {
                 document.getElementById('player-spec').value = player.spec;
+                document.getElementById('player-offspec').value = player.offSpec || '';
                 document.getElementById('player-role').value = player.role;
                 document.getElementById('player-flex-role').value = player.flexRole || '';
                 document.getElementById('player-notes').value = player.notes || '';
-                document.getElementById('player-availability').value = player.availability || '';
-                document.getElementById('equipment-enchant-percent').value = player.enchantPercentage !== null ? player.enchantPercentage : '';
-                document.getElementById('equipment-gem-percent').value = player.gemPercentage !== null ? player.gemPercentage : '';
-                document.getElementById('character-avatar-url').value = player.avatarUrl || '';
-                document.getElementById('character-realm-slug').value = player.realmSlug || '';
+
+                // Handle availability checkboxes
+                const checkboxes = document.querySelectorAll('input[name="availability"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = player.availability && player.availability.includes(checkbox.value);
+                });
             }, 100);
 
             // Delete old entry from Firestore
