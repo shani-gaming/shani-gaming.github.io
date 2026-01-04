@@ -169,42 +169,65 @@ exports.getWowCharacters = onRequest(
 exports.getCharacterDetails = onRequest(
   {
     region: 'europe-west1',
-    maxInstances: 10
+    maxInstances: 10,
+    secrets: [blizzardClientId, blizzardClientSecret]
   },
   (req, res) => {
     corsMiddleware(req, res, async () => {
       try {
-        const { accessToken, realmSlug, characterName } = req.body;
+        const { accessToken, realmSlug, characterName, region } = req.body;
 
-        if (!accessToken || !realmSlug || !characterName) {
+        if (!realmSlug || !characterName) {
           return res.status(400).json({ error: 'Missing required parameters' });
+        }
+
+        // If no accessToken provided, get one using client credentials
+        let token = accessToken;
+        if (!token) {
+          const clientId = blizzardClientId.value();
+          const clientSecret = blizzardClientSecret.value();
+
+          const tokenResponse = await axios.post(
+            'https://oauth.battle.net/token',
+            new URLSearchParams({
+              grant_type: 'client_credentials'
+            }),
+            {
+              auth: {
+                username: clientId,
+                password: clientSecret
+              }
+            }
+          );
+
+          token = tokenResponse.data.access_token;
         }
 
         // Get character profile summary
         const profileUrl = `https://eu.api.blizzard.com/profile/wow/character/${realmSlug}/${characterName.toLowerCase()}`;
         const profileResponse = await axios.get(profileUrl, {
-          headers: { Authorization: `Bearer ${accessToken}` },
+          headers: { Authorization: `Bearer ${token}` },
           params: { namespace: 'profile-eu', locale: 'fr_FR' }
         });
 
         // Get character equipment
         const equipmentUrl = `${profileUrl}/equipment`;
         const equipmentResponse = await axios.get(equipmentUrl, {
-          headers: { Authorization: `Bearer ${accessToken}` },
+          headers: { Authorization: `Bearer ${token}` },
           params: { namespace: 'profile-eu', locale: 'fr_FR' }
         });
 
         // Get character specializations
         const specsUrl = `${profileUrl}/specializations`;
         const specsResponse = await axios.get(specsUrl, {
-          headers: { Authorization: `Bearer ${accessToken}` },
+          headers: { Authorization: `Bearer ${token}` },
           params: { namespace: 'profile-eu', locale: 'fr_FR' }
         });
 
         // Get character media (avatar)
         const mediaUrl = `${profileUrl}/character-media`;
         const mediaResponse = await axios.get(mediaUrl, {
-          headers: { Authorization: `Bearer ${accessToken}` },
+          headers: { Authorization: `Bearer ${token}` },
           params: { namespace: 'profile-eu', locale: 'fr_FR' }
         });
 
