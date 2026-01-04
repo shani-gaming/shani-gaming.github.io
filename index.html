@@ -158,12 +158,38 @@
             line-height: 1.8;
         }
 
+        .highlight-box {
+            background: var(--bg-elevated);
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+        }
+
+        .highlight-box ul {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .highlight-box li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .highlight-box li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: 700;
+        }
+
         .news-item {
             background: var(--bg-elevated);
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 1.5rem;
-            margin-bottom: 1rem;
             transition: all 0.2s ease;
         }
 
@@ -204,33 +230,77 @@
             gap: 0.75rem;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
+        .battletag-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
             margin-top: 1.5rem;
         }
 
-        .stat-card {
+        .battletag-item {
             background: var(--bg-elevated);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 1.5rem;
-            text-align: center;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
         }
 
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--accent);
-            margin-bottom: 0.5rem;
+        .battletag-name {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            font-weight: 600;
         }
 
-        .stat-label {
+        .battletag-role {
             color: var(--text-secondary);
             font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        }
+
+        .btn-copy {
+            padding: 0.5rem 1rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-copy:hover {
+            background: var(--accent-hover);
+            transform: scale(1.05);
+        }
+
+        .btn-copy.copied {
+            background: var(--success);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--success);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(1rem);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         footer {
@@ -258,6 +328,15 @@
                 width: 100%;
                 justify-content: center;
             }
+
+            .battletag-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .btn-copy {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -266,15 +345,15 @@
         <div class="container">
             <div class="guild-logo">🐼</div>
             <h1>Les Sages de Pandarie</h1>
-            <p class="subtitle">Guilde World of Warcraft - En préparation pour l'extension Midnight</p>
+            <p class="subtitle">Oui, même toi derrière ton écran !</p>
             <div class="hero-buttons">
                 <a href="/roster/" class="btn btn-primary">
                     <span>📋</span>
-                    Accéder au Roster
+                    Voir le Roster
                 </a>
-                <a href="#actualites" class="btn btn-secondary">
-                    <span>📰</span>
-                    Actualités
+                <a href="#nous-rejoindre" class="btn btn-secondary">
+                    <span>🤝</span>
+                    Nous Rejoindre
                 </a>
             </div>
         </div>
@@ -282,32 +361,38 @@
 
     <main class="container">
         <section class="section">
-            <h2 class="section-title">À propos de la guilde</h2>
+            <h2 class="section-title">Pourquoi nous rejoindre ?</h2>
             <div class="section-content">
-                <p style="margin-bottom: 1rem;">
-                    Bienvenue chez <strong>Les Sages de Pandarie</strong> ! Nous sommes une communauté de joueurs passionnés qui se prépare pour l'extension Midnight de World of Warcraft.
+                <p style="margin-bottom: 1rem; font-size: 1.1rem;">
+                    <strong>Marre des guildes ultra tryhard où rater un sort = drama ?</strong><br>
+                    Envie de préparer <strong>Midnight</strong> sans sacrifier ton sommeil, ton couple ou ton chat ?
                 </p>
-                <p style="margin-bottom: 1rem;">
-                    Notre objectif est de créer une expérience de jeu agréable et organisée, que ce soit pour du PvE progressif, des raids mythiques, ou simplement passer de bons moments ensemble.
+                <p style="margin-bottom: 1.5rem;">
+                    Bienvenue chez <strong>Les Sages de Pandarie</strong> !
                 </p>
-                <p>
-                    Nous recherchons des joueurs motivés et respectueux pour rejoindre nos rangs et affronter ensemble les défis de la prochaine extension.
-                </p>
-            </div>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value">🎮</div>
-                    <div class="stat-label">Raids Organisés</div>
+                <div class="highlight-box">
+                    <strong style="font-size: 1.1rem; color: var(--text-primary);">Chez nous :</strong>
+                    <ul>
+                        <li>On joue pour s'amuser (et parfois pour looter, soyons honnêtes)</li>
+                        <li>1 jour fixe par semaine pour des sorties raids / Mythiques+</li>
+                        <li>Aucune obligation : tu viens quand tu peux, sans jugement</li>
+                        <li>L'entraide est plus importante que le DPS meter</li>
+                    </ul>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value">🤝</div>
-                    <div class="stat-label">Communauté Active</div>
+
+                <div class="highlight-box">
+                    <strong style="font-size: 1.1rem; color: var(--text-primary);">On recherche :</strong>
+                    <ul>
+                        <li>Joueurs matures (dans la tête, pas forcément sur l'acte de naissance)</li>
+                        <li>Débutants, retours de pause ou vétérans fatigués du tryhard</li>
+                        <li>Capables de rire d'un wipe et de dire "c'était un pull de reconnaissance"</li>
+                    </ul>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value">⚔️</div>
-                    <div class="stat-label">PvE & Mythiques</div>
-                </div>
+
+                <p style="margin-top: 1.5rem; font-size: 1.05rem; color: var(--text-primary);">
+                    <strong>Objectif :</strong> Avancer tranquillement sur Midnight, ensemble, dans la bonne humeur et le respect.
+                </p>
             </div>
         </section>
 
@@ -316,40 +401,47 @@
 
             <div class="news-item">
                 <div class="news-date">📅 Janvier 2026</div>
-                <h3 class="news-title">Sondage de disponibilité - Midnight</h3>
+                <h3 class="news-title">Sondage : Classes & Disponibilités</h3>
                 <p class="news-description">
-                    Nous préparons activement nos horaires de raid pour l'extension Midnight ! Merci de remplir notre sondage pour nous indiquer vos disponibilités et préférences.
+                    Pour bien préparer Midnight, on a besoin de connaître les classes que vous allez jouer et vos disponibilités ! Remplis notre sondage pour nous aider à organiser nos raids et Mythiques+.
                 </p>
                 <a href="https://forms.gle/votre-sondage" class="news-link" target="_blank">
                     Participer au sondage →
                 </a>
             </div>
-
-            <div class="news-item">
-                <div class="news-date">📅 Janvier 2026</div>
-                <h3 class="news-title">Ouverture du Roster en ligne</h3>
-                <p class="news-description">
-                    Notre nouveau système de roster est maintenant disponible ! Inscrivez-vous dès maintenant avec votre compte Battle.net pour rejoindre l'aventure.
-                </p>
-                <a href="/roster/" class="news-link">
-                    Voir le roster →
-                </a>
-            </div>
         </section>
 
-        <section class="section">
-            <h2 class="section-title">Nous rejoindre</h2>
+        <section class="section" id="nous-rejoindre">
+            <h2 class="section-title">Nous Rejoindre</h2>
             <div class="section-content">
                 <p style="margin-bottom: 1rem;">
-                    Pour rejoindre Les Sages de Pandarie, commencez par vous inscrire sur notre roster en ligne. Vous pourrez indiquer votre classe, vos spécialisations et vos disponibilités.
+                    Si tu penses que WoW est meilleur quand on joue détendu et entouré de gens sympas, alors <strong>Les Sages de Pandarie t'attendent !</strong>
                 </p>
                 <p style="margin-bottom: 1.5rem;">
-                    Notre équipe d'officiers prendra contact avec vous pour discuter de votre intégration dans la guilde.
+                    Pour nous rejoindre, contacte-nous directement en jeu en ajoutant l'un de ces Battle Tags :
                 </p>
-                <a href="/roster/" class="btn btn-primary">
-                    <span>📋</span>
-                    S'inscrire au Roster
-                </a>
+
+                <div class="battletag-list">
+                    <div class="battletag-item">
+                        <div>
+                            <div class="battletag-name">BattleTag#1234</div>
+                            <div class="battletag-role">Officier - Recrutement</div>
+                        </div>
+                        <button class="btn-copy" onclick="copyBattleTag('BattleTag#1234', this)">Copier</button>
+                    </div>
+
+                    <div class="battletag-item">
+                        <div>
+                            <div class="battletag-name">BattleTag#5678</div>
+                            <div class="battletag-role">Officier - Recrutement</div>
+                        </div>
+                        <button class="btn-copy" onclick="copyBattleTag('BattleTag#5678', this)">Copier</button>
+                    </div>
+                </div>
+
+                <p style="margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.95rem;">
+                    💡 <strong>Astuce :</strong> Clique sur "Copier" puis dans WoW : touche Échap → Social → Ajouter un Ami → Colle le Battle Tag
+                </p>
             </div>
         </section>
     </main>
@@ -358,5 +450,36 @@
         <p>&copy; 2026 Les Sages de Pandarie - Guilde World of Warcraft</p>
         <p style="margin-top: 0.5rem; font-size: 0.875rem;">Propulsé par GitHub Pages</p>
     </footer>
+
+    <div class="toast" id="toast">Battle Tag copié !</div>
+
+    <script>
+        function copyBattleTag(battleTag, button) {
+            navigator.clipboard.writeText(battleTag).then(() => {
+                // Show toast notification
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+
+                // Change button text
+                const originalText = button.textContent;
+                button.textContent = '✓ Copié';
+                button.classList.add('copied');
+
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+
+                // Hide toast after 3 seconds
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }).catch(err => {
+                console.error('Erreur lors de la copie:', err);
+                alert('Erreur lors de la copie. Battle Tag: ' + battleTag);
+            });
+        }
+    </script>
 </body>
 </html>
