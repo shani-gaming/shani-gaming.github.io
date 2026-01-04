@@ -90,8 +90,8 @@
         }
 
         .hero-logo {
-            width: 320px;
-            height: 320px;
+            width: min(500px, 90vw);
+            height: auto;
             object-fit: contain;
             filter: drop-shadow(0 0 40px rgba(212, 175, 55, 0.5));
             animation: float 6s ease-in-out infinite;
@@ -370,8 +370,8 @@
             }
 
             .hero-logo {
-                width: 200px;
-                height: 200px;
+                width: 90vw;
+                max-width: 350px;
             }
 
             .hero-buttons {
@@ -397,10 +397,10 @@
 <body>
     <header class="hero">
         <div class="hero-background">
-            <img src="pandaria.png" alt="Pandaria" class="hero-bg-logo">
+            <img src="wow.png" alt="WoW" class="hero-bg-logo">
         </div>
         <div class="hero-content">
-            <img src="pandaria.png" alt="Les Sages de Pandarie" class="hero-logo">
+            <img src="logo.png" alt="Les Sages de Pandarie" class="hero-logo">
             <h1 class="hero-title">Les Sages de Pandarie</h1>
             <div class="hero-buttons">
                 <a href="/roster/" class="btn btn-primary">
