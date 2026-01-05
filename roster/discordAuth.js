@@ -57,7 +57,7 @@ const DiscordAuth = {
      * Start Discord OAuth flow
      */
     login() {
-        const scope = 'identify guilds.members.read';
+        const scope = 'identify guilds';
         const state = Math.random().toString(36).substring(7);
 
         // Store state for CSRF protection
