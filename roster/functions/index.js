@@ -384,16 +384,24 @@ exports.verifyDiscordRole = onRequest(
           }
         );
 
+        // Log for debugging
+        console.log('User guilds:', guildsResponse.data.map(g => ({ id: g.id, name: g.name })));
+        console.log('Target guild ID:', guildId);
+        console.log('Guild ID type:', typeof guildId);
+
         // Check if user is member of the guild
-        const isMember = guildsResponse.data.some(guild => guild.id === guildId);
+        const isMember = guildsResponse.data.some(guild => {
+          console.log(`Comparing: "${guild.id}" === "${guildId}"`, guild.id === guildId);
+          return guild.id === guildId;
+        });
 
-        // For now, grant access to all guild members
-        // TODO: Add bot to verify specific roles
+        // Grant access to all guild members
         const hasAccess = isMember;
-        const userRoles = isMember ? ['Member'] : [];
+        const userRoles = isMember ? ['Membre du Discord'] : [];
 
-        console.log('Discord auth:', {
+        console.log('Discord auth result:', {
           username,
+          isMember,
           userRoles,
           hasAccess
         });
@@ -402,7 +410,14 @@ exports.verifyDiscordRole = onRequest(
           hasAccess,
           username,
           userId,
-          roles: userRoles
+          roles: userRoles,
+          // Debug info
+          debug: {
+            userGuilds: guildsResponse.data.map(g => ({ id: g.id, name: g.name })),
+            targetGuildId: guildId,
+            guildIdType: typeof guildId,
+            isMember
+          }
         });
       } catch (error) {
         console.error('Discord auth error:', error);

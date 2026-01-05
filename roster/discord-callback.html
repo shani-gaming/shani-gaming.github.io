@@ -135,22 +135,34 @@
                         window.location.href = '/roster/';
                     }, 2000);
                 } else {
-                    // Access denied
+                    // Access denied - show debug info
+                    console.log('Auth data:', authData);
+                    console.log('Debug info:', authData.debug);
+
+                    const debugInfo = authData.debug ? `
+                        <details style="margin-top: 1rem; text-align: left;">
+                            <summary style="cursor: pointer; color: var(--gold);">🔍 Infos de debug (clique pour voir)</summary>
+                            <pre style="font-size: 0.75rem; overflow-x: auto; margin-top: 0.5rem;">${JSON.stringify(authData.debug, null, 2)}</pre>
+                        </details>
+                    ` : '';
+
                     statusEl.textContent = 'Accès refusé';
                     resultEl.innerHTML = `
                         <div class="error">
                             <h2>🚫 Accès Refusé</h2>
                             <p>Vous devez être membre de la guilde "Les Sages de Pandarie" pour accéder à cette page.</p>
                             <p style="margin-top: 1rem;">Rôles détectés : ${authData.roles.join(', ') || 'Aucun'}</p>
-                            <p class="redirect-info">Redirection vers la page d'accueil dans 5 secondes...</p>
+                            ${debugInfo}
+                            <p class="redirect-info">PAS de redirection automatique - ouvre la console F12 pour plus de détails</p>
                         </div>
                     `;
 
                     DiscordAuth.logout();
 
-                    setTimeout(() => {
-                        window.location.href = '/';
-                    }, 5000);
+                    // Don't redirect - let user see debug info
+                    // setTimeout(() => {
+                    //     window.location.href = '/';
+                    // }, 30000);
                 }
             } catch (error) {
                 console.error('Callback error:', error);
