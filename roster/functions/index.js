@@ -6,6 +6,9 @@ const cors = require('cors');
 // Définir les secrets
 const blizzardClientId = defineSecret('BLIZZARD_CLIENT_ID');
 const blizzardClientSecret = defineSecret('BLIZZARD_CLIENT_SECRET');
+const discordClientId = defineSecret('DISCORD_CLIENT_ID');
+const discordClientSecret = defineSecret('DISCORD_CLIENT_SECRET');
+const discordGuildId = defineSecret('DISCORD_GUILD_ID');
 
 // CORS configuration - Allow GitHub Pages and custom domain
 const corsOptions = {
@@ -303,6 +306,112 @@ exports.getCharacterDetails = onRequest(
         res.status(500).json({
           error: 'Failed to fetch character details',
           details: error.message
+        });
+      }
+    });
+  }
+);
+
+/**
+ * Verify Discord user has required role in guild
+ */
+exports.verifyDiscordRole = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10,
+    secrets: [discordClientId, discordClientSecret, discordGuildId]
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        const { code, redirectUri } = req.body;
+
+        if (!code || !redirectUri) {
+          return res.status(400).json({ error: 'Missing code or redirectUri' });
+        }
+
+        const clientId = discordClientId.value();
+        const clientSecret = discordClientSecret.value();
+        const guildId = discordGuildId.value();
+
+        // Allowed roles (exact match required)
+        const allowedRoles = [
+          '👑​ - Administrateur',
+          '✴ 𝕆𝕗𝕗𝕚𝕔𝕚𝕖𝕣 ✴',
+          '🧌​- 𝕄𝕖𝕞𝕓𝕣𝕖 -'
+        ];
+
+        // Exchange code for access token
+        const tokenResponse = await axios.post(
+          'https://discord.com/api/oauth2/token',
+          new URLSearchParams({
+            grant_type: 'authorization_code',
+            code: code,
+            redirect_uri: redirectUri
+          }),
+          {
+            auth: {
+              username: clientId,
+              password: clientSecret
+            },
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }
+        );
+
+        const accessToken = tokenResponse.data.access_token;
+
+        // Get user info
+        const userResponse = await axios.get(
+          'https://discord.com/api/users/@me',
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            }
+          }
+        );
+
+        const userId = userResponse.data.id;
+        const username = userResponse.data.username;
+
+        // Get user's guilds
+        const guildsResponse = await axios.get(
+          'https://discord.com/api/users/@me/guilds',
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            }
+          }
+        );
+
+        // Check if user is member of the guild
+        const isMember = guildsResponse.data.some(guild => guild.id === guildId);
+
+        // For now, grant access to all guild members
+        // TODO: Add bot to verify specific roles
+        const hasAccess = isMember;
+        const userRoles = isMember ? ['Member'] : [];
+
+        console.log('Discord auth:', {
+          username,
+          userRoles,
+          hasAccess
+        });
+
+        res.json({
+          hasAccess,
+          username,
+          userId,
+          roles: userRoles
+        });
+      } catch (error) {
+        console.error('Discord auth error:', error);
+        console.error('Error response:', error.response?.data);
+        res.status(500).json({
+          error: 'Discord authentication failed',
+          details: error.message,
+          discordError: error.response?.data
         });
       }
     });

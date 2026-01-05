@@ -1501,6 +1501,9 @@
             }
         }
     </style>
+
+    <!-- Discord Authentication Module -->
+    <script src="discordAuth.js"></script>
 </head>
 <body>
     <div class="container">
@@ -3232,6 +3235,16 @@
                 showToast(`Personnage "${character.name}" importé avec succès !`, 'success');
             }, 100);
         }
+
+        // Initialize Discord Authentication
+        // Set ENABLED to false to disable Discord auth (easy rollback)
+        DiscordAuth.init({
+            title: 'Accès Réservé aux Membres',
+            message: 'Le roster est réservé aux membres de la guilde "Les Sages de Pandarie". Connectez-vous avec Discord pour y accéder.',
+            onSuccess: () => {
+                console.log('Discord auth successful');
+            }
+        });
 
         // Check for OAuth callback on page load
         if (window.location.search.includes('code=')) {
