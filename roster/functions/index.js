@@ -406,18 +406,28 @@ exports.verifyDiscordRole = onRequest(
           hasAccess
         });
 
+        // Build debug info safely
+        let debugInfo = {
+          isMember,
+          targetGuildId: guildId,
+          guildIdType: typeof guildId,
+          guildsCount: guildsResponse.data ? guildsResponse.data.length : 0
+        };
+
+        try {
+          if (guildsResponse.data && Array.isArray(guildsResponse.data)) {
+            debugInfo.userGuilds = guildsResponse.data.map(g => ({ id: g.id, name: g.name }));
+          }
+        } catch (err) {
+          debugInfo.mapError = err.message;
+        }
+
         res.json({
           hasAccess,
           username,
           userId,
           roles: userRoles,
-          // Debug info
-          debug: {
-            userGuilds: guildsResponse.data.map(g => ({ id: g.id, name: g.name })),
-            targetGuildId: guildId,
-            guildIdType: typeof guildId,
-            isMember
-          }
+          debug: debugInfo
         });
       } catch (error) {
         console.error('Discord auth error:', error);
