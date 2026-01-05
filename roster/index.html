@@ -2783,7 +2783,7 @@
             ['tanks', 'healers', 'melee', 'ranged'].forEach(section => {
                 if (roster[section]) {
                     roster[section].forEach(player => {
-                        if (player.id && player.name && player.realmSlug) {
+                        if (player && player.id && player.name && player.realmSlug) {
                             allPlayers.push(player);
                         }
                     });
