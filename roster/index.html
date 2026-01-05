@@ -1540,6 +1540,22 @@
                 <button class="hero-cta" onclick="openForm()">
                     <span>⚔</span> Inscription Roster
                 </button>
+
+                <!-- Admin Controls -->
+                <div class="admin-controls" id="admin-controls-section" style="margin-top: 2rem; display: none;">
+                    <button class="admin-btn-small" onclick="refreshAllPlayers()" id="refresh-all-btn">
+                        <span>🔄</span> Rafraîchir tout le roster
+                    </button>
+                    <div id="refresh-progress" style="display: none; margin-top: 1rem; width: 100%;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+                            <span id="refresh-status">Actualisation en cours...</span>
+                            <span id="refresh-count">0/0</span>
+                        </div>
+                        <div style="width: 100%; height: 8px; background: var(--bg-elevated); border-radius: 4px; overflow: hidden;">
+                            <div id="refresh-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -1838,6 +1854,12 @@
         function updateAdminButton() {
             const adminBtn = document.querySelector('.admin-menu-item');
             if (!adminBtn) return; // Button not found, skip update
+
+            // Show/hide admin controls section
+            const adminControlsSection = document.getElementById('admin-controls-section');
+            if (adminControlsSection) {
+                adminControlsSection.style.display = (currentUser && isUserAdmin) ? 'block' : 'none';
+            }
 
             if (currentUser && isUserAdmin) {
                 adminBtn.innerHTML = '<span>✓</span> Admin (Connecté)';
@@ -2740,6 +2762,128 @@
                 console.error('Erreur refresh Armory:', error);
                 showToast(`Erreur: ${error.message}`, 'error');
             }
+        }
+
+        // Refresh all players Armory data (admin mode)
+        let isRefreshingAll = false;
+
+        async function refreshAllPlayers() {
+            if (!isUserAdmin) {
+                showToast('Vous devez être un admin autorisé.', 'error');
+                return;
+            }
+
+            if (isRefreshingAll) {
+                showToast('Une actualisation est déjà en cours...', 'warning');
+                return;
+            }
+
+            // Collect all players from roster
+            const allPlayers = [];
+            ['tanks', 'healers', 'melee', 'ranged'].forEach(section => {
+                if (roster[section]) {
+                    roster[section].forEach(player => {
+                        if (player.id && player.name && player.realmSlug) {
+                            allPlayers.push(player);
+                        }
+                    });
+                }
+            });
+
+            if (allPlayers.length === 0) {
+                showToast('Aucun joueur à actualiser.', 'warning');
+                return;
+            }
+
+            // Confirm action
+            if (!confirm(`Actualiser ${allPlayers.length} joueur(s) ? Cela peut prendre quelques minutes.`)) {
+                return;
+            }
+
+            isRefreshingAll = true;
+
+            // Show progress UI
+            const progressDiv = document.getElementById('refresh-progress');
+            const progressBar = document.getElementById('refresh-progress-bar');
+            const statusText = document.getElementById('refresh-status');
+            const countText = document.getElementById('refresh-count');
+            const refreshBtn = document.getElementById('refresh-all-btn');
+
+            progressDiv.style.display = 'block';
+            refreshBtn.disabled = true;
+            refreshBtn.style.opacity = '0.5';
+
+            let completed = 0;
+            let errors = 0;
+
+            for (let i = 0; i < allPlayers.length; i++) {
+                const player = allPlayers[i];
+
+                // Update progress
+                statusText.textContent = `Actualisation de ${player.name}...`;
+                countText.textContent = `${i}/${allPlayers.length}`;
+                const percentage = (i / allPlayers.length) * 100;
+                progressBar.style.width = `${percentage}%`;
+
+                try {
+                    const response = await fetch('https://getcharacterdetails-bmdbdjnmkq-ew.a.run.app', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            characterName: player.name,
+                            realmSlug: player.realmSlug,
+                            region: 'eu'
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        if (data.character && data.equipment) {
+                            await db.collection('roster').doc(player.id).update({
+                                ilvl: data.character.equippedItemLevel || null,
+                                enchantPercentage: data.equipment.enchantPercentage,
+                                gemPercentage: data.equipment.gemPercentage,
+                                avatarUrl: data.character.avatarUrl || null
+                            });
+                            completed++;
+                        }
+                    } else {
+                        errors++;
+                        console.error(`Erreur pour ${player.name}:`, response.status);
+                    }
+                } catch (error) {
+                    errors++;
+                    console.error(`Erreur pour ${player.name}:`, error);
+                }
+
+                // Delay between requests to avoid rate limiting
+                if (i < allPlayers.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 2000)); // 2s delay
+                }
+            }
+
+            // Finished
+            statusText.textContent = 'Actualisation terminée !';
+            countText.textContent = `${allPlayers.length}/${allPlayers.length}`;
+            progressBar.style.width = '100%';
+
+            // Show result
+            if (errors === 0) {
+                showToast(`✅ ${completed} joueur(s) actualisé(s) avec succès !`, 'success');
+            } else {
+                showToast(`⚠️ ${completed} réussis, ${errors} erreur(s)`, 'warning');
+            }
+
+            // Hide progress and reload roster after 2s
+            setTimeout(() => {
+                progressDiv.style.display = 'none';
+                progressBar.style.width = '0%';
+                refreshBtn.disabled = false;
+                refreshBtn.style.opacity = '1';
+                isRefreshingAll = false;
+                fetchRoster();
+            }, 2000);
         }
 
         // Export to CSV
