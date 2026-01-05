@@ -342,18 +342,17 @@ exports.verifyDiscordRole = onRequest(
         ];
 
         // Exchange code for access token
+        // Discord requires client_id and client_secret in the body, not as Basic Auth
         const tokenResponse = await axios.post(
           'https://discord.com/api/oauth2/token',
           new URLSearchParams({
             grant_type: 'authorization_code',
             code: code,
-            redirect_uri: redirectUri
+            redirect_uri: redirectUri,
+            client_id: clientId,
+            client_secret: clientSecret
           }),
           {
-            auth: {
-              username: clientId,
-              password: clientSecret
-            },
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded'
             }

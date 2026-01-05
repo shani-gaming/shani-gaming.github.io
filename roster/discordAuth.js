@@ -7,7 +7,7 @@ const DiscordAuth = {
     // Configuration
     CLIENT_ID: '1457760094363320441',
     REDIRECT_URI: 'https://www.sagesdepandarie.ovh/roster/discord-callback.html',
-    FUNCTION_URL: 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/verifyDiscordRole',
+    FUNCTION_URL: 'https://verifydiscordrole-bmdbdjnmkq-ew.a.run.app',
     STORAGE_KEY: 'discord_auth',
 
     // Enable/disable Discord auth (for easy rollback)
