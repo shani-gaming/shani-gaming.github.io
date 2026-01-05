@@ -110,7 +110,14 @@ const DiscordAuth = {
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || 'Failed to verify Discord role');
+            console.error('Cloud Function error:', error);
+            console.error('Status:', response.status);
+            console.error('Full response:', {
+                status: response.status,
+                statusText: response.statusText,
+                error: error
+            });
+            throw new Error(JSON.stringify(error, null, 2));
         }
 
         const data = await response.json();

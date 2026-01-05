@@ -154,18 +154,29 @@
                 }
             } catch (error) {
                 console.error('Callback error:', error);
+                console.error('Full error object:', JSON.stringify(error, null, 2));
+
+                // Try to get more details from the response
+                let errorDetails = error.message;
+                if (error.response) {
+                    console.error('Error response:', error.response);
+                    errorDetails += '\n\nDétails: ' + JSON.stringify(error.response);
+                }
+
                 statusEl.textContent = 'Erreur d\'authentification';
                 resultEl.innerHTML = `
                     <div class="error">
                         <h2>❌ Erreur</h2>
                         <p>${error.message}</p>
-                        <p class="redirect-info">Redirection vers la page d'accueil dans 5 secondes...</p>
+                        <p style="font-size: 0.85rem; margin-top: 1rem; word-break: break-all;">${errorDetails}</p>
+                        <p class="redirect-info">Ouvre la console (F12) pour voir plus de détails. Pas de redirection automatique.</p>
                     </div>
                 `;
 
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 5000);
+                // Don't redirect automatically - let user check console
+                // setTimeout(() => {
+                //     window.location.href = '/';
+                // }, 60000);
             }
         })();
     </script>
