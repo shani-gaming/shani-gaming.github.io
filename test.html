@@ -14,6 +14,7 @@
             --text-primary: #ffffff;
             --text-secondary: #b0b0b0;
             --green: #00ff88;
+            --success: #0cba7a;
             --border: #333;
         }
 
@@ -33,12 +34,12 @@
         /* Header */
         .header {
             background: linear-gradient(180deg, var(--bg-secondary) 0%, transparent 100%);
-            padding: 2rem 0;
+            padding: 1.5rem 0;
             border-bottom: 1px solid var(--border);
         }
 
         .header-content {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 0 2rem;
             display: flex;
@@ -47,11 +48,12 @@
         }
 
         .logo {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             border: 3px solid var(--gold);
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            object-fit: cover;
         }
 
         .guild-info {
@@ -59,68 +61,107 @@
         }
 
         .guild-name {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: bold;
             color: var(--gold);
-            text-shadow: 2px 2px 10px rgba(255, 215, 0, 0.5);
-            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 8px rgba(255, 215, 0, 0.4);
+            margin-bottom: 0.3rem;
         }
 
         .guild-server {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: var(--text-secondary);
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
         }
 
         .guild-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
 
         .tag {
             background: var(--bg-elevated);
             color: var(--text-primary);
-            padding: 0.4rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
             border: 1px solid var(--border);
         }
 
         /* Container */
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 0 2rem;
         }
 
         /* Section */
         .section {
-            padding: 4rem 0;
+            padding: 2.5rem 0;
         }
 
         .section-title {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: bold;
-            text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 1.5rem;
             color: var(--text-primary);
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
         }
 
         /* Welcome Section */
         .welcome-text {
-            max-width: 900px;
-            margin: 0 auto;
-            font-size: 1.1rem;
-            line-height: 1.8;
+            font-size: 1.05rem;
+            line-height: 1.7;
             color: var(--text-secondary);
-            text-align: center;
         }
 
         .welcome-text strong {
             color: var(--gold);
+        }
+
+        /* News Section */
+        .news-item {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .news-item:hover {
+            border-color: var(--gold);
+            transform: translateX(4px);
+        }
+
+        .news-date {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .news-title {
+            font-size: 1.5rem;
+            color: var(--gold);
+            margin-bottom: 0.75rem;
+        }
+
+        .news-description {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .news-link {
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .news-link:hover {
+            color: var(--gold-dim);
+            text-decoration: underline;
         }
 
         /* Recruitment Section */
@@ -130,8 +171,8 @@
 
         .recruitment-intro {
             text-align: center;
-            margin-bottom: 3rem;
-            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            font-size: 1.05rem;
             color: var(--text-secondary);
         }
 
@@ -139,144 +180,159 @@
             display: inline-block;
             background: var(--green);
             color: var(--bg-dark);
-            padding: 0.5rem 1.5rem;
-            border-radius: 25px;
+            padding: 0.4rem 1.2rem;
+            border-radius: 20px;
             font-weight: bold;
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
         }
 
-        .classes-grid {
+        .classes-compact {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
         }
 
-        .class-card {
+        .class-item {
             background: var(--bg-elevated);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: 8px;
+            padding: 0.8rem;
             display: flex;
             align-items: center;
-            gap: 1.5rem;
-            transition: all 0.3s ease;
-            position: relative;
+            gap: 1rem;
+            transition: all 0.2s ease;
         }
 
-        .class-card:hover {
+        .class-item:hover {
             border-color: var(--gold);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
+            transform: translateY(-3px);
         }
 
-        .class-icon-wrapper {
-            position: relative;
-        }
-
-        .class-icon {
-            width: 64px;
-            height: 64px;
+        .class-icon-small {
+            width: 40px;
+            height: 40px;
             background: #000;
             border-radius: 50%;
-            padding: 8px;
+            padding: 5px;
             border: 2px solid var(--border);
+            flex-shrink: 0;
         }
 
-        .class-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--green);
-            color: var(--bg-dark);
-            font-size: 0.65rem;
-            font-weight: bold;
-            padding: 0.2rem 0.5rem;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 255, 136, 0.4);
+        .class-info {
+            flex: 1;
         }
 
-        .class-name {
-            font-size: 1.3rem;
-            font-weight: bold;
+        .class-name-fr {
+            font-size: 1rem;
+            font-weight: 600;
             color: var(--text-primary);
         }
 
-        /* Join Section */
-        .join-section {
-            text-align: center;
-        }
-
-        .join-text {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .battletags {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            flex-wrap: wrap;
-            margin-bottom: 2rem;
-        }
-
-        .battletag-card {
-            background: var(--bg-elevated);
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem 2rem;
-            min-width: 250px;
-            transition: all 0.3s ease;
-        }
-
-        .battletag-card:hover {
-            border-color: var(--gold);
-            transform: scale(1.05);
-        }
-
-        .battletag-label {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .battletag-value {
-            color: var(--gold);
-            font-size: 1.3rem;
+        .class-status {
+            font-size: 0.75rem;
+            color: var(--green);
             font-weight: bold;
+        }
+
+        /* BattleTag Section */
+        .join-intro {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .battletag-list {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .bnet-button {
+            background: linear-gradient(180deg, #1a8fff 0%, #0d6fd6 100%);
+            border: none;
+            border-radius: 6px;
+            padding: 0.875rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(26, 143, 255, 0.3);
+        }
+
+        .bnet-button:hover {
+            background: linear-gradient(180deg, #2a9fff 0%, #1d7fe6 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 143, 255, 0.5);
+        }
+
+        .bnet-button.copied {
+            background: linear-gradient(180deg, var(--success) 0%, #0a9668 100%);
+        }
+
+        .bnet-icon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .bnet-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .bnet-tag {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #fff;
             font-family: 'Courier New', monospace;
         }
 
-        .cta-button {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--gold-dim), var(--gold));
-            color: var(--bg-dark);
-            padding: 1rem 3rem;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        .bnet-role {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.8);
         }
 
-        .cta-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.5);
+        .join-tip {
+            margin-top: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--success);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
         }
 
         /* Footer */
         .footer {
             background: var(--bg-secondary);
-            padding: 2rem 0;
+            padding: 1.5rem 0;
             text-align: center;
             color: var(--text-secondary);
             border-top: 1px solid var(--border);
-            margin-top: 4rem;
+            margin-top: 3rem;
+            font-size: 0.9rem;
         }
 
         /* Responsive */
@@ -287,7 +343,7 @@
             }
 
             .guild-name {
-                font-size: 2rem;
+                font-size: 1.8rem;
             }
 
             .guild-server {
@@ -295,16 +351,19 @@
             }
 
             .section-title {
-                font-size: 1.8rem;
+                font-size: 1.5rem;
             }
 
-            .classes-grid {
+            .classes-compact {
                 grid-template-columns: 1fr;
             }
 
-            .battletags {
+            .battletag-list {
                 flex-direction: column;
-                align-items: center;
+            }
+
+            .bnet-button {
+                width: 100%;
             }
         }
     </style>
@@ -341,11 +400,29 @@
                     Que tu sois nouveau joueur ou vétéran chevronné, ici on joue pour le plaisir,
                     l'entraide et la bonne ambiance.
                 </p>
-                <p style="margin-top: 1.5rem;">
+                <p style="margin-top: 1rem;">
                     On organise des <strong>Mythiques+</strong>, du <strong>raid en Normal/Héroïque</strong>,
                     et plein d'activités ensemble. Rejoins-nous si tu cherches une communauté
                     sympa où le fun prime sur la performance !
                 </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- News Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Actualités</h2>
+            <div class="news-item">
+                <div class="news-date">📅 Janvier 2026</div>
+                <h3 class="news-title">Sondage : Classes & Disponibilités</h3>
+                <p class="news-description">
+                    Pour bien préparer Midnight, on a besoin de connaître les classes que vous allez jouer et vos disponibilités !
+                    Remplis notre sondage pour nous aider à organiser nos raids et Mythiques+.
+                </p>
+                <a href="https://www.sagesdepandarie.ovh/roster/" class="news-link">
+                    Participer au sondage →
+                </a>
             </div>
         </div>
     </section>
@@ -359,163 +436,143 @@
                 <p>Nous recherchons des joueurs motivés de toutes classes et spécialisations !</p>
             </div>
 
-            <div class="classes-grid">
-                <!-- Death Knight -->
-                <div class="class-card">
-                    <div class="class-icon-wrapper">
-                        <img src="https://guildsofwow.com/assets/images/class-icons/death-knight.png"
-                             alt="Death Knight" class="class-icon">
-                        <span class="class-badge">OPEN</span>
+            <div class="classes-compact">
+                <div class="class-item">
+                    <img src="https://guildsofwow.com/assets/images/class-icons/death-knight.png" class="class-icon-small">
+                    <div class="class-info">
+                        <div class="class-name-fr">Chevalier de la mort</div>
+                        <div class="class-status">OUVERT</div>
                     </div>
-                    <div class="class-name">Death Knight</div>
                 </div>
 
-                <!-- Demon Hunter -->
-                <div class="class-card">
-                    <div class="class-icon-wrapper">
-                        <img src="https://guildsofwow.com/assets/images/class-icons/demon-hunter.png"
-                             alt="Demon Hunter" class="class-icon">
-                        <span class="class-badge">OPEN</span>
+                <div class="class-item">
+                    <img src="https://guildsofwow.com/assets/images/class-icons/demon-hunter.png" class="class-icon-small">
+                    <div class="class-info">
+                        <div class="class-name-fr">Chasseur de démons</div>
+                        <div class="class-status">OUVERT</div>
                     </div>
-                    <div class="class-name">Demon Hunter</div>
                 </div>
 
-                <!-- Druid -->
-                <div class="class-card">
-                    <div class="class-icon-wrapper">
-                        <img src="https://guildsofwow.com/assets/images/class-icons/druid.png"
-                             alt="Druid" class="class-icon">
-                        <span class="class-badge">OPEN</span>
+                <div class="class-item">
+                    <img src="https://guildsofwow.com/assets/images/class-icons/druid.png" class="class-icon-small">
+                    <div class="class-info">
+                        <div class="class-name-fr">Druide</div>
+                        <div class="class-status">OUVERT</div>
                     </div>
-                    <div class="class-name">Druid</div>
                 </div>
 
-                <!-- Evoker -->
-                <div class="class-card">
-                    <div class="class-icon-wrapper">
-                        <img src="https://guildsofwow.com/assets/images/class-icons/evoker.png"
-                             alt="Evoker" class="class-icon">
-                        <span class="class-badge">OPEN</span>
+                <div class="class-item">
+                    <img src="https://guildsofwow.com/assets/images/class-icons/evoker.png" class="class-icon-small">
+                    <div class="class-info">
+                        <div class="class-name-fr">Évocateur</div>
+                        <div class="class-status">OUVERT</div>
                     </div>
-                    <div class="class-name">Evoker</div>
                 </div>
 
-                <!-- Hunter -->
-                <div class="class-card">
-                    <div class="class-icon-wrapper">
-                        <img src="https://guildsofwow.com/assets/images/class-icons/hunter.png"
-                             alt="Hunter" class="class-icon">
-                        <span class="class-badge">OPEN</span>
+                <div class="class-item">
+                    <img src="https://guildsofwow.com/assets/images/class-icons/hunter.png" class="class-icon-small">
+                    <div class="class-info">
+                        <div class="class-name-fr">Chasseur</div>
+                        <div class="class-status">OUVERT</div>
                     </div>
-                    <div class="class-name">Hunter</div>
                 </div>
 
-                <!-- Mage -->
-                <div class="class-card">
-                    <div class="class-icon-wrapper">
-                        <img src="https://guildsofwow.com/assets/images/class-icons/mage.png"
-                             alt="Mage" class="class-icon">
-                        <span class="class-badge">OPEN</span>
+                <div class="class-item">
+                    <img src="https://guildsofwow.com/assets/images/class-icons/mage.png" class="class-icon-small">
+                    <div class="class-info">
+                        <div class="class-name-fr">Mage</div>
+                        <div class="class-status">OUVERT</div>
                     </div>
-                    <div class="class-name">Mage</div>
                 </div>
 
-                <!-- Monk -->
-                <div class="class-card">
-                    <div class="class-icon-wrapper">
-                        <img src="https://guildsofwow.com/assets/images/class-icons/monk.png"
-                             alt="Monk" class="class-icon">
-                        <span class="class-badge">OPEN</span>
+                <div class="class-item">
+                    <img src="https://guildsofwow.com/assets/images/class-icons/monk.png" class="class-icon-small">
+                    <div class="class-info">
+                        <div class="class-name-fr">Moine</div>
+                        <div class="class-status">OUVERT</div>
                     </div>
-                    <div class="class-name">Monk</div>
                 </div>
 
-                <!-- Paladin -->
-                <div class="class-card">
-                    <div class="class-icon-wrapper">
-                        <img src="https://guildsofwow.com/assets/images/class-icons/paladin.png"
-                             alt="Paladin" class="class-icon">
-                        <span class="class-badge">OPEN</span>
+                <div class="class-item">
+                    <img src="https://guildsofwow.com/assets/images/class-icons/paladin.png" class="class-icon-small">
+                    <div class="class-info">
+                        <div class="class-name-fr">Paladin</div>
+                        <div class="class-status">OUVERT</div>
                     </div>
-                    <div class="class-name">Paladin</div>
                 </div>
 
-                <!-- Priest -->
-                <div class="class-card">
-                    <div class="class-icon-wrapper">
-                        <img src="https://guildsofwow.com/assets/images/class-icons/priest.png"
-                             alt="Priest" class="class-icon">
-                        <span class="class-badge">OPEN</span>
+                <div class="class-item">
+                    <img src="https://guildsofwow.com/assets/images/class-icons/priest.png" class="class-icon-small">
+                    <div class="class-info">
+                        <div class="class-name-fr">Prêtre</div>
+                        <div class="class-status">OUVERT</div>
                     </div>
-                    <div class="class-name">Priest</div>
                 </div>
 
-                <!-- Rogue -->
-                <div class="class-card">
-                    <div class="class-icon-wrapper">
-                        <img src="https://guildsofwow.com/assets/images/class-icons/rogue.png"
-                             alt="Rogue" class="class-icon">
-                        <span class="class-badge">OPEN</span>
+                <div class="class-item">
+                    <img src="https://guildsofwow.com/assets/images/class-icons/rogue.png" class="class-icon-small">
+                    <div class="class-info">
+                        <div class="class-name-fr">Voleur</div>
+                        <div class="class-status">OUVERT</div>
                     </div>
-                    <div class="class-name">Rogue</div>
                 </div>
 
-                <!-- Shaman -->
-                <div class="class-card">
-                    <div class="class-icon-wrapper">
-                        <img src="https://guildsofwow.com/assets/images/class-icons/shaman.png"
-                             alt="Shaman" class="class-icon">
-                        <span class="class-badge">OPEN</span>
+                <div class="class-item">
+                    <img src="https://guildsofwow.com/assets/images/class-icons/shaman.png" class="class-icon-small">
+                    <div class="class-info">
+                        <div class="class-name-fr">Chaman</div>
+                        <div class="class-status">OUVERT</div>
                     </div>
-                    <div class="class-name">Shaman</div>
                 </div>
 
-                <!-- Warlock -->
-                <div class="class-card">
-                    <div class="class-icon-wrapper">
-                        <img src="https://guildsofwow.com/assets/images/class-icons/warlock.png"
-                             alt="Warlock" class="class-icon">
-                        <span class="class-badge">OPEN</span>
+                <div class="class-item">
+                    <img src="https://guildsofwow.com/assets/images/class-icons/warlock.png" class="class-icon-small">
+                    <div class="class-info">
+                        <div class="class-name-fr">Démoniste</div>
+                        <div class="class-status">OUVERT</div>
                     </div>
-                    <div class="class-name">Warlock</div>
                 </div>
 
-                <!-- Warrior -->
-                <div class="class-card">
-                    <div class="class-icon-wrapper">
-                        <img src="https://guildsofwow.com/assets/images/class-icons/warrior.png"
-                             alt="Warrior" class="class-icon">
-                        <span class="class-badge">OPEN</span>
+                <div class="class-item">
+                    <img src="https://guildsofwow.com/assets/images/class-icons/warrior.png" class="class-icon-small">
+                    <div class="class-info">
+                        <div class="class-name-fr">Guerrier</div>
+                        <div class="class-status">OUVERT</div>
                     </div>
-                    <div class="class-name">Warrior</div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Join Section -->
-    <section class="section join-section">
+    <section class="section">
         <div class="container">
             <h2 class="section-title">Nous Rejoindre</h2>
-            <div class="join-text">
+            <div class="join-intro">
                 Pour rejoindre Les Sages de Pandarie, ajoute l'un de nos officiers sur Battle.net
-                ou inscris-toi directement sur notre roster !
             </div>
 
-            <div class="battletags">
-                <div class="battletag-card">
-                    <div class="battletag-label">Officier - Recrutement</div>
-                    <div class="battletag-value">superfrog#2600</div>
-                </div>
-                <div class="battletag-card">
-                    <div class="battletag-label">Officier - Recrutement</div>
-                    <div class="battletag-value">NOX#27761</div>
-                </div>
+            <div class="battletag-list">
+                <button class="bnet-button" onclick="copyBattleTag('superfrog#2600', this)">
+                    <img src="bnet-icon.png" alt="Battle.net" class="bnet-icon">
+                    <div class="bnet-content">
+                        <div class="bnet-tag">superfrog#2600</div>
+                        <div class="bnet-role">Officier - Recrutement</div>
+                    </div>
+                </button>
+
+                <button class="bnet-button" onclick="copyBattleTag('NOX#27761', this)">
+                    <img src="bnet-icon.png" alt="Battle.net" class="bnet-icon">
+                    <div class="bnet-content">
+                        <div class="bnet-tag">NOX#27761</div>
+                        <div class="bnet-role">Officier - Recrutement</div>
+                    </div>
+                </button>
             </div>
 
-            <a href="https://www.sagesdepandarie.ovh/roster/" class="cta-button">
-                📋 Remplir le Sondage Roster
-            </a>
+            <p class="join-tip">
+                💡 <strong>Astuce :</strong> Clique pour copier puis dans WoW : touche Échap → Social → Ajouter un Ami → Colle le Battle Tag
+            </p>
         </div>
     </section>
 
@@ -523,8 +580,37 @@
     <footer class="footer">
         <div class="container">
             <p>&copy; 2026 Les Sages de Pandarie • Hyjal-FR</p>
-            <p style="margin-top: 0.5rem; font-size: 0.9rem;">Communauté World of Warcraft Casual & Conviviale</p>
+            <p style="margin-top: 0.3rem;">Communauté World of Warcraft Casual & Conviviale</p>
         </div>
     </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">✓ Battle Tag copié dans le presse-papier !</div>
+
+    <script>
+        function copyBattleTag(battleTag, button) {
+            navigator.clipboard.writeText(battleTag).then(() => {
+                // Show toast notification
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+
+                // Change button appearance
+                const bnetTag = button.querySelector('.bnet-tag');
+                const originalText = bnetTag.textContent;
+                bnetTag.textContent = '✓ Copié !';
+                button.classList.add('copied');
+
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    bnetTag.textContent = originalText;
+                    button.classList.remove('copied');
+                    toast.classList.remove('show');
+                }, 2000);
+            }).catch(err => {
+                console.error('Erreur copie:', err);
+                alert('Erreur lors de la copie. Battle Tag: ' + battleTag);
+            });
+        }
+    </script>
 </body>
 </html>
