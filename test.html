@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Les Sages de Pandarie - Guilde WoW Hyjal</title>
+    <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-elevated: #252525;
+            --gold: #ffd700;
+            --gold-dim: #ccaa00;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --green: #00ff88;
+            --border: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, transparent 100%);
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid var(--gold);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .guild-info {
+            flex: 1;
+        }
+
+        .guild-name {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--gold);
+            text-shadow: 2px 2px 10px rgba(255, 215, 0, 0.5);
+            margin-bottom: 0.5rem;
+        }
+
+        .guild-server {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .guild-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tag {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid var(--border);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Section */
+        .section {
+            padding: 4rem 0;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Welcome Section */
+        .welcome-text {
+            max-width: 900px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .welcome-text strong {
+            color: var(--gold);
+        }
+
+        /* Recruitment Section */
+        .recruitment {
+            background: var(--bg-secondary);
+        }
+
+        .recruitment-intro {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .recruitment-status {
+            display: inline-block;
+            background: var(--green);
+            color: var(--bg-dark);
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .classes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .class-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .class-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
+        }
+
+        .class-icon-wrapper {
+            position: relative;
+        }
+
+        .class-icon {
+            width: 64px;
+            height: 64px;
+            background: #000;
+            border-radius: 50%;
+            padding: 8px;
+            border: 2px solid var(--border);
+        }
+
+        .class-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--green);
+            color: var(--bg-dark);
+            font-size: 0.65rem;
+            font-weight: bold;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 255, 136, 0.4);
+        }
+
+        .class-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        /* Join Section */
+        .join-section {
+            text-align: center;
+        }
+
+        .join-text {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .battletags {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .battletag-card {
+            background: var(--bg-elevated);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            min-width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .battletag-card:hover {
+            border-color: var(--gold);
+            transform: scale(1.05);
+        }
+
+        .battletag-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .battletag-value {
+            color: var(--gold);
+            font-size: 1.3rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+            color: var(--bg-dark);
+            padding: 1rem 3rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-secondary);
+            padding: 2rem 0;
+            text-align: center;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border);
+            margin-top: 4rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .guild-name {
+                font-size: 2rem;
+            }
+
+            .guild-server {
+                font-size: 1rem;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .classes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .battletags {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <img src="redpanda.png" alt="Les Sages de Pandarie" class="logo">
+            <div class="guild-info">
+                <h1 class="guild-name">Les Sages de Pandarie</h1>
+                <div class="guild-server">Hyjal • FR • Retail</div>
+                <div class="guild-tags">
+                    <span class="tag">Casual</span>
+                    <span class="tag">Leveling</span>
+                    <span class="tag">Mythic+</span>
+                    <span class="tag">Raiding</span>
+                    <span class="tag">Questing</span>
+                    <span class="tag">Social</span>
+                    <span class="tag">Housing</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Welcome Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Bienvenue chez les Sages</h2>
+            <div class="welcome-text">
+                <p>
+                    Les Sages de Pandarie est une <strong>guilde casual et conviviale</strong> sur Hyjal-FR,
+                    créée pour les joueurs qui veulent profiter de World of Warcraft sans pression.
+                    Que tu sois nouveau joueur ou vétéran chevronné, ici on joue pour le plaisir,
+                    l'entraide et la bonne ambiance.
+                </p>
+                <p style="margin-top: 1.5rem;">
+                    On organise des <strong>Mythiques+</strong>, du <strong>raid en Normal/Héroïque</strong>,
+                    et plein d'activités ensemble. Rejoins-nous si tu cherches une communauté
+                    sympa où le fun prime sur la performance !
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recruitment Section -->
+    <section class="section recruitment">
+        <div class="container">
+            <h2 class="section-title">Recrutement</h2>
+            <div class="recruitment-intro">
+                <div class="recruitment-status">🟢 RECRUTEMENT OUVERT</div>
+                <p>Nous recherchons des joueurs motivés de toutes classes et spécialisations !</p>
+            </div>
+
+            <div class="classes-grid">
+                <!-- Death Knight -->
+                <div class="class-card">
+                    <div class="class-icon-wrapper">
+                        <img src="https://guildsofwow.com/assets/images/class-icons/death-knight.png"
+                             alt="Death Knight" class="class-icon">
+                        <span class="class-badge">OPEN</span>
+                    </div>
+                    <div class="class-name">Death Knight</div>
+                </div>
+
+                <!-- Demon Hunter -->
+                <div class="class-card">
+                    <div class="class-icon-wrapper">
+                        <img src="https://guildsofwow.com/assets/images/class-icons/demon-hunter.png"
+                             alt="Demon Hunter" class="class-icon">
+                        <span class="class-badge">OPEN</span>
+                    </div>
+                    <div class="class-name">Demon Hunter</div>
+                </div>
+
+                <!-- Druid -->
+                <div class="class-card">
+                    <div class="class-icon-wrapper">
+                        <img src="https://guildsofwow.com/assets/images/class-icons/druid.png"
+                             alt="Druid" class="class-icon">
+                        <span class="class-badge">OPEN</span>
+                    </div>
+                    <div class="class-name">Druid</div>
+                </div>
+
+                <!-- Evoker -->
+                <div class="class-card">
+                    <div class="class-icon-wrapper">
+                        <img src="https://guildsofwow.com/assets/images/class-icons/evoker.png"
+                             alt="Evoker" class="class-icon">
+                        <span class="class-badge">OPEN</span>
+                    </div>
+                    <div class="class-name">Evoker</div>
+                </div>
+
+                <!-- Hunter -->
+                <div class="class-card">
+                    <div class="class-icon-wrapper">
+                        <img src="https://guildsofwow.com/assets/images/class-icons/hunter.png"
+                             alt="Hunter" class="class-icon">
+                        <span class="class-badge">OPEN</span>
+                    </div>
+                    <div class="class-name">Hunter</div>
+                </div>
+
+                <!-- Mage -->
+                <div class="class-card">
+                    <div class="class-icon-wrapper">
+                        <img src="https://guildsofwow.com/assets/images/class-icons/mage.png"
+                             alt="Mage" class="class-icon">
+                        <span class="class-badge">OPEN</span>
+                    </div>
+                    <div class="class-name">Mage</div>
+                </div>
+
+                <!-- Monk -->
+                <div class="class-card">
+                    <div class="class-icon-wrapper">
+                        <img src="https://guildsofwow.com/assets/images/class-icons/monk.png"
+                             alt="Monk" class="class-icon">
+                        <span class="class-badge">OPEN</span>
+                    </div>
+                    <div class="class-name">Monk</div>
+                </div>
+
+                <!-- Paladin -->
+                <div class="class-card">
+                    <div class="class-icon-wrapper">
+                        <img src="https://guildsofwow.com/assets/images/class-icons/paladin.png"
+                             alt="Paladin" class="class-icon">
+                        <span class="class-badge">OPEN</span>
+                    </div>
+                    <div class="class-name">Paladin</div>
+                </div>
+
+                <!-- Priest -->
+                <div class="class-card">
+                    <div class="class-icon-wrapper">
+                        <img src="https://guildsofwow.com/assets/images/class-icons/priest.png"
+                             alt="Priest" class="class-icon">
+                        <span class="class-badge">OPEN</span>
+                    </div>
+                    <div class="class-name">Priest</div>
+                </div>
+
+                <!-- Rogue -->
+                <div class="class-card">
+                    <div class="class-icon-wrapper">
+                        <img src="https://guildsofwow.com/assets/images/class-icons/rogue.png"
+                             alt="Rogue" class="class-icon">
+                        <span class="class-badge">OPEN</span>
+                    </div>
+                    <div class="class-name">Rogue</div>
+                </div>
+
+                <!-- Shaman -->
+                <div class="class-card">
+                    <div class="class-icon-wrapper">
+                        <img src="https://guildsofwow.com/assets/images/class-icons/shaman.png"
+                             alt="Shaman" class="class-icon">
+                        <span class="class-badge">OPEN</span>
+                    </div>
+                    <div class="class-name">Shaman</div>
+                </div>
+
+                <!-- Warlock -->
+                <div class="class-card">
+                    <div class="class-icon-wrapper">
+                        <img src="https://guildsofwow.com/assets/images/class-icons/warlock.png"
+                             alt="Warlock" class="class-icon">
+                        <span class="class-badge">OPEN</span>
+                    </div>
+                    <div class="class-name">Warlock</div>
+                </div>
+
+                <!-- Warrior -->
+                <div class="class-card">
+                    <div class="class-icon-wrapper">
+                        <img src="https://guildsofwow.com/assets/images/class-icons/warrior.png"
+                             alt="Warrior" class="class-icon">
+                        <span class="class-badge">OPEN</span>
+                    </div>
+                    <div class="class-name">Warrior</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Join Section -->
+    <section class="section join-section">
+        <div class="container">
+            <h2 class="section-title">Nous Rejoindre</h2>
+            <div class="join-text">
+                Pour rejoindre Les Sages de Pandarie, ajoute l'un de nos officiers sur Battle.net
+                ou inscris-toi directement sur notre roster !
+            </div>
+
+            <div class="battletags">
+                <div class="battletag-card">
+                    <div class="battletag-label">Officier - Recrutement</div>
+                    <div class="battletag-value">superfrog#2600</div>
+                </div>
+                <div class="battletag-card">
+                    <div class="battletag-label">Officier - Recrutement</div>
+                    <div class="battletag-value">NOX#27761</div>
+                </div>
+            </div>
+
+            <a href="https://www.sagesdepandarie.ovh/roster/" class="cta-button">
+                📋 Remplir le Sondage Roster
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Les Sages de Pandarie • Hyjal-FR</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">Communauté World of Warcraft Casual & Conviviale</p>
+        </div>
+    </footer>
+</body>
+</html>
