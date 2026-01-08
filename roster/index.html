@@ -1446,6 +1446,76 @@
 
         .nav-link.active { color: var(--primary); }
 
+        /* Navbar Dropdown */
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-dropdown-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem;
+            min-width: 200px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+        .nav-dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .nav-dropdown-item {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            text-align: left;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-dropdown-item:hover {
+            background: var(--primary-dim);
+            color: var(--primary);
+        }
+
+        .nav-dropdown-item span {
+            font-size: 1.1rem;
+        }
+
+        .nav-dropdown-item.admin-nav-item {
+            border-top: 1px solid var(--border);
+            margin-top: 0.5rem;
+            padding-top: 0.75rem;
+        }
+
         /* Add padding to body for fixed navbar */
         body {
             padding-top: 70px;
@@ -1464,15 +1534,22 @@
         <div class="nav-links">
             <a href="../index.html" class="nav-link">Accueil</a>
             <a href="#" class="nav-link active">Roster</a>
-            <button class="nav-link" onclick="exportToDiscord()" style="background:none; border:none; cursor:pointer; padding:0;">
-                💬 Export Discord
-            </button>
-            <button class="nav-link" onclick="exportToCSV()" style="background:none; border:none; cursor:pointer; padding:0;">
-                📊 Export CSV
-            </button>
-            <button class="nav-link admin-nav-item" onclick="toggleAdminMode()" style="background:none; border:none; cursor:pointer; padding:0; display:none;">
-                ⚙ Admin
-            </button>
+            <div class="nav-dropdown">
+                <button class="nav-link nav-dropdown-btn" onclick="toggleNavDropdown()">
+                    ⚙️ Actions <span style="font-size: 0.7em;">▼</span>
+                </button>
+                <div class="nav-dropdown-menu" id="nav-dropdown-menu">
+                    <button class="nav-dropdown-item" onclick="exportToDiscord(); closeNavDropdown();">
+                        <span>💬</span> Export Discord
+                    </button>
+                    <button class="nav-dropdown-item" onclick="exportToCSV(); closeNavDropdown();">
+                        <span>📊</span> Export CSV
+                    </button>
+                    <button class="nav-dropdown-item admin-nav-item" onclick="toggleAdminMode(); closeNavDropdown();">
+                        <span>⚙️</span> Mode Admin
+                    </button>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -1759,23 +1836,23 @@
             }, 4000);
         }
 
-        // Menu Toggle System
-        function toggleMenu() {
-            const menu = document.getElementById('dropdown-menu');
+        // Navbar Dropdown Toggle System
+        function toggleNavDropdown() {
+            const menu = document.getElementById('nav-dropdown-menu');
             menu.classList.toggle('active');
         }
 
-        function closeMenu() {
-            const menu = document.getElementById('dropdown-menu');
+        function closeNavDropdown() {
+            const menu = document.getElementById('nav-dropdown-menu');
             menu.classList.remove('active');
         }
 
-        // Close menu when clicking outside
+        // Close dropdown when clicking outside
         document.addEventListener('click', function(event) {
-            const menu = document.getElementById('dropdown-menu');
-            const toggle = document.getElementById('menu-toggle');
-            if (menu && toggle && !menu.contains(event.target) && !toggle.contains(event.target)) {
-                closeMenu();
+            const dropdown = document.querySelector('.nav-dropdown');
+            const menu = document.getElementById('nav-dropdown-menu');
+            if (dropdown && menu && !dropdown.contains(event.target)) {
+                menu.classList.remove('active');
             }
         });
 
@@ -1818,14 +1895,13 @@
             }
 
             if (currentUser && isUserAdmin) {
-                adminBtn.innerHTML = '<span>✓</span> Admin (Connecté)';
-                adminBtn.style.color = 'var(--gold)';
+                adminBtn.innerHTML = '<span>✅</span> Admin (Connecté)';
+                adminBtn.style.color = 'var(--primary)';
             } else if (currentUser && !isUserAdmin) {
-                adminBtn.innerHTML = '<span>⚠</span> Pas autorisé';
-                adminBtn.style.opacity = '0.5';
+                adminBtn.innerHTML = '<span>⚠️</span> Pas autorisé';
+                adminBtn.style.color = 'var(--text-muted)';
             } else {
-                adminBtn.innerHTML = '<span>⚙</span> Mode Admin';
-                adminBtn.style.opacity = '1';
+                adminBtn.innerHTML = '<span>⚙️</span> Mode Admin';
                 adminBtn.style.color = '';
             }
         }
