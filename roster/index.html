@@ -16,24 +16,33 @@
 
     <style>
         :root {
-            /* WoW Class Colors */
+            /* Modern UI Colors (Homepage style) */
+            --bg-deep: #0d1117;
+            --bg-surface: #161b22;
+            --bg-card: #21262d;
+            --bg-elevated: #2a2f38;
+            --primary: #eebb55; /* Or Pandarie */
+            --primary-dim: rgba(238, 187, 85, 0.1);
+            --accent: #33ffaa; /* Jade */
+            --accent-dim: rgba(51, 255, 170, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #b1bac4;
+            --text-muted: #8b949e;
+            --border: rgba(255, 255, 255, 0.1);
+            --border-glow: rgba(238, 187, 85, 0.3);
+
+            /* Legacy aliases for compatibility */
+            --bg-dark: #0d1117;
+            --gold: #eebb55;
+            --gold-dim: #c4920a;
+
+            /* WoW Role Colors */
             --tank: #C41E3A;
             --healer: #00FF98;
             --melee: #C69B6D;
             --ranged: #3FC7EB;
-            
-            /* UI Colors */
-            --bg-dark: #0a0a0f;
-            --bg-card: #12121a;
-            --bg-elevated: #1a1a25;
-            --border: #2a2a3a;
-            --border-glow: #4a4a6a;
-            --text-primary: #e8e6e3;
-            --text-secondary: #8a8a9a;
-            --gold: #f8b700;
-            --gold-dim: #c4920a;
-            
-            /* Class specific */
+
+            /* WoW Class Colors */
             --warrior: #C69B6D;
             --paladin: #F48CBA;
             --hunter: #AAD372;
@@ -56,14 +65,12 @@
         }
 
         body {
-            font-family: 'Crimson Text', Georgia, serif;
-            background: var(--bg-dark);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg-deep);
             color: var(--text-primary);
             min-height: 100vh;
-            background-image: 
-                radial-gradient(ellipse at 20% 0%, rgba(196, 30, 58, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 100%, rgba(63, 199, 235, 0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(248, 183, 0, 0.03) 0%, transparent 70%);
+            line-height: 1.6;
+            overflow-x: hidden;
         }
 
         .container {
@@ -214,15 +221,16 @@
         }
 
         .section-title {
-            font-family: 'Cinzel', serif;
-            font-size: 1.3rem;
-            font-weight: 600;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.15em;
+            letter-spacing: 0.05em;
             margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
             gap: 1rem;
+            color: var(--primary);
         }
 
         .section-title::before,
@@ -255,11 +263,11 @@
             gap: 1rem;
         }
 
-        /* Slot Card */
+        /* Slot Card (Bento style) */
         .slot-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 1.25rem;
             position: relative;
             transition: all 0.3s ease;
@@ -278,9 +286,9 @@
         }
 
         .slot-card:hover {
-            border-color: var(--border-glow);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 32px rgba(238, 187, 85, 0.15);
         }
 
         .slot-card.filled {
@@ -1500,21 +1508,79 @@
                 padding: 0.2rem 0.4rem;
             }
         }
+
+        /* Modern Navbar (Homepage style) */
+        .navbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(13, 17, 23, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-logo {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover { color: var(--primary); }
+
+        .nav-link.active { color: var(--primary); }
+
+        /* Add padding to body for fixed navbar */
+        body {
+            padding-top: 70px;
+        }
     </style>
 
     <!-- Discord Authentication Module -->
     <script src="discordAuth.js"></script>
 </head>
 <body>
+    <!-- Modern Navbar -->
+    <nav class="navbar">
+        <a href="../index.html" class="nav-logo">
+            <span style="color: var(--primary);">●</span> LES SAGES DE PANDARIE
+        </a>
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Accueil</a>
+            <a href="#" class="nav-link active">Roster</a>
+        </div>
+    </nav>
+
     <div class="container">
         <!-- Hero Section -->
         <section class="hero">
             <div class="hero-background">
-                <img src="wow.png" alt="" class="hero-bg-logo">
+                <img src="../redpanda.png" alt="" class="hero-bg-logo">
             </div>
 
             <div class="hero-content">
-                <img src="logo.png" alt="Les Sages de Pandarie" class="hero-logo">
+                <img src="../redpanda.png" alt="Les Sages de Pandarie" class="hero-logo">
                 <h1 class="hero-title">Les Sages de Pandarie</h1>
                 <p class="hero-subtitle">Sondage Roster Raid 10 - Inscrivez-vous !</p>
 
