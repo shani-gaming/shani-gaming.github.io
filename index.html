@@ -3,535 +3,1075 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Les Sages de Pandarie - Guilde WoW</title>
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <title>Les Sages de Pandarie - Guilde WoW Hyjal</title>
     <style>
+        /* Modern Reset & Variables */
         :root {
-            /* WoW Class Colors */
-            --tank: #C41E3A;
-            --healer: #00FF98;
-            --melee: #C69B6D;
-            --ranged: #3FC7EB;
-
-            /* UI Colors */
-            --bg-dark: #0a0a0f;
-            --bg-card: #12121a;
-            --bg-elevated: #1a1a25;
-            --border: #2a2a3a;
-            --border-glow: #4a4a6a;
-            --text-primary: #e8e6e3;
-            --text-secondary: #8a8a9a;
-            --gold: #f8b700;
-            --gold-dim: #c4920a;
-            --success: #10b981;
+            --bg-deep: #0d1117; /* Bleu nuit adouci (moins noir) */
+            --bg-surface: #161b22;
+            --bg-card: #21262d; /* Carte légèrement plus claire */
+            --primary: #eebb55; /* Or Pandarie (Couleur Principale) */
+            --primary-dim: rgba(238, 187, 85, 0.1);
+            --accent: #33ffaa; /* Jade en accent secondaire */
+            --accent-dim: rgba(51, 255, 170, 0.1);
+            --text-main: #ffffff;
+            --text-muted: #b1bac4; /* Gris plus clair pour l'accessibilité */
+            --border: rgba(255, 255, 255, 0.1);
+            --gradient-hero: linear-gradient(180deg, rgba(3,4,5,0) 0%, #030405 100%);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Crimson Text', Georgia, serif;
-            background: var(--bg-dark);
-            color: var(--text-primary);
-            min-height: 100vh;
-            background-image:
-                radial-gradient(ellipse at 20% 0%, rgba(196, 30, 58, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 100%, rgba(63, 199, 235, 0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(248, 183, 0, 0.03) 0%, transparent 70%);
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
         }
 
+        /* Typography */
+        h1, h2, h3 { font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+        
+        /* Layout Utilities */
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 0 2rem;
+        }
+
+        .grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(3, 4, 5, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-logo {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover { color: var(--primary); }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--bg-deep);
+        }
+        
+        .btn-primary:hover {
+            background: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px var(--primary-dim);
+        }
+
+        .btn-outline {
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            background: transparent;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--text-main);
+            background: rgba(255,255,255,0.05);
         }
 
         /* Hero Section */
         .hero {
             position: relative;
-            min-height: 80vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 4rem 2rem;
+            padding-top: 80px;
             overflow: hidden;
         }
 
-        .hero-background {
+        .hero-bg {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 0;
-            opacity: 0.08;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://bnetcmsus-a.akamaihd.net/cms/blog_header/2g/2G4V75565X6E1595526888467.jpg') center/cover no-repeat;
+            opacity: 0.4;
+            z-index: -1;
+            filter: saturate(0.8) contrast(1.2);
         }
 
-        .hero-bg-logo {
-            width: 60%;
-            max-width: 800px;
-            object-fit: contain;
-            filter: blur(2px);
+        .hero-overlay {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, var(--bg-deep) 90%),
+                        linear-gradient(to bottom, transparent 50%, var(--bg-deep) 100%);
+            z-index: -1;
         }
 
         .hero-content {
-            position: relative;
-            z-index: 1;
-            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
         }
 
+        .hero-text h1 {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, #fff, var(--primary)); /* Dégradé vers l'Or */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-text p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            max-width: 500px;
+        }
+
+        .hero-visual {
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* LOGO STYLE - No Circle, Just Image */
         .hero-logo {
-            width: min(500px, 90vw);
+            width: 350px;
             height: auto;
-            object-fit: contain;
-            filter: drop-shadow(0 0 40px rgba(212, 175, 55, 0.5));
+            filter: drop-shadow(0 0 50px rgba(51, 255, 170, 0.3)); /* On garde la lueur Jade pour le logo */
             animation: float 6s ease-in-out infinite;
-            margin-bottom: 2rem;
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0px); }
+            0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-20px); }
         }
 
-        .hero-title {
-            font-family: 'Cinzel', serif;
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
-            font-weight: 700;
-            background: linear-gradient(180deg, var(--gold) 0%, #d4af37 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 3rem;
-            letter-spacing: 0.05em;
-            text-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
+        /* Dashboard Grid (Bento Box Style) */
+        .dashboard {
+            padding: 4rem 0;
         }
 
-        .hero-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 3rem;
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: minmax(250px, auto);
+            gap: 1.5rem;
         }
 
-        .btn {
-            padding: 1rem 2.5rem;
-            border: none;
-            border-radius: 8px;
-            font-family: 'Cinzel', serif;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--gold-dim), var(--gold));
-            color: #000;
-            box-shadow: 0 8px 30px rgba(248, 183, 0, 0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(248, 183, 0, 0.5);
-        }
-
-        .btn-secondary {
-            background: var(--bg-elevated);
-            color: var(--text-primary);
-            border: 2px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--gold);
-            transform: translateY(-2px);
-        }
-
-        main {
-            padding: 2rem 0 3rem 0;
-        }
-
-        .section {
+        .card {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .section-title {
-            font-family: 'Cinzel', serif;
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            color: var(--gold);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .section-title::before {
-            content: '';
-            width: 4px;
-            height: 1.75rem;
-            background: var(--gold);
-            border-radius: 2px;
-        }
-
-        .section-content {
-            color: var(--text-secondary);
-            font-size: 1.05rem;
-            line-height: 1.8;
-        }
-
-        .highlight-box {
-            background: var(--bg-elevated);
-            border-left: 4px solid var(--gold);
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            border-radius: 8px;
-        }
-
-        .highlight-box ul {
-            list-style: none;
-            margin-top: 1rem;
-        }
-
-        .highlight-box li {
-            padding: 0.5rem 0;
-            padding-left: 1.5rem;
-            position: relative;
-        }
-
-        .highlight-box li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: var(--gold);
-            font-weight: 700;
-        }
-
-        .news-item {
-            background: var(--bg-elevated);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.5rem;
-            transition: all 0.2s ease;
-        }
-
-        .news-item:hover {
-            border-color: var(--gold);
-            transform: translateX(4px);
-        }
-
-        .news-date {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .news-title {
-            font-family: 'Cinzel', serif;
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-            color: var(--gold);
-        }
-
-        .news-description {
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
-        }
-
-        .news-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--gold);
-            text-decoration: none;
-            font-weight: 600;
-            transition: gap 0.2s ease;
-        }
-
-        .news-link:hover {
-            gap: 0.75rem;
-        }
-
-        .battletag-list {
+            transition: transform 0.3s, border-color 0.3s;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
-            margin-top: 1.5rem;
+            justify-content: space-between;
         }
 
-        .bnet-button {
-            background: linear-gradient(180deg, #1a8fff 0%, #0d6fd6 100%);
-            border: none;
-            border-radius: 6px;
-            padding: 0.875rem 1.5rem;
+        .card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+        }
+
+        .card-large { grid-column: span 2; grid-row: span 2; }
+        .card-wide { grid-column: span 2; }
+        .card-tall { grid-row: span 2; }
+        .card-full { grid-column: 1 / -1; }
+
+        .card-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .card-stat {
+            font-size: 2.5rem; /* Taille réduite pour être moins agressif */
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .card-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Recruitment List (Detailed) */
+        .recruitment-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 0.5rem 1rem;
+            overflow-y: auto;
+            flex: 1; /* Prend l'espace restant */
+            min-height: 0;
+            padding-right: 0.5rem;
+        }
+
+        /* Scrollbar custom pour la liste */
+        .recruitment-list::-webkit-scrollbar { width: 4px; }
+        .recruitment-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .recruitment-list::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; } /* Scrollbar Jade */
+
+        .class-row {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(26, 143, 255, 0.3);
-            width: 100%;
+            gap: 0.8rem;
+            padding: 0.6rem;
+            background: rgba(255,255,255,0.02);
+            border-radius: 6px;
+            border: 1px solid var(--border);
         }
 
-        .bnet-button:hover {
-            background: linear-gradient(180deg, #2a9fff 0%, #1d7fe6 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(26, 143, 255, 0.5);
+        .class-icon-row { width: 24px; height: 24px; border-radius: 4px; opacity: 0.9; }
+
+        .spec-group { display: flex; flex-wrap: wrap; gap: 0.3rem; flex: 1; }
+
+        .spec-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            cursor: help;
+            transition: all 0.2s;
+            opacity: 0.8;
         }
 
-        .bnet-button.copied {
-            background: linear-gradient(180deg, var(--success) 0%, #0a9668 100%);
-        }
-
-        .bnet-icon {
-            width: 24px;
-            height: 24px;
-            flex-shrink: 0;
-        }
-
-        .bnet-content {
-            flex: 1;
-            text-align: left;
-        }
-
-        .bnet-tag {
-            font-family: 'Courier New', monospace;
-            font-size: 1.05rem;
-            color: white;
-            font-weight: 600;
-            margin-bottom: 0.15rem;
-        }
-
-        .bnet-role {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.8rem;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: var(--success);
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            opacity: 0;
-            transform: translateY(1rem);
-            transition: all 0.3s ease;
-            pointer-events: none;
-            z-index: 1000;
-            font-family: 'Cinzel', serif;
-        }
-
-        .toast.show {
+        .spec-icon:hover, .spec-icon:active {
+            transform: scale(1.2);
+            border-color: var(--accent); /* Hover Jade pour les classes */
+            box-shadow: 0 0 10px var(--accent-dim);
             opacity: 1;
-            transform: translateY(0);
         }
 
-        footer {
+        /* Tooltip simple via title natif, mais on peut styliser si besoin */
+        
+        /* Image de fond pour la carte Roster */
+        .card-roster {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-roster::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            /* Image d'une table de commandement / carte */
+            background: url('conseil.png') center/cover;
+            opacity: 0.25;
+            transition: transform 0.5s;
+            z-index: 0;
+            filter: sepia(0.5) hue-rotate(-30deg);
+        }
+
+        .card-roster:hover::before {
+            transform: scale(1.05);
+            opacity: 0.35;
+        }
+
+        .card-roster > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Style spécifique pour la carte Discord (Social) */
+        .card-social {
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(88, 101, 242, 0.15) 100%); /* Touche Discord */
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-social::before {
+            content: '';
+            position: absolute;
+            right: -10px; bottom: -20px;
+            width: 120px; height: 120px;
+            background: url('https://assets-global.website-files.com/6257adef93867e56f84d3092/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png') center/contain no-repeat;
+            opacity: 0.1;
+            transform: rotate(-15deg);
+            pointer-events: none;
+        }
+
+        /* Process Steps */
+        .process-container {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .process-steps {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .process-step {
             text-align: center;
-            padding: 2rem;
-            color: var(--text-secondary);
-            border-top: 1px solid var(--border);
-            margin-top: 3rem;
+            position: relative;
+            flex: 1;
+        }
+        .process-step strong { display: block; color: var(--text-main); margin-bottom: 0.2rem; }
+
+        /* Join Section */
+        .join-section {
+            padding: 6rem 0;
+            text-align: center;
+            background: linear-gradient(to top, var(--bg-surface) 0%, var(--bg-deep) 100%);
         }
 
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2rem;
-            }
+        .bnet-copy {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
 
-            .hero-logo {
-                width: 90vw;
-                max-width: 350px;
-            }
+        .bnet-copy:hover {
+            border-color: var(--primary);
+            background: var(--bg-surface-hover);
+        }
 
-            .hero-buttons {
-                flex-direction: column;
-            }
+        .bnet-copy code {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
 
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
+        /* About Section */
+        .about-section {
+            padding: 6rem 0;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
 
-            .bnet-button {
-                padding: 0.75rem 1.25rem;
-            }
+        /* Activities Section (New) */
+        .activities-section {
+            padding: 6rem 0;
+            background: var(--bg-deep);
+        }
 
-            .bnet-tag {
-                font-size: 0.95rem;
+        .activities-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .activity-wide-card {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 4rem 3rem;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            min-height: 300px;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .activity-wide-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+        }
+
+        .activity-wide-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.25;
+            transition: transform 0.5s, opacity 0.5s;
+            z-index: 0;
+            filter: grayscale(30%);
+        }
+
+        .activity-wide-card:hover::before {
+            transform: scale(1.05);
+            opacity: 0.4;
+            filter: grayscale(0%);
+        }
+
+        .activity-content {
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+        }
+
+        .activity-content h3 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .activity-content p {
+            font-size: 1.2rem;
+            color: var(--text-main);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.3); /* Fond léger pour lisibilité */
+            padding: 1rem;
+            border-radius: 8px;
+            backdrop-filter: blur(2px);
+            border-left: 4px solid var(--primary);
+        }
+
+        /* Background Images Specifics */
+        .activity-mm::before {
+            background-image: url('https://wow.zamimg.com/optimized/guide-header-revamp/uploads/guide/header/37a330e5e710bec41de2affceed7aa680c92bf58.jpg'); /* Ambiance Manaforge/Dimensius */
+        }
+
+        .activity-hf::before {
+            background-image: url('https://main.judgehype.com/images/news-entetes/2021/386745-1617710257.jpg'); /* Interface HF */
+        }
+
+        .activity-social::before {
+            background-image: url('https://www.pcgamesn.com/wp-content/sites/pcgamesn/2025/03/world-of-warcraft-housing.jpg'); /* Ambiance Taverne/Social */
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 3rem 0;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-content { grid-template-columns: 1fr; text-align: center; }
+            .hero-visual { order: -1; }
+            .hero-text h1 { font-size: 3.5rem; }
+            
+            /* Optimisation Tablette : Passage en 2 colonnes au lieu de 1 */
+            .bento-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                grid-auto-rows: minmax(200px, auto);
             }
+            /* Les grandes cartes prennent toute la largeur ou restent carrées selon le besoin */
+            .card-large { grid-column: span 2; grid-row: auto; } 
+            .card-wide { grid-column: span 2; } /* Sur tablette, l'objectif principal prend toute la largeur */
+        }
+
+        @media (max-width: 600px) {
+            .bento-grid { grid-template-columns: 1fr; }
+            .card-large, .card-wide { grid-column: span 1; }
+            .hero-text h1 { font-size: 2.5rem; }
+        }
+
+        /* Styles pour la Modale de Recrutement */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            z-index: 2000; display: none; align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 2rem; width: 95%; max-width: 700px;
+            max-height: 90vh; overflow-y: auto; position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+        .char-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem; margin: 1.5rem 0;
+        }
+        .char-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 8px; padding: 1rem; cursor: pointer;
+            text-align: center; transition: all 0.2s; display: flex; flex-direction: column; align-items: center;
+        }
+        .char-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .char-card.selected { border-color: var(--primary); background: rgba(238, 187, 85, 0.1); box-shadow: 0 0 15px var(--primary-dim); }
+        .char-avatar {
+            width: 56px; height: 56px; border-radius: 50%; margin-bottom: 0.5rem;
+            background: #333; object-fit: cover; border: 2px solid var(--border);
+        }
+        .form-group { margin-bottom: 1.5rem; text-align: left; }
+        .form-label { display: block; margin-bottom: 0.5rem; color: var(--primary); font-weight: 600; font-size: 0.9rem; }
+        .form-input, .form-textarea {
+            width: 100%; background: var(--bg-deep); border: 1px solid var(--border);
+            color: var(--text-main); padding: 1rem; border-radius: 6px;
+            font-family: inherit; font-size: 1rem;
+        }
+        .form-textarea { min-height: 120px; resize: vertical; }
+        .form-input:focus, .form-textarea:focus { outline: none; border-color: var(--primary); }
+        
+        /* Loader */
+        .loader {
+            border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--primary);
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 1s linear infinite; margin: 2rem auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .hidden { display: none; }
+        
+        .btn-bnet {
+            background: #148eff; color: white; font-weight: bold;
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 1rem 2rem; border-radius: 4px; text-decoration: none;
+            transition: all 0.2s; border: none; cursor: pointer; font-size: 1.1rem;
+        }
+        .btn-bnet:hover {
+            background: #0076e6; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(20, 142, 255, 0.3);
         }
     </style>
 </head>
 <body>
-    <header class="hero">
-        <div class="hero-background">
-            <img src="wow.png" alt="WoW" class="hero-bg-logo">
+
+    <nav class="navbar">
+        <a href="#" class="nav-logo">
+            <!-- Petit logo nav -->
+            <span style="color: var(--primary);">●</span> LES SAGES DE PANDARIE
+        </a>
+        <div class="nav-links">
+            <a href="#about" class="nav-link">L'Esprit</a>
+            <a href="#activities" class="nav-link">Activités</a>
+            <a href="#recruitment" class="nav-link">Classes Recherchées</a>
         </div>
-        <div class="hero-content">
-            <img src="logo.png" alt="Les Sages de Pandarie" class="hero-logo">
-            <h1 class="hero-title">Les Sages de Pandarie</h1>
-            <div class="hero-buttons">
-                <a href="/roster/" class="btn btn-primary">
-                    <span>📋</span>
-                    Voir le Roster
-                </a>
-                <a href="#nous-rejoindre" class="btn btn-secondary">
-                    <span>🤝</span>
-                    Nous Rejoindre
-                </a>
+        <a href="#join" class="btn btn-primary">Rejoindre</a>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>L'Aventure <br>Sans Pression.</h1>
+                    <p>
+                        Rejoignez une communauté World of Warcraft où la performance rencontre la bienveillance. 
+                        Raid HM, Mythique+ et entraide sur Hyjal-FR.
+                    </p>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <a href="#join" class="btn btn-primary">Devenir un Sage</a>
+                        <a href="#about" class="btn btn-outline">Découvrir la guilde</a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <!-- LOGO SANS CERCLE, JUSTE L'IMAGE DÉTOURÉE -->
+                    <img src="redpanda.png" alt="Logo Les Sages" class="hero-logo">
+                </div>
             </div>
         </div>
-    </header>
+    </section>
 
-    <main class="container">
-        <section class="section">
-            <h2 class="section-title">Pourquoi nous rejoindre ?</h2>
-            <div class="section-content">
-                <p style="margin-bottom: 1rem; font-size: 1.1rem;">
-                    <strong style="color: var(--text-primary);">Marre des guildes ultra tryhard où rater un sort = drama ?</strong><br>
-                    Envie de préparer <strong style="color: var(--gold);">Midnight</strong> sans sacrifier ton sommeil, ton couple ou ton chat ?
+    <section class="about-section" id="about">
+        <div class="container">
+            <div class="about-content">
+                <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">L'Esprit des Sages</h2>
+                <p style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    Nous sommes un collectif de <strong>joueurs vétérans</strong> aux parcours variés : anciens hardcore gamers ou casuals assumés. 
+                    Notre point commun ? L'envie de jouer ensemble, sans prise de tête.
                 </p>
-                <p style="margin-bottom: 1.5rem; color: var(--text-primary);">
-                    Bienvenue chez <strong style="color: var(--gold);">Les Sages de Pandarie</strong> !
-                </p>
-
-                <div class="highlight-box">
-                    <strong style="font-size: 1.1rem; color: var(--gold);">Chez nous :</strong>
-                    <ul>
-                        <li>On joue pour s'amuser (et parfois pour looter, soyons honnêtes)</li>
-                        <li>1 jour fixe par semaine pour des sorties raids / Mythiques+</li>
-                        <li>Aucune obligation : tu viens quand tu peux, sans jugement</li>
-                        <li>L'entraide est plus importante que le DPS meter</li>
-                    </ul>
-                </div>
-
-                <div class="highlight-box">
-                    <strong style="font-size: 1.1rem; color: var(--gold);">On recherche :</strong>
-                    <ul>
-                        <li>Joueurs matures (dans la tête, pas forcément sur l'acte de naissance)</li>
-                        <li>Débutants, retours de pause ou vétérans fatigués du tryhard</li>
-                        <li>Capables de rire d'un wipe et de dire "c'était un pull de reconnaissance"</li>
-                    </ul>
-                </div>
-
-                <p style="margin-top: 1.5rem; font-size: 1.05rem; color: var(--text-primary);">
-                    <strong style="color: var(--gold);">Objectif :</strong> Avancer tranquillement sur Midnight, ensemble, dans la bonne humeur et le respect.
+                <p style="font-size: 1.1rem; color: var(--text-muted);">
+                    Ici, <strong>pas de drama</strong>. Nous avons assez de stress au travail, le jeu doit rester une détente absolue. 
+                    Bienveillance, bonne humeur et légèreté sont nos maîtres-mots.
                 </p>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="section" id="actualites">
-            <h2 class="section-title">Actualités</h2>
-
-            <div class="news-item">
-                <div class="news-date">📅 Janvier 2026</div>
-                <h3 class="news-title">Sondage : Classes & Disponibilités</h3>
-                <p class="news-description">
-                    Pour bien préparer Midnight, on a besoin de connaître les classes que vous allez jouer et vos disponibilités ! Remplis notre sondage pour nous aider à organiser nos raids et Mythiques+.
-                </p>
-                <a href="https://www.sagesdepandarie.ovh/roster/" class="news-link">
-                    Participer au sondage →
-                </a>
+    <section class="activities-section" id="activities">
+        <div class="container">
+            <h2 style="font-size: 2.5rem; margin-bottom: 2rem; text-align: center;">Nos Activités</h2>
+            <div class="activities-list">
+                <!-- Card 1 -->
+                <div class="activity-wide-card activity-mm">
+                    <div class="activity-content">
+                        <h3>Mythique+ & Gouffres</h3>
+                        <p>Des clés pour tous les niveaux, de l'exploration de Gouffres et des Raids (NM/HM), sans la pression du progress Mythique.</p>
+                    </div>
+                </div>
+                <!-- Card 2 -->
+                <div class="activity-wide-card activity-hf">
+                    <div class="activity-content">
+                        <h3>Collection & HF</h3>
+                        <p>Pour les complétionnistes : farm de montures, vieux raids et hauts-faits en groupe.</p>
+                    </div>
+                </div>
+                <!-- Card 3 -->
+                <div class="activity-wide-card activity-social">
+                    <div class="activity-content">
+                        <h3>Détente & Housing</h3>
+                        <p>Parce que WoW, c'est aussi se poser, discuter et profiter de l'univers du jeu tranquillement.</p>
+                    </div>
+                </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="section" id="nous-rejoindre">
-            <h2 class="section-title">Nous Rejoindre</h2>
-            <div class="section-content">
-                <p style="margin-bottom: 1rem; color: var(--text-primary);">
-                    Si tu penses que WoW est meilleur quand on joue détendu et entouré de gens sympas, alors <strong style="color: var(--gold);">Les Sages de Pandarie t'attendent !</strong>
-                </p>
-                <p style="margin-bottom: 1.5rem;">
-                    Pour nous rejoindre, contacte-nous directement en jeu en ajoutant l'un de ces Battle Tags :
-                </p>
+    <section class="dashboard" id="dashboard">
+        <div class="container">
+            <div class="bento-grid">
+                <!-- Card: Progress -->
+                <div class="card card-wide card-roster">
+                    <div class="card-label">Objectif Midnight</div>
+                    <h3 class="card-title">Préparation Roster</h3>
+                    <div class="card-stat">En cours...</div>
+                    <p class="card-desc" style="margin-top: auto;">
+                        Nous préparons activement la prochaine extension.
+                        <br><strong>Rythme :</strong> 1 soir / semaine (à définir).
+                        <br><strong>Objectif :</strong> Clean Normal, puis Héroïque... et qui sait pour la suite ?
+                    </p>
+                </div>
 
-                <div class="battletag-list">
-                    <button class="bnet-button" onclick="copyBattleTag('superfrog#2600', this)">
-                        <img src="bnet-icon.png" alt="Battle.net" class="bnet-icon">
-                        <div class="bnet-content">
-                            <div class="bnet-tag">superfrog#2600</div>
-                            <div class="bnet-role">Officier - Recrutement</div>
+                <!-- Card: News -->
+                <div class="card">
+                    <div class="card-label">Dernières Nouvelles</div>
+                    <h3 class="card-title">Sondage de Présence</h3>
+                    <p class="card-desc">
+                        Afin d'organiser au mieux le roster pour Midnight, merci de remplir vos disponibilités et souhaits de classes.
+                    </p>
+                    <a href="https://www.sagesdepandarie.ovh/roster/" target="_blank" style="color: var(--primary); text-decoration: none; margin-top: 1rem; font-weight: 600;">Accéder au sondage →</a>
+                </div>
+
+                <!-- Card: Social -->
+                <div class="card card-social">
+                    <div class="card-label">Communauté</div>
+                    <h3 class="card-title">Plus que du WoW</h3>
+                    <p class="card-desc">
+                        Un Discord actif réservé aux membres pour des soirées jeux variés, du Mythique+, 
+                        des vieux raids et de la bonne humeur !
+                    </p>
+                </div>
+
+                <!-- Card: Recruitment -->
+                <div class="card card-full" id="recruitment">
+                    <div class="card-label">Recrutement</div>
+                    <h3 class="card-title">Rejoindre les Sages</h3>
+                    <div style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--accent); display: flex; align-items: center; gap: 0.5rem;"><span>🟢</span> <span>Recrutement ouvert pour toutes les spécialisations ci-dessous</span></div>
+                    
+                    <div class="recruitment-list">
+                        
+                        <!-- Death Knight -->
+                        <div class="class-row">
+                            <img src="https://guildsofwow.com/assets/images/class-icons/death-knight.png" class="class-icon-row">
+                            <div class="spec-group">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_deathknight_bloodpresence.jpg" class="spec-icon" title="Sang (Tank)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_deathknight_frostpresence.jpg" class="spec-icon" title="Givre (DPS)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_deathknight_unholypresence.jpg" class="spec-icon" title="Impie (DPS)">
+                            </div>
                         </div>
-                    </button>
-
-                    <button class="bnet-button" onclick="copyBattleTag('NOX#27761', this)">
-                        <img src="bnet-icon.png" alt="Battle.net" class="bnet-icon">
-                        <div class="bnet-content">
-                            <div class="bnet-tag">NOX#27761</div>
-                            <div class="bnet-role">Officier - Recrutement</div>
+                        <!-- Demon Hunter -->
+                        <div class="class-row">
+                            <img src="https://guildsofwow.com/assets/images/class-icons/demon-hunter.png" class="class-icon-row">
+                            <div class="spec-group">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/ability_demonhunter_spectank.jpg" class="spec-icon" title="Vengeance (Tank)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/ability_demonhunter_specdps.jpg" class="spec-icon" title="Dévastation (DPS)">
+                            </div>
                         </div>
-                    </button>
+                        <!-- Druid -->
+                        <div class="class-row">
+                            <img src="https://guildsofwow.com/assets/images/class-icons/druid.png" class="class-icon-row">
+                            <div class="spec-group">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_nature_starfall.jpg" class="spec-icon" title="Équilibre (DPS Distant)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/ability_druid_catform.jpg" class="spec-icon" title="Farouche (DPS Mêlée)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/ability_racial_bearform.jpg" class="spec-icon" title="Gardien (Tank)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_nature_healingtouch.jpg" class="spec-icon" title="Restauration (Heal)">
+                            </div>
+                        </div>
+                        <!-- Evoker -->
+                        <div class="class-row">
+                            <img src="https://guildsofwow.com/assets/images/class-icons/evoker.png" class="class-icon-row">
+                            <div class="spec-group">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/classicon_evoker_devastation.jpg" class="spec-icon" title="Dévastation (DPS)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/classicon_evoker_preservation.jpg" class="spec-icon" title="Préservation (Heal)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/classicon_evoker_augmentation.jpg" class="spec-icon" title="Augmentation (Support)">
+                            </div>
+                        </div>
+                        <!-- Hunter -->
+                        <div class="class-row">
+                            <img src="https://guildsofwow.com/assets/images/class-icons/hunter.png" class="class-icon-row">
+                            <div class="spec-group">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/ability_hunter_bestialdiscipline.jpg" class="spec-icon" title="Maîtrise des bêtes (DPS)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/ability_hunter_focusedaim.jpg" class="spec-icon" title="Précision (DPS)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/ability_hunter_camouflage.jpg" class="spec-icon" title="Survie (DPS)">
+                            </div>
+                        </div>
+                        <!-- Mage -->
+                        <div class="class-row">
+                            <img src="https://guildsofwow.com/assets/images/class-icons/mage.png" class="class-icon-row">
+                            <div class="spec-group">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_holy_magicalsentry.jpg" class="spec-icon" title="Arcanes (DPS)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_fire_firebolt02.jpg" class="spec-icon" title="Feu (DPS)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_frost_frostbolt02.jpg" class="spec-icon" title="Givre (DPS)">
+                            </div>
+                        </div>
+                        <!-- Monk -->
+                        <div class="class-row">
+                            <img src="https://guildsofwow.com/assets/images/class-icons/monk.png" class="class-icon-row">
+                            <div class="spec-group">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_monk_brewmaster_spec.jpg" class="spec-icon" title="Maître Brasseur (Tank)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_monk_mistweaver_spec.jpg" class="spec-icon" title="Tisse-brume (Heal)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_monk_windwalker_spec.jpg" class="spec-icon" title="Marche-vent (DPS)">
+                            </div>
+                        </div>
+                        <!-- Paladin -->
+                        <div class="class-row">
+                            <img src="https://guildsofwow.com/assets/images/class-icons/paladin.png" class="class-icon-row">
+                            <div class="spec-group">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_holy_holybolt.jpg" class="spec-icon" title="Sacré (Heal)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/ability_paladin_shieldofthetemplar.jpg" class="spec-icon" title="Protection (Tank)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_holy_auraoflight.jpg" class="spec-icon" title="Vindicte (DPS)">
+                            </div>
+                        </div>
+                        <!-- Priest -->
+                        <div class="class-row">
+                            <img src="https://guildsofwow.com/assets/images/class-icons/priest.png" class="class-icon-row">
+                            <div class="spec-group">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_holy_powerwordshield.jpg" class="spec-icon" title="Discipline (Heal)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_holy_guardianspirit.jpg" class="spec-icon" title="Sacré (Heal)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_shadow_shadowwordpain.jpg" class="spec-icon" title="Ombre (DPS)">
+                            </div>
+                        </div>
+                        <!-- Rogue -->
+                        <div class="class-row">
+                            <img src="https://guildsofwow.com/assets/images/class-icons/rogue.png" class="class-icon-row">
+                            <div class="spec-group">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/ability_rogue_deadlybrew.jpg" class="spec-icon" title="Assassinat (DPS)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/inv_sword_30.jpg" class="spec-icon" title="Hors-la-loi (DPS)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/ability_stealth.jpg" class="spec-icon" title="Finesse (DPS)">
+                            </div>
+                        </div>
+                        <!-- Shaman -->
+                        <div class="class-row">
+                            <img src="https://guildsofwow.com/assets/images/class-icons/shaman.png" class="class-icon-row">
+                            <div class="spec-group">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_nature_lightning.jpg" class="spec-icon" title="Élémentaire (DPS Distant)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_shaman_improvedstormstrike.jpg" class="spec-icon" title="Amélioration (DPS Mêlée)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_nature_magicimmunity.jpg" class="spec-icon" title="Restauration (Heal)">
+                            </div>
+                        </div>
+                        <!-- Warlock -->
+                        <div class="class-row">
+                            <img src="https://guildsofwow.com/assets/images/class-icons/warlock.png" class="class-icon-row">
+                            <div class="spec-group">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_shadow_deathcoil.jpg" class="spec-icon" title="Affliction (DPS)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_shadow_metamorphosis.jpg" class="spec-icon" title="Démonologie (DPS)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/spell_shadow_rainoffire.jpg" class="spec-icon" title="Destruction (DPS)">
+                            </div>
+                        </div>
+                        <!-- Warrior -->
+                        <div class="class-row">
+                            <img src="https://guildsofwow.com/assets/images/class-icons/warrior.png" class="class-icon-row">
+                            <div class="spec-group">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/ability_warrior_savageblow.jpg" class="spec-icon" title="Armes (DPS)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/ability_warrior_innerrage.jpg" class="spec-icon" title="Fureur (DPS)">
+                                <img src="https://wow.zamimg.com/images/wow/icons/medium/ability_warrior_defensivestance.jpg" class="spec-icon" title="Protection (Tank)">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <p style="margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.95rem;">
-                    💡 <strong>Astuce :</strong> Clique sur "Copier" puis dans WoW : touche Échap → Social → Ajouter un Ami → Colle le Battle Tag
-                </p>
             </div>
-        </section>
-    </main>
+        </div>
+    </section>
+
+    <section class="join-section" id="join">
+        <div class="container">
+            <h2 style="font-size: 3rem; margin-bottom: 1rem;">Prêt à nous rejoindre ?</h2>
+            <p style="color: var(--text-muted); margin-bottom: 3rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                Postulez en ligne avec votre compte Battle.net. Nous étudierons votre candidature et vous recontacterons rapidement.
+            </p>
+
+            <!-- Bouton Postuler -->
+            <div>
+                <button onclick="startRecruitment()" class="btn-bnet">
+                    <img src="bnet-icon.png" alt="Battle.net" style="width: 24px; height: 24px;">
+                    Postuler avec Battle.net
+                </button>
+            </div>
+        </div>
+    </section>
 
     <footer>
-        <p>&copy; 2026 Les Sages de Pandarie - Guilde World of Warcraft</p>
-        <p style="margin-top: 0.5rem; font-size: 0.875rem;">Propulsé par GitHub Pages</p>
+        <div class="container">
+            <p>© 2026 Les Sages de Pandarie • Hyjal EU</p>
+        </div>
     </footer>
 
-    <div class="toast" id="toast">Battle Tag copié !</div>
+    <!-- Modale de Recrutement -->
+    <div id="recruitmentModal" class="modal-overlay">
+        <div class="modal-content">
+            <button onclick="closeModal()" style="position: absolute; top: 1rem; right: 1rem; background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer;">&times;</button>
+            
+            <h2 id="modalTitle" style="text-align: center; margin-bottom: 1rem; color: var(--primary);">Candidature</h2>
+            
+            <div id="stepLoader" class="hidden" style="text-align: center;">
+                <div class="loader"></div>
+                <p id="loaderText">Chargement...</p>
+            </div>
+
+            <div id="stepCharSelect" class="hidden">
+                <p style="text-align: center; color: var(--text-muted);">Sélectionnez votre personnage principal</p>
+                <div id="charList" class="char-grid"></div>
+            </div>
+
+            <div id="stepForm" class="hidden">
+                <div id="selectedCharSummary" style="text-align: center; margin-bottom: 2rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;"></div>
+                <div class="form-group">
+                    <label class="form-label">Présentation & Expérience</label>
+                    <textarea id="inputPresentation" class="form-textarea" placeholder="Parlez-nous de vous, votre expérience sur WoW, vos anciennes guildes..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Disponibilités & Objectifs</label>
+                    <textarea id="inputAvailability" class="form-textarea" placeholder="Vos soirs de dispo, ce que vous cherchez chez nous..."></textarea>
+                </div>
+                <button onclick="submitApplication()" class="btn btn-primary" style="width: 100%;">Envoyer ma candidature</button>
+            </div>
+
+            <div id="stepSuccess" class="hidden" style="text-align: center; padding: 2rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+                <h3 style="color: #fff; margin-bottom: 1rem;">Candidature envoyée !</h3>
+                <p style="color: var(--text-muted);">Nous avons bien reçu votre demande sur Discord. Un officier vous recontactera très bientôt.</p>
+                <button onclick="closeModal()" class="btn btn-outline" style="margin-top: 2rem;">Fermer</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        function copyBattleTag(battleTag, button) {
-            navigator.clipboard.writeText(battleTag).then(() => {
-                // Show toast notification
-                const toast = document.getElementById('toast');
-                toast.classList.add('show');
-
-                // Change button appearance
-                const bnetTag = button.querySelector('.bnet-tag');
-                const originalText = bnetTag.textContent;
-                bnetTag.textContent = '✓ Copié !';
-                button.classList.add('copied');
-
-                // Reset button after 2 seconds
+        function copyToClipboard(text, element) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalBg = element.style.background;
+                element.style.background = 'var(--primary)';
+                element.style.color = '#000';
+                
                 setTimeout(() => {
-                    bnetTag.textContent = originalText;
-                    button.classList.remove('copied');
-                }, 2000);
-
-                // Hide toast after 3 seconds
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 3000);
-            }).catch(err => {
-                console.error('Erreur lors de la copie:', err);
-                alert('Erreur lors de la copie. Battle Tag: ' + battleTag);
+                    element.style.background = '';
+                    element.style.color = '';
+                }, 1000);
             });
+        }
+
+        // --- LOGIQUE DE RECRUTEMENT ---
+
+        // CONFIGURATION
+        const CLIENT_ID = '1686cadfa50a49d3b9b8aa56ba21bc8a'; // Blizzard OAuth Client ID
+        const API_BASE_URL = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net'; // Cloud Functions URL
+        const REDIRECT_URI = 'https://www.sagesdepandarie.ovh/test.html'; // OAuth redirect URL
+
+        let accessToken = null;
+        let battletag = null;
+        let selectedChar = null;
+
+        // Vérifier le retour OAuth au chargement
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+
+            if (code) {
+                // Vérifier le state pour protection CSRF
+                const savedState = sessionStorage.getItem('oauth_state');
+                if (state !== savedState) {
+                    console.error('State mismatch - possible CSRF attack');
+                    alert('Erreur de sécurité. Veuillez réessayer.');
+                    return;
+                }
+
+                // Nettoyer le state et l'URL
+                sessionStorage.removeItem('oauth_state');
+                window.history.replaceState({}, document.title, REDIRECT_URI);
+                openModal();
+                handleAuthCode(code);
+            }
+        };
+
+        function openModal() {
+            document.getElementById('recruitmentModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('recruitmentModal').style.display = 'none';
+        }
+
+        function startRecruitment() {
+            // Générer un state aléatoire pour protection CSRF
+            const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            sessionStorage.setItem('oauth_state', state);
+
+            // Redirection vers Battle.net avec state
+            const authUrl = `https://oauth.battle.net/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=wow.profile&state=${state}`;
+            window.location.href = authUrl;
+        }
+
+        function showStep(stepId) {
+            ['stepLoader', 'stepCharSelect', 'stepForm', 'stepSuccess'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(stepId).classList.remove('hidden');
+        }
+
+        async function handleAuthCode(code) {
+            showStep('stepLoader');
+            document.getElementById('loaderText').innerText = 'Authentification Battle.net...';
+
+            try {
+                // 1. Echange du code contre token
+                const authRes = await fetch(`${API_BASE_URL}/blizzardAuth`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ code, redirectUri: REDIRECT_URI })
+                });
+                const authData = await authRes.json();
+                
+                if (!authData.accessToken) throw new Error('Auth failed');
+                accessToken = authData.accessToken;
+                battletag = authData.battletag;
+
+                // 2. Récupération des personnages
+                document.getElementById('loaderText').innerText = 'Récupération de vos personnages...';
+                const charsRes = await fetch(`${API_BASE_URL}/getWowCharacters`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ accessToken })
+                });
+                const charsData = await charsRes.json();
+
+                renderCharList(charsData.characters);
+            } catch (error) {
+                console.error(error);
+                alert("Erreur lors de la connexion. Veuillez réessayer.");
+                closeModal();
+            }
+        }
+
+        function renderCharList(characters) {
+            const list = document.getElementById('charList');
+            list.innerHTML = '';
+            
+            // Filtrer pour garder les persos niveau max ou presque (ex: > 70)
+            const relevantChars = characters.filter(c => c.level >= 70).sort((a,b) => b.level - a.level);
+
+            if(relevantChars.length === 0) {
+                list.innerHTML = '<p>Aucun personnage de niveau 70+ trouvé.</p>';
+            }
+
+            relevantChars.forEach(char => {
+                const div = document.createElement('div');
+                div.className = 'char-card';
+                // Avatar générique si pas d'image (l'API characters simple ne donne pas toujours l'avatar, il faut getCharacterDetails pour ça, on utilise une icone de classe si possible ou placeholder)
+                // Pour simplifier ici on met juste le nom/classe
+                div.innerHTML = `
+                    <div style="font-weight:bold; color:#fff;">${char.name}</div>
+                    <div style="font-size:0.8rem; color:var(--primary);">${char.playableClass}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">${char.realm} - Lvl ${char.level}</div>
+                `;
+                div.onclick = () => selectChar(char, div);
+                list.appendChild(div);
+            });
+            showStep('stepCharSelect');
+        }
+
+        function selectChar(char, element) {
+            selectedChar = char;
+            document.querySelectorAll('.char-card').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            // Passer au formulaire après une petite pause
+            setTimeout(() => {
+                document.getElementById('selectedCharSummary').innerHTML = `Candidature pour : <strong>${char.name}</strong> (${char.playableClass})`;
+                showStep('stepForm');
+            }, 300);
+        }
+
+        async function submitApplication() {
+            const presentation = document.getElementById('inputPresentation').value;
+            const availability = document.getElementById('inputAvailability').value;
+
+            if(!presentation || !availability) return alert("Merci de remplir tous les champs.");
+
+            showStep('stepLoader');
+            document.getElementById('loaderText').innerText = 'Envoi de la candidature...';
+
+            try {
+                // Appel à la fonction submitApplication avec accessToken pour enrichir les données
+                const response = await fetch(`${API_BASE_URL}/submitApplication`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        character: selectedChar,
+                        battletag: battletag,
+                        accessToken: accessToken, // Passer le token pour récupérer ilvl + avatar
+                        formData: { presentation, availability }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erreur serveur');
+                }
+
+                showStep('stepSuccess');
+            } catch (e) {
+                console.error('Erreur soumission:', e);
+                alert("Erreur lors de l'envoi. Veuillez réessayer.");
+                showStep('stepForm');
+            }
         }
     </script>
 </body>
