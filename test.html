@@ -964,9 +964,19 @@
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
-            
+            const state = urlParams.get('state');
+
             if (code) {
-                // Nettoyer l'URL
+                // Vérifier le state pour protection CSRF
+                const savedState = sessionStorage.getItem('oauth_state');
+                if (state !== savedState) {
+                    console.error('State mismatch - possible CSRF attack');
+                    alert('Erreur de sécurité. Veuillez réessayer.');
+                    return;
+                }
+
+                // Nettoyer le state et l'URL
+                sessionStorage.removeItem('oauth_state');
                 window.history.replaceState({}, document.title, REDIRECT_URI);
                 openModal();
                 handleAuthCode(code);
@@ -982,8 +992,12 @@
         }
 
         function startRecruitment() {
-            // Redirection vers Battle.net
-            const authUrl = `https://oauth.battle.net/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=wow.profile`;
+            // Générer un state aléatoire pour protection CSRF
+            const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            sessionStorage.setItem('oauth_state', state);
+
+            // Redirection vers Battle.net avec state
+            const authUrl = `https://oauth.battle.net/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=wow.profile&state=${state}`;
             window.location.href = authUrl;
         }
 
