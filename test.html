@@ -523,6 +523,63 @@
             .card-large, .card-wide { grid-column: span 1; }
             .hero-text h1 { font-size: 2.5rem; }
         }
+
+        /* Styles pour la Modale de Recrutement */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            z-index: 2000; display: none; align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 2rem; width: 95%; max-width: 700px;
+            max-height: 90vh; overflow-y: auto; position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+        .char-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem; margin: 1.5rem 0;
+        }
+        .char-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 8px; padding: 1rem; cursor: pointer;
+            text-align: center; transition: all 0.2s; display: flex; flex-direction: column; align-items: center;
+        }
+        .char-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .char-card.selected { border-color: var(--primary); background: rgba(238, 187, 85, 0.1); box-shadow: 0 0 15px var(--primary-dim); }
+        .char-avatar {
+            width: 56px; height: 56px; border-radius: 50%; margin-bottom: 0.5rem;
+            background: #333; object-fit: cover; border: 2px solid var(--border);
+        }
+        .form-group { margin-bottom: 1.5rem; text-align: left; }
+        .form-label { display: block; margin-bottom: 0.5rem; color: var(--primary); font-weight: 600; font-size: 0.9rem; }
+        .form-input, .form-textarea {
+            width: 100%; background: var(--bg-deep); border: 1px solid var(--border);
+            color: var(--text-main); padding: 1rem; border-radius: 6px;
+            font-family: inherit; font-size: 1rem;
+        }
+        .form-textarea { min-height: 120px; resize: vertical; }
+        .form-input:focus, .form-textarea:focus { outline: none; border-color: var(--primary); }
+        
+        /* Loader */
+        .loader {
+            border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--primary);
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 1s linear infinite; margin: 2rem auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .hidden { display: none; }
+        
+        .btn-bnet {
+            background: #148eff; color: white; font-weight: bold;
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 1rem 2rem; border-radius: 4px; text-decoration: none;
+            transition: all 0.2s; border: none; cursor: pointer; font-size: 1.1rem;
+        }
+        .btn-bnet:hover {
+            background: #0076e6; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(20, 142, 255, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -782,6 +839,14 @@
                 Contactez un officier directement en jeu ou via Battle.net. Cliquez sur un tag pour le copier.
             </p>
             
+            <!-- Bouton Postuler -->
+            <div style="margin-bottom: 3rem;">
+                <button onclick="startRecruitment()" class="btn-bnet">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    Postuler avec Battle.net
+                </button>
+            </div>
+
             <div class="process-container" style="max-width: 800px; margin: 0 auto 3rem auto; text-align: left;">
                 <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--primary); margin-bottom: 0.8rem; font-weight: 700; text-align: center;">Comment nous rejoindre ?</div>
                 <div class="process-steps">
@@ -831,6 +896,45 @@
         </div>
     </footer>
 
+    <!-- Modale de Recrutement -->
+    <div id="recruitmentModal" class="modal-overlay">
+        <div class="modal-content">
+            <button onclick="closeModal()" style="position: absolute; top: 1rem; right: 1rem; background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer;">&times;</button>
+            
+            <h2 id="modalTitle" style="text-align: center; margin-bottom: 1rem; color: var(--primary);">Candidature</h2>
+            
+            <div id="stepLoader" class="hidden" style="text-align: center;">
+                <div class="loader"></div>
+                <p id="loaderText">Chargement...</p>
+            </div>
+
+            <div id="stepCharSelect" class="hidden">
+                <p style="text-align: center; color: var(--text-muted);">Sélectionnez votre personnage principal</p>
+                <div id="charList" class="char-grid"></div>
+            </div>
+
+            <div id="stepForm" class="hidden">
+                <div id="selectedCharSummary" style="text-align: center; margin-bottom: 2rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;"></div>
+                <div class="form-group">
+                    <label class="form-label">Présentation & Expérience</label>
+                    <textarea id="inputPresentation" class="form-textarea" placeholder="Parlez-nous de vous, votre expérience sur WoW, vos anciennes guildes..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Disponibilités & Objectifs</label>
+                    <textarea id="inputAvailability" class="form-textarea" placeholder="Vos soirs de dispo, ce que vous cherchez chez nous..."></textarea>
+                </div>
+                <button onclick="submitApplication()" class="btn btn-primary" style="width: 100%;">Envoyer ma candidature</button>
+            </div>
+
+            <div id="stepSuccess" class="hidden" style="text-align: center; padding: 2rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+                <h3 style="color: #fff; margin-bottom: 1rem;">Candidature envoyée !</h3>
+                <p style="color: var(--text-muted);">Nous avons bien reçu votre demande sur Discord. Un officier vous recontactera très bientôt.</p>
+                <button onclick="closeModal()" class="btn btn-outline" style="margin-top: 2rem;">Fermer</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         function copyToClipboard(text, element) {
             navigator.clipboard.writeText(text).then(() => {
@@ -843,6 +947,158 @@
                     element.style.color = '';
                 }, 1000);
             });
+        }
+
+        // --- LOGIQUE DE RECRUTEMENT ---
+
+        // CONFIGURATION
+        const CLIENT_ID = '1686cadfa50a49d3b9b8aa56ba21bc8a'; // Blizzard OAuth Client ID
+        const API_BASE_URL = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net'; // Cloud Functions URL
+        const REDIRECT_URI = 'https://www.sagesdepandarie.ovh/test.html'; // OAuth redirect URL
+
+        let accessToken = null;
+        let battletag = null;
+        let selectedChar = null;
+
+        // Vérifier le retour OAuth au chargement
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            
+            if (code) {
+                // Nettoyer l'URL
+                window.history.replaceState({}, document.title, REDIRECT_URI);
+                openModal();
+                handleAuthCode(code);
+            }
+        };
+
+        function openModal() {
+            document.getElementById('recruitmentModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('recruitmentModal').style.display = 'none';
+        }
+
+        function startRecruitment() {
+            // Redirection vers Battle.net
+            const authUrl = `https://oauth.battle.net/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=wow.profile`;
+            window.location.href = authUrl;
+        }
+
+        function showStep(stepId) {
+            ['stepLoader', 'stepCharSelect', 'stepForm', 'stepSuccess'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(stepId).classList.remove('hidden');
+        }
+
+        async function handleAuthCode(code) {
+            showStep('stepLoader');
+            document.getElementById('loaderText').innerText = 'Authentification Battle.net...';
+
+            try {
+                // 1. Echange du code contre token
+                const authRes = await fetch(`${API_BASE_URL}/blizzardAuth`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ code, redirectUri: REDIRECT_URI })
+                });
+                const authData = await authRes.json();
+                
+                if (!authData.accessToken) throw new Error('Auth failed');
+                accessToken = authData.accessToken;
+                battletag = authData.battletag;
+
+                // 2. Récupération des personnages
+                document.getElementById('loaderText').innerText = 'Récupération de vos personnages...';
+                const charsRes = await fetch(`${API_BASE_URL}/getWowCharacters`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ accessToken })
+                });
+                const charsData = await charsRes.json();
+
+                renderCharList(charsData.characters);
+            } catch (error) {
+                console.error(error);
+                alert("Erreur lors de la connexion. Veuillez réessayer.");
+                closeModal();
+            }
+        }
+
+        function renderCharList(characters) {
+            const list = document.getElementById('charList');
+            list.innerHTML = '';
+            
+            // Filtrer pour garder les persos niveau max ou presque (ex: > 70)
+            const relevantChars = characters.filter(c => c.level >= 70).sort((a,b) => b.level - a.level);
+
+            if(relevantChars.length === 0) {
+                list.innerHTML = '<p>Aucun personnage de niveau 70+ trouvé.</p>';
+            }
+
+            relevantChars.forEach(char => {
+                const div = document.createElement('div');
+                div.className = 'char-card';
+                // Avatar générique si pas d'image (l'API characters simple ne donne pas toujours l'avatar, il faut getCharacterDetails pour ça, on utilise une icone de classe si possible ou placeholder)
+                // Pour simplifier ici on met juste le nom/classe
+                div.innerHTML = `
+                    <div style="font-weight:bold; color:#fff;">${char.name}</div>
+                    <div style="font-size:0.8rem; color:var(--primary);">${char.playableClass}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">${char.realm} - Lvl ${char.level}</div>
+                `;
+                div.onclick = () => selectChar(char, div);
+                list.appendChild(div);
+            });
+            showStep('stepCharSelect');
+        }
+
+        function selectChar(char, element) {
+            selectedChar = char;
+            document.querySelectorAll('.char-card').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            // Passer au formulaire après une petite pause
+            setTimeout(() => {
+                document.getElementById('selectedCharSummary').innerHTML = `Candidature pour : <strong>${char.name}</strong> (${char.playableClass})`;
+                showStep('stepForm');
+            }, 300);
+        }
+
+        async function submitApplication() {
+            const presentation = document.getElementById('inputPresentation').value;
+            const availability = document.getElementById('inputAvailability').value;
+
+            if(!presentation || !availability) return alert("Merci de remplir tous les champs.");
+
+            showStep('stepLoader');
+            document.getElementById('loaderText').innerText = 'Envoi de la candidature...';
+
+            try {
+                // Appel à la fonction submitApplication avec accessToken pour enrichir les données
+                const response = await fetch(`${API_BASE_URL}/submitApplication`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        character: selectedChar,
+                        battletag: battletag,
+                        accessToken: accessToken, // Passer le token pour récupérer ilvl + avatar
+                        formData: { presentation, availability }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erreur serveur');
+                }
+
+                showStep('stepSuccess');
+            } catch (e) {
+                console.error('Erreur soumission:', e);
+                alert("Erreur lors de l'envoi. Veuillez réessayer.");
+                showStep('stepForm');
+            }
         }
     </script>
 </body>
