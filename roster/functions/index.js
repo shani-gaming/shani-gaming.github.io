@@ -9,7 +9,7 @@ const blizzardClientSecret = defineSecret('BLIZZARD_CLIENT_SECRET');
 const discordClientId = defineSecret('DISCORD_CLIENT_ID');
 const discordClientSecret = defineSecret('DISCORD_CLIENT_SECRET');
 const discordGuildId = defineSecret('DISCORD_GUILD_ID');
-
+const discordWebhookUrl = defineSecret('DISCORD_WEBHOOK_URL');
 // CORS configuration - Allow GitHub Pages and custom domain
 const corsOptions = {
   origin: [
@@ -436,6 +436,147 @@ exports.verifyDiscordRole = onRequest(
           error: 'Discord authentication failed',
           details: error.message,
           discordError: error.response?.data
+        });
+      }
+    });
+  }
+);
+
+/**
+ * Soumettre une candidature vers Discord via Webhook
+ * Récupère les détails complets du personnage (ilvl, avatar) avant envoi
+ */
+exports.submitApplication = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10,
+    secrets: [discordWebhookUrl, blizzardClientId, blizzardClientSecret]
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        const { character, formData, battletag, accessToken } = req.body;
+
+        if (!character || !formData) {
+          return res.status(400).json({ error: 'Données manquantes' });
+        }
+
+        const webhookUrl = discordWebhookUrl.value();
+
+        // Récupérer les détails complets du personnage (ilvl, avatar, etc.)
+        let characterDetails = { ...character };
+
+        try {
+          // Utiliser le token d'accès de l'utilisateur ou générer un token client
+          let token = accessToken;
+
+          if (!token) {
+            const clientId = blizzardClientId.value();
+            const clientSecret = blizzardClientSecret.value();
+
+            const tokenResponse = await axios.post(
+              'https://oauth.battle.net/token',
+              new URLSearchParams({
+                grant_type: 'client_credentials'
+              }),
+              {
+                auth: {
+                  username: clientId,
+                  password: clientSecret
+                }
+              }
+            );
+
+            token = tokenResponse.data.access_token;
+          }
+
+          // Récupérer le profil complet
+          const profileUrl = `https://eu.api.blizzard.com/profile/wow/character/${character.realmSlug}/${character.name.toLowerCase()}`;
+          const profileResponse = await axios.get(profileUrl, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { namespace: 'profile-eu', locale: 'fr_FR' }
+          });
+
+          // Récupérer l'avatar
+          const mediaUrl = `${profileUrl}/character-media`;
+          const mediaResponse = await axios.get(mediaUrl, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { namespace: 'profile-eu', locale: 'fr_FR' }
+          });
+
+          const avatarAsset = mediaResponse.data.assets?.find(asset => asset.key === 'avatar');
+
+          characterDetails = {
+            ...character,
+            averageItemLevel: profileResponse.data.average_item_level,
+            equippedItemLevel: profileResponse.data.equipped_item_level,
+            avatarUrl: avatarAsset?.value || null
+          };
+
+          console.log('Character details enriched:', characterDetails);
+        } catch (detailsError) {
+          console.error('Failed to fetch character details, using basic info:', detailsError.message);
+          // Continue avec les données de base si l'enrichissement échoue
+        }
+
+        // Couleurs par classe (Discord color codes)
+        const classColors = {
+          'Chevalier de la mort': 12853051, 'Chasseur de démons': 10694857,
+          'Druide': 16743690, 'Évocateur': 3380095, 'Chasseur': 11129457,
+          'Mage': 4245483, 'Moine': 65432, 'Paladin': 16092346,
+          'Prêtre': 16777215, 'Voleur': 16774505, 'Chaman': 28894,
+          'Démoniste': 8882157, 'Guerrier': 13081710
+        };
+
+        const color = classColors[characterDetails.playableClass] || 16777215;
+
+        // Construire l'URL Armurerie
+        const armoryUrl = `https://worldofwarcraft.blizzard.com/fr-fr/character/eu/${characterDetails.realmSlug}/${characterDetails.name.toLowerCase()}`;
+
+        // Construction du message Discord (Embed)
+        const embed = {
+          title: `🎯 Nouvelle Candidature : ${characterDetails.name}`,
+          description: `**${characterDetails.playableClass}** • Niveau ${characterDetails.level}`,
+          color: color,
+          fields: [
+            {
+              name: '⚔️ Item Level',
+              value: characterDetails.averageItemLevel ? `${characterDetails.averageItemLevel} (équipé: ${characterDetails.equippedItemLevel})` : 'N/A',
+              inline: true
+            },
+            { name: '🏰 Royaume', value: characterDetails.realm, inline: true },
+            { name: '⚡ Faction', value: characterDetails.faction || 'N/A', inline: true },
+            { name: '🎮 BattleTag', value: battletag || 'Non renseigné', inline: false },
+            {
+              name: '📝 Présentation & Expérience',
+              value: formData.presentation.substring(0, 1024) || 'Aucune'
+            },
+            {
+              name: '📅 Disponibilités & Objectifs',
+              value: formData.availability.substring(0, 1024) || 'Non renseigné'
+            },
+            {
+              name: '🔗 Liens',
+              value: `[Voir sur l'Armurerie](${armoryUrl})`
+            }
+          ],
+          thumbnail: { url: characterDetails.avatarUrl || '' },
+          footer: { text: '⚜️ Les Sages de Pandarie • Système de Recrutement' },
+          timestamp: new Date().toISOString()
+        };
+
+        // Envoi au Webhook
+        await axios.post(webhookUrl, {
+          content: '@here Nouvelle candidature reçue !',
+          embeds: [embed]
+        });
+
+        res.json({ success: true });
+      } catch (error) {
+        console.error('Erreur soumission candidature:', error);
+        res.status(500).json({
+          error: 'Erreur lors de l\'envoi de la candidature',
+          details: error.message
         });
       }
     });
