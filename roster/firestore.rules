@@ -15,10 +15,10 @@ service cloud.firestore {
       allow write: if false; // Only Cloud Functions can write
     }
 
-    // Roster survey responses - require Discord authentication
-    match /roster-responses/{responseId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+    // Roster survey responses - public read, auth write
+    match /roster/{responseId} {
+      allow read: if true; // Public read pour afficher le roster
+      allow write: if request.auth != null; // Seulement les utilisateurs Discord authentifiés peuvent écrire
     }
 
     // Default: deny all other access
