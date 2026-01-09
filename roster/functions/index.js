@@ -1,7 +1,14 @@
 const { onRequest } = require('firebase-functions/v2/https');
+const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { defineSecret } = require('firebase-functions/params');
+const { initializeApp } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
 const axios = require('axios');
 const cors = require('cors');
+
+// Initialize Firebase Admin
+initializeApp();
+const db = getFirestore();
 
 // Définir les secrets
 const blizzardClientId = defineSecret('BLIZZARD_CLIENT_ID');
@@ -578,6 +585,323 @@ exports.submitApplication = onRequest(
           error: 'Erreur lors de l\'envoi de la candidature',
           details: error.message
         });
+      }
+    });
+  }
+);
+
+/**
+ * Scheduled function: Daily guild roster sync
+ * Runs every day at 2 AM (Europe/Paris timezone)
+ * Detects new members and tracks roster changes
+ */
+exports.syncGuildRoster = onSchedule(
+  {
+    schedule: '0 2 * * *',
+    timeZone: 'Europe/Paris',
+    region: 'europe-west1',
+    secrets: [blizzardClientId, blizzardClientSecret]
+  },
+  async (event) => {
+    try {
+      console.log('Starting daily guild roster sync...');
+
+      const clientId = blizzardClientId.value();
+      const clientSecret = blizzardClientSecret.value();
+
+      const GUILD_REALM = 'hyjal';
+      const GUILD_NAME = 'les-sages-de-pandarie';
+      const GUILD_REGION = 'eu';
+
+      const tokenResponse = await axios.post(
+        'https://oauth.battle.net/token',
+        new URLSearchParams({
+          grant_type: 'client_credentials'
+        }),
+        {
+          auth: {
+            username: clientId,
+            password: clientSecret
+          }
+        }
+      );
+
+      const accessToken = tokenResponse.data.access_token;
+
+      const rosterResponse = await axios.get(
+        `https://${GUILD_REGION}.api.blizzard.com/data/wow/guild/${GUILD_REALM}/${GUILD_NAME}/roster`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          params: {
+            namespace: `profile-${GUILD_REGION}`,
+            locale: 'fr_FR'
+          }
+        }
+      );
+
+      const currentRoster = rosterResponse.data.members || [];
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayKey = yesterday.toISOString().split('T')[0];
+
+      const snapshotRef = db.collection('guild-roster-snapshots').doc(yesterdayKey);
+      const snapshotDoc = await snapshotRef.get();
+
+      const previousMembers = snapshotDoc.exists ? snapshotDoc.data().members || [] : [];
+      const previousMemberNames = new Set(previousMembers.map(m => `${m.name}-${m.realm}`));
+
+      // Mapping des IDs de classe WoW vers les noms
+      const classNames = {
+        1: 'Warrior',
+        2: 'Paladin',
+        3: 'Hunter',
+        4: 'Rogue',
+        5: 'Priest',
+        6: 'Death Knight',
+        7: 'Shaman',
+        8: 'Mage',
+        9: 'Warlock',
+        10: 'Monk',
+        11: 'Druid',
+        12: 'Demon Hunter',
+        13: 'Evoker'
+      };
+
+      const newMembers = [];
+      const currentMembersList = [];
+
+      for (const member of currentRoster) {
+        const character = member.character;
+        const memberKey = `${character.name}-${character.realm.slug}`;
+
+        // Utiliser le mapping d'ID pour obtenir le nom de classe
+        const classId = character.playable_class.id;
+        const className = classNames[classId] || 'Unknown';
+
+        const memberData = {
+          name: character.name,
+          realm: character.realm.slug,
+          level: character.level,
+          classId: classId,
+          class: className,
+          rank: member.rank
+        };
+
+        currentMembersList.push(memberData);
+
+        if (!previousMemberNames.has(memberKey)) {
+          newMembers.push(memberKey);
+
+          const memberDocRef = db.collection('guild-members').doc(memberKey);
+          const memberDoc = await memberDocRef.get();
+
+          if (!memberDoc.exists) {
+            await memberDocRef.set({
+              ...memberData,
+              joinedAt: Date.now(),
+              lastSeen: Date.now()
+            });
+            console.log('New member:', character.name);
+          } else {
+            await memberDocRef.update({
+              ...memberData,
+              lastSeen: Date.now()
+            });
+          }
+        } else {
+          const memberDocRef = db.collection('guild-members').doc(memberKey);
+          await memberDocRef.update({
+            ...memberData,
+            lastSeen: Date.now()
+          });
+        }
+      }
+
+      const todayKey = new Date().toISOString().split('T')[0];
+      await db.collection('guild-roster-snapshots').doc(todayKey).set({
+        timestamp: Date.now(),
+        memberCount: currentRoster.length,
+        members: currentMembersList
+      });
+
+      console.log('Roster sync complete:', currentRoster.length, 'members,', newMembers.length, 'new');
+
+      return {
+        success: true,
+        memberCount: currentRoster.length,
+        newMembersCount: newMembers.length
+      };
+
+    } catch (error) {
+      console.error('Error in syncGuildRoster:', error);
+      throw error;
+    }
+  }
+);
+
+/**
+ * Temporary function to create yesterday's snapshot without Thallyium and Osmondo
+ */
+exports.createYesterdaySnapshot = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        console.log('Creating yesterday snapshot without Thallyium and Osmondo...');
+
+        // Get all current members
+        const snapshot = await db.collection('guild-members').get();
+
+        if (snapshot.empty) {
+          return res.json({ error: 'No members found in database.' });
+        }
+
+        // Filter out Thallyium and Osmondo
+        const yesterdayMembers = [];
+        const excludedMembers = ['Thallyium-archimonde', 'Osmondo-hyjal'];
+
+        snapshot.forEach(doc => {
+          const memberId = doc.id;
+          if (!excludedMembers.includes(memberId)) {
+            const member = doc.data();
+            yesterdayMembers.push({
+              name: member.name,
+              realm: member.realm,
+              level: member.level,
+              classId: member.classId,
+              class: member.class,
+              rank: member.rank
+            });
+          }
+        });
+
+        // Create snapshot for yesterday
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayKey = yesterday.toISOString().split('T')[0];
+
+        await db.collection('guild-roster-snapshots').doc(yesterdayKey).set({
+          timestamp: yesterday.getTime(),
+          memberCount: yesterdayMembers.length,
+          members: yesterdayMembers
+        });
+
+        res.json({
+          success: true,
+          snapshotDate: yesterdayKey,
+          membersInSnapshot: yesterdayMembers.length,
+          excludedMembers: excludedMembers,
+          message: 'Yesterday snapshot created. Now trigger syncGuildRoster to detect new members.'
+        });
+
+      } catch (error) {
+        console.error('Error creating snapshot:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+  }
+);
+
+/**
+ * Set all members except Thallyium and Osmondo to have joined 30 days ago
+ */
+exports.setOldMembersDate = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+        const snapshot = await db.collection('guild-members').get();
+
+        const targetMembers = ['Thallyium-archimonde', 'Osmondo-hyjal'];
+        let updated = 0;
+        let kept = 0;
+
+        const batch = db.batch();
+
+        snapshot.forEach(doc => {
+          if (!targetMembers.includes(doc.id)) {
+            // Set old date for all other members
+            batch.update(doc.ref, { joinedAt: thirtyDaysAgo });
+            updated++;
+          } else {
+            kept++;
+          }
+        });
+
+        await batch.commit();
+
+        res.json({
+          success: true,
+          updated: updated,
+          keptRecent: kept,
+          message: `${updated} members set to 30 days ago. ${kept} kept as recent (Thallyium, Osmondo).`
+        });
+
+      } catch (error) {
+        console.error('Error updating dates:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+  }
+);
+
+/**
+ * Temporary HTTP function to check guild members (for testing)
+ */
+exports.checkMembers = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        const snapshot = await db.collection('guild-members').get();
+
+        if (snapshot.empty) {
+          return res.json({ message: 'No members found', count: 0, members: [] });
+        }
+
+        const fourteenDaysAgo = Date.now() - (14 * 24 * 60 * 60 * 1000);
+        const allMembers = [];
+        const recentMembers = [];
+
+        snapshot.forEach(doc => {
+          const member = { id: doc.id, ...doc.data() };
+          allMembers.push(member);
+
+          if (member.joinedAt >= fourteenDaysAgo) {
+            recentMembers.push(member);
+          }
+        });
+
+        // Sort recent members by joinedAt (newest first)
+        recentMembers.sort((a, b) => b.joinedAt - a.joinedAt);
+
+        res.json({
+          totalMembers: allMembers.length,
+          recentMembers: recentMembers.map(m => ({
+            id: m.id,
+            name: m.name,
+            class: m.class,
+            level: m.level,
+            realm: m.realm,
+            joinedAt: new Date(m.joinedAt).toLocaleString('fr-FR'),
+            daysAgo: Math.floor((Date.now() - m.joinedAt) / (24 * 60 * 60 * 1000))
+          }))
+        });
+
+      } catch (error) {
+        console.error('Error checking members:', error);
+        res.status(500).json({ error: error.message });
       }
     });
   }

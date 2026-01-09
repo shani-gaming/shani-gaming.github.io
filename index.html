@@ -580,6 +580,48 @@
         .btn-bnet:hover {
             background: #0076e6; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(20, 142, 255, 0.3);
         }
+
+        /* New Members Badges */
+        .member-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 0.9rem;
+            background: rgba(51, 255, 170, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            transition: all 0.2s;
+        }
+
+        .member-badge:hover {
+            background: rgba(51, 255, 170, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--accent-dim);
+        }
+
+        .member-badge-class-img {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .member-badge-name {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .member-badge-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        #newMembersList.empty {
+            color: var(--text-muted);
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -691,14 +733,13 @@
                     <a href="https://www.sagesdepandarie.ovh/roster/" target="_blank" style="color: var(--primary); text-decoration: none; margin-top: 1rem; font-weight: 600;">Accéder au sondage →</a>
                 </div>
 
-                <!-- Card: Social -->
-                <div class="card card-social">
-                    <div class="card-label">Communauté</div>
-                    <h3 class="card-title">Plus que du WoW</h3>
-                    <p class="card-desc">
-                        Un Discord actif réservé aux membres pour des soirées jeux variés, du Mythique+, 
-                        des vieux raids et de la bonne humeur !
-                    </p>
+                <!-- Card: New Members -->
+                <div class="card">
+                    <div class="card-label">Bienvenue</div>
+                    <h3 class="card-title">Nos Nouveaux Sages</h3>
+                    <div id="newMembersList" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
+                        <div class="loader" style="width: 30px; height: 30px;"></div>
+                    </div>
                 </div>
 
                 <!-- Card: Recruitment -->
@@ -1073,6 +1114,113 @@
                 showStep('stepForm');
             }
         }
+    </script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, query, where, getDocs, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Configuration Firebase (même config que dans roster)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjrcW6l6XkdKABiEJM2mCOQZKJ3fhwqeU",
+            authDomain: "guild-roster-67da7.firebaseapp.com",
+            projectId: "guild-roster-67da7",
+            storageBucket: "guild-roster-67da7.firebasestorage.app",
+            messagingSenderId: "824076820820",
+            appId: "1:824076820820:web:67a8ef22c699f12f2f5b8f"
+        };
+
+        // Initialiser Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Mapping des classes WoW vers leurs icônes officielles
+        const classIcons = {
+            'Death Knight': 'https://guildsofwow.com/assets/images/class-icons/death-knight.png',
+            'Demon Hunter': 'https://guildsofwow.com/assets/images/class-icons/demon-hunter.png',
+            'Druid': 'https://guildsofwow.com/assets/images/class-icons/druid.png',
+            'Evoker': 'https://guildsofwow.com/assets/images/class-icons/evoker.png',
+            'Hunter': 'https://guildsofwow.com/assets/images/class-icons/hunter.png',
+            'Mage': 'https://guildsofwow.com/assets/images/class-icons/mage.png',
+            'Monk': 'https://guildsofwow.com/assets/images/class-icons/monk.png',
+            'Paladin': 'https://guildsofwow.com/assets/images/class-icons/paladin.png',
+            'Priest': 'https://guildsofwow.com/assets/images/class-icons/priest.png',
+            'Rogue': 'https://guildsofwow.com/assets/images/class-icons/rogue.png',
+            'Shaman': 'https://guildsofwow.com/assets/images/class-icons/shaman.png',
+            'Warlock': 'https://guildsofwow.com/assets/images/class-icons/warlock.png',
+            'Warrior': 'https://guildsofwow.com/assets/images/class-icons/warrior.png'
+        };
+
+        // Fonction pour formater la date relative
+        function getRelativeTime(timestamp) {
+            const now = Date.now();
+            const diff = now - timestamp;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+            if (days === 0) return "Aujourd'hui";
+            if (days === 1) return "Hier";
+            if (days < 7) return `Il y a ${days} jours`;
+            if (days < 14) return `Il y a ${Math.floor(days / 7)} semaine${days >= 14 ? 's' : ''}`;
+            return new Date(timestamp).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+        }
+
+        // Charger et afficher les nouveaux membres
+        async function loadNewMembers() {
+            const membersList = document.getElementById('newMembersList');
+
+            try {
+                // Calculer la date limite (14 jours en arrière)
+                const fourteenDaysAgo = Date.now() - (14 * 24 * 60 * 60 * 1000);
+
+                // Requête Firestore pour les membres récents (limité à 5 max)
+                const membersRef = collection(db, 'guild-members');
+                const q = query(
+                    membersRef,
+                    where('joinedAt', '>=', fourteenDaysAgo),
+                    orderBy('joinedAt', 'desc'),
+                    limit(5)
+                );
+
+                const querySnapshot = await getDocs(q);
+
+                // Vider le loader
+                membersList.innerHTML = '';
+
+                if (querySnapshot.empty) {
+                    membersList.classList.add('empty');
+                    membersList.innerHTML = '<p style="font-size: 0.9rem;">Aucun nouveau membre récemment.</p>';
+                    return;
+                }
+
+                // Afficher chaque nouveau membre
+                querySnapshot.forEach((doc) => {
+                    const member = doc.data();
+                    const badge = document.createElement('div');
+                    badge.className = 'member-badge';
+
+                    const classIconUrl = classIcons[member.class] || classIcons['Warrior'];
+                    const relativeDate = getRelativeTime(member.joinedAt);
+
+                    badge.innerHTML = `
+                        <img src="${classIconUrl}" alt="${member.class}" class="member-badge-class-img">
+                        <div style="display: flex; flex-direction: column; gap: 0.1rem;">
+                            <span class="member-badge-name">${member.name}</span>
+                            <span class="member-badge-date">${relativeDate}</span>
+                        </div>
+                    `;
+
+                    membersList.appendChild(badge);
+                });
+
+            } catch (error) {
+                console.error('Erreur lors du chargement des nouveaux membres:', error);
+                membersList.innerHTML = '<p style="color: var(--text-muted);">Impossible de charger les nouveaux membres.</p>';
+            }
+        }
+
+        // Charger les membres au chargement de la page
+        loadNewMembers();
     </script>
 </body>
 </html>

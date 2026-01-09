@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Allow public read access to guild members (for homepage widget)
+    match /guild-members/{memberId} {
+      allow read: if true;
+      allow write: if false; // Only Cloud Functions can write
+    }
+
+    // Allow public read access to guild roster snapshots
+    match /guild-roster-snapshots/{snapshotId} {
+      allow read: if true;
+      allow write: if false; // Only Cloud Functions can write
+    }
+
+    // Roster survey responses - require Discord authentication
+    match /roster-responses/{responseId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // Default: deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
