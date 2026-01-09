@@ -679,13 +679,63 @@ exports.syncGuildRoster = onSchedule(
         const classId = character.playable_class.id;
         const className = classNames[classId] || 'Unknown';
 
+        // Construire le lien armurerie
+        const armoryLink = `https://worldofwarcraft.blizzard.com/fr-fr/character/eu/${character.realm.slug}/${character.name.toLowerCase()}`;
+
+        // Récupérer les détails du personnage (ilvl, spé, métiers)
+        let characterDetails = {
+          ilvl: null,
+          activeSpec: null,
+          professions: []
+        };
+
+        try {
+          // Appel API pour les détails du personnage
+          const profileResponse = await axios.get(
+            `https://${GUILD_REGION}.api.blizzard.com/profile/wow/character/${character.realm.slug}/${character.name.toLowerCase()}`,
+            {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              params: {
+                namespace: `profile-${GUILD_REGION}`,
+                locale: 'fr_FR'
+              }
+            }
+          );
+
+          const profile = profileResponse.data;
+
+          // Item level
+          characterDetails.ilvl = profile.equipped_item_level || profile.average_item_level || null;
+
+          // Spécialisation active
+          if (profile.active_spec) {
+            characterDetails.activeSpec = profile.active_spec.name;
+          }
+
+          // Métiers
+          if (profile.professions && profile.professions.primaries) {
+            characterDetails.professions = profile.professions.primaries.map(prof => ({
+              name: prof.profession.name,
+              tier: prof.tier,
+              skillPoints: prof.skill_points,
+              maxSkillPoints: prof.max_skill_points
+            }));
+          }
+        } catch (error) {
+          console.error(`Failed to fetch details for ${character.name}:`, error.message);
+        }
+
         const memberData = {
           name: character.name,
           realm: character.realm.slug,
           level: character.level,
           classId: classId,
           class: className,
-          rank: member.rank
+          rank: member.rank,
+          armoryLink: armoryLink,
+          ilvl: characterDetails.ilvl,
+          activeSpec: characterDetails.activeSpec,
+          professions: characterDetails.professions
         };
 
         currentMembersList.push(memberData);
@@ -894,6 +944,11 @@ exports.checkMembers = onRequest(
             class: m.class,
             level: m.level,
             realm: m.realm,
+            rank: m.rank,
+            ilvl: m.ilvl,
+            activeSpec: m.activeSpec,
+            armoryLink: m.armoryLink,
+            professions: m.professions,
             joinedAt: new Date(m.joinedAt).toLocaleString('fr-FR'),
             daysAgo: Math.floor((Date.now() - m.joinedAt) / (24 * 60 * 60 * 1000))
           }))

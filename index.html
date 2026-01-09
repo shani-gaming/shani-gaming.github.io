@@ -613,6 +613,12 @@
             color: #fff;
         }
 
+        .member-badge-spec {
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-style: italic;
+        }
+
         .member-badge-date {
             font-size: 0.75rem;
             color: var(--text-muted);
@@ -1174,10 +1180,12 @@
                 const fourteenDaysAgo = Date.now() - (14 * 24 * 60 * 60 * 1000);
 
                 // Requête Firestore pour les membres récents (limité à 5 max)
+                // Filtre: joinedAt récent ET rank === 3 (membres principaux, pas les rerolls)
                 const membersRef = collection(db, 'guild-members');
                 const q = query(
                     membersRef,
                     where('joinedAt', '>=', fourteenDaysAgo),
+                    where('rank', '==', 3),
                     orderBy('joinedAt', 'desc'),
                     limit(5)
                 );
@@ -1202,13 +1210,24 @@
                     const classIconUrl = classIcons[member.class] || classIcons['Warrior'];
                     const relativeDate = getRelativeTime(member.joinedAt);
 
+                    // Infos supplémentaires
+                    const ilvlText = member.ilvl ? `ilvl ${member.ilvl}` : '';
+                    const specText = member.activeSpec || member.class;
+
                     badge.innerHTML = `
                         <img src="${classIconUrl}" alt="${member.class}" class="member-badge-class-img">
-                        <div style="display: flex; flex-direction: column; gap: 0.1rem;">
+                        <div style="display: flex; flex-direction: column; gap: 0.1rem; flex: 1;">
                             <span class="member-badge-name">${member.name}</span>
-                            <span class="member-badge-date">${relativeDate}</span>
+                            <span class="member-badge-spec">${specText}</span>
+                            <span class="member-badge-date">${relativeDate} ${ilvlText ? '• ' + ilvlText : ''}</span>
                         </div>
                     `;
+
+                    // Rendre le badge cliquable vers l'armurerie
+                    if (member.armoryLink) {
+                        badge.style.cursor = 'pointer';
+                        badge.onclick = () => window.open(member.armoryLink, '_blank');
+                    }
 
                     membersList.appendChild(badge);
                 });
