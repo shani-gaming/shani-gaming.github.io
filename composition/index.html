@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Composition de Raid - Les Sages de Pandarie</title>
+    <link rel="icon" type="image/png" href="../img/logo.png">
+    <link rel="stylesheet" href="../styles/common.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* Page-specific variables */
+        :root {
+            --bg-elevated: #2a2f38;
+            --text-secondary: #b1bac4;
+
+            /* WoW Role Colors */
+            --tank: #C41E3A;
+            --healer: #00FF98;
+            --dps-melee: #C69B6D;
+            --dps-ranged: #3FC7EB;
+
+            /* WoW Class Colors */
+            --warrior: #C69B6D;
+            --paladin: #F48CBA;
+            --hunter: #AAD372;
+            --rogue: #FFF468;
+            --priest: #FFFFFF;
+            --shaman: #0070DD;
+            --mage: #3FC7EB;
+            --warlock: #8788EE;
+            --monk: #00FF98;
+            --druid: #FF7C0A;
+            --dh: #A330C9;
+            --dk: #C41E3A;
+            --evoker: #33937F;
+        }
+
+        body {
+            padding-top: 80px;
+        }
+
+        .page-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            grid-template-rows: 1fr auto;
+            gap: 1.5rem;
+            min-height: calc(100vh - 80px);
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Left Panel - Member List */
+        .members-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 120px);
+            grid-row: span 2;
+        }
+
+        .panel-header {
+            margin-bottom: 1rem;
+        }
+
+        .panel-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .panel-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Grade Filters */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .filter-btn {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--bg-deep);
+        }
+
+        /* Member List */
+        .member-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .member-list::-webkit-scrollbar { width: 6px; }
+        .member-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 3px; }
+        .member-list::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+
+        .member-card {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: grab;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .member-card:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .member-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .member-card.in-raid {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .member-class-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+        }
+
+        .member-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .member-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .member-details {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .member-ilvl {
+            font-size: 0.75rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Right Panel - Raid Composition */
+        .composition-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .composition-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .raid-count {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .raid-count strong {
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .clear-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .clear-btn:hover {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        .role-sections {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .role-section {
+            background: var(--bg-elevated);
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            min-height: 200px;
+            transition: all 0.2s;
+        }
+
+        .role-section.drag-over {
+            border-color: var(--primary);
+            background: rgba(238, 187, 85, 0.05);
+        }
+
+        .role-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .role-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .role-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .role-title.tank { color: var(--tank); }
+        .role-title.healer { color: var(--healer); }
+        .role-title.dps { color: var(--dps-ranged); }
+
+        .role-count {
+            margin-left: auto;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .role-members {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .raid-member {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .raid-member .member-class-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .raid-member .member-name {
+            flex: 1;
+            font-size: 0.85rem;
+        }
+
+        .remove-member {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            font-size: 1rem;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .remove-member:hover {
+            color: #ff6b6b;
+        }
+
+        /* Bottom Panel - Analysis */
+        .analysis-panel {
+            grid-column: 2;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .buff-category {
+            background: var(--bg-elevated);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .buff-category-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .buff-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .buff-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .buff-status {
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .buff-status.available {
+            color: #00ff98;
+        }
+
+        .buff-status.missing {
+            color: #ff6b6b;
+        }
+
+        .buff-name {
+            flex: 1;
+        }
+
+        .buff-provider {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .page-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+
+            .members-panel {
+                grid-row: auto;
+                max-height: 300px;
+            }
+
+            .role-sections {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loader */
+        .loader-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="../index.html" class="nav-logo">
+            <span style="color: var(--primary);">●</span> LES SAGES DE PANDARIE
+        </a>
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Accueil</a>
+            <a href="../roster/index.html" class="nav-link">Sondage Midnight</a>
+            <a href="index.html" class="nav-link active">Composition</a>
+        </div>
+    </nav>
+
+    <div class="page-container">
+        <!-- Left Panel - Member List -->
+        <div class="members-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Membres de la Guilde</h2>
+                <p class="panel-subtitle">Glissez les membres vers la composition</p>
+            </div>
+
+            <div class="filters" id="gradeFilters">
+                <button class="filter-btn active" data-grade="all">Tous</button>
+                <!-- Grade buttons will be added dynamically -->
+            </div>
+
+            <div class="member-list" id="memberList">
+                <div class="loader-container">
+                    <div class="loader"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Raid Composition -->
+        <div class="composition-panel">
+            <div class="composition-header">
+                <div>
+                    <h2 class="panel-title">Composition de Raid</h2>
+                    <p class="raid-count"><strong id="raidCount">0</strong> / 20 joueurs</p>
+                </div>
+                <button class="clear-btn" onclick="clearComposition()">Vider la composition</button>
+            </div>
+
+            <div class="role-sections">
+                <div class="role-section" data-role="tank" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'tank')" ondragleave="handleDragLeave(event)">
+                    <div class="role-header">
+                        <span class="role-title tank">Tanks</span>
+                        <span class="role-count" id="tankCount">0/2</span>
+                    </div>
+                    <div class="role-members" id="tankMembers"></div>
+                </div>
+
+                <div class="role-section" data-role="healer" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'healer')" ondragleave="handleDragLeave(event)">
+                    <div class="role-header">
+                        <span class="role-title healer">Healers</span>
+                        <span class="role-count" id="healerCount">0/4</span>
+                    </div>
+                    <div class="role-members" id="healerMembers"></div>
+                </div>
+
+                <div class="role-section" data-role="dps" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'dps')" ondragleave="handleDragLeave(event)">
+                    <div class="role-header">
+                        <span class="role-title dps">DPS</span>
+                        <span class="role-count" id="dpsCount">0/14</span>
+                    </div>
+                    <div class="role-members" id="dpsMembers"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Panel - Analysis -->
+        <div class="analysis-panel">
+            <h2 class="panel-title" style="margin-bottom: 1rem;">Analyse de la Composition</h2>
+            <div class="analysis-grid" id="analysisGrid">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjrcW6l6XkdKABiEJM2mCOQZKJ3fhwqeU",
+            authDomain: "guild-roster-67da7.firebaseapp.com",
+            projectId: "guild-roster-67da7",
+            storageBucket: "guild-roster-67da7.firebasestorage.app",
+            messagingSenderId: "824076820820",
+            appId: "1:824076820820:web:67a8ef22c699f12f2f5b8f"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Class icons mapping
+        const classIcons = {
+            'Death Knight': 'https://guildsofwow.com/assets/images/class-icons/death-knight.png',
+            'Demon Hunter': 'https://guildsofwow.com/assets/images/class-icons/demon-hunter.png',
+            'Druid': 'https://guildsofwow.com/assets/images/class-icons/druid.png',
+            'Evoker': 'https://guildsofwow.com/assets/images/class-icons/evoker.png',
+            'Hunter': 'https://guildsofwow.com/assets/images/class-icons/hunter.png',
+            'Mage': 'https://guildsofwow.com/assets/images/class-icons/mage.png',
+            'Monk': 'https://guildsofwow.com/assets/images/class-icons/monk.png',
+            'Paladin': 'https://guildsofwow.com/assets/images/class-icons/paladin.png',
+            'Priest': 'https://guildsofwow.com/assets/images/class-icons/priest.png',
+            'Rogue': 'https://guildsofwow.com/assets/images/class-icons/rogue.png',
+            'Shaman': 'https://guildsofwow.com/assets/images/class-icons/shaman.png',
+            'Warlock': 'https://guildsofwow.com/assets/images/class-icons/warlock.png',
+            'Warrior': 'https://guildsofwow.com/assets/images/class-icons/warrior.png'
+        };
+
+        // Role detection based on spec
+        const specRoles = {
+            // Tanks
+            'Blood': 'tank', 'Vengeance': 'tank', 'Guardian': 'tank',
+            'Brewmaster': 'tank', 'Protection': 'tank', 'Sang': 'tank',
+            'Gardien': 'tank', 'Maître brasseur': 'tank',
+            // Healers
+            'Restoration': 'healer', 'Holy': 'healer', 'Discipline': 'healer',
+            'Mistweaver': 'healer', 'Preservation': 'healer', 'Restauration': 'healer',
+            'Sacré': 'healer', 'Tisse-brume': 'healer', 'Préservation': 'healer',
+            // DPS (everything else)
+        };
+
+        // Buff/Debuff definitions
+        const raidUtility = {
+            'Battle Rez': {
+                providers: ['Death Knight', 'Druid', 'Warlock'],
+                icon: '💀'
+            },
+            'Bloodlust': {
+                providers: ['Shaman', 'Mage', 'Evoker', 'Hunter'],
+                icon: '⚡'
+            },
+            'Intellect': {
+                providers: ['Mage'],
+                icon: '📘'
+            },
+            'Stamina': {
+                providers: ['Priest'],
+                icon: '❤️'
+            },
+            'Attack Power': {
+                providers: ['Warrior'],
+                icon: '⚔️'
+            },
+            'Mystic Touch': {
+                providers: ['Monk'],
+                icon: '👊',
+                description: '+5% Physical Damage'
+            },
+            'Chaos Brand': {
+                providers: ['Demon Hunter'],
+                icon: '😈',
+                description: '+5% Magic Damage'
+            }
+        };
+
+        // State
+        let allMembers = [];
+        let raidComposition = {
+            tank: [],
+            healer: [],
+            dps: []
+        };
+        let activeFilter = 'all';
+        let knownGrades = new Set();
+
+        // Initialize
+        async function init() {
+            await loadMembers();
+            updateAnalysis();
+        }
+
+        // Load members from Firestore
+        async function loadMembers() {
+            const memberList = document.getElementById('memberList');
+
+            try {
+                const snapshot = await db.collection('guild-members')
+                    .where('active', '==', true)
+                    .get();
+
+                allMembers = [];
+                knownGrades.clear();
+
+                snapshot.forEach(doc => {
+                    const member = { id: doc.id, ...doc.data() };
+                    allMembers.push(member);
+                    knownGrades.add(member.rank);
+                });
+
+                // Sort by name
+                allMembers.sort((a, b) => a.name.localeCompare(b.name));
+
+                // Create grade filters
+                createGradeFilters();
+
+                // Render members
+                renderMembers();
+
+            } catch (error) {
+                console.error('Error loading members:', error);
+                memberList.innerHTML = '<p style="color: var(--text-muted); padding: 1rem;">Erreur de chargement</p>';
+            }
+        }
+
+        // Create grade filter buttons
+        function createGradeFilters() {
+            const container = document.getElementById('gradeFilters');
+            container.innerHTML = '<button class="filter-btn active" data-grade="all" onclick="filterByGrade(\'all\')">Tous</button>';
+
+            const sortedGrades = [...knownGrades].sort((a, b) => a - b);
+            sortedGrades.forEach(grade => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn';
+                btn.dataset.grade = grade;
+                btn.textContent = `Rang ${grade}`;
+                btn.onclick = () => filterByGrade(grade);
+                container.appendChild(btn);
+            });
+        }
+
+        // Filter members by grade
+        function filterByGrade(grade) {
+            activeFilter = grade;
+
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.grade == grade);
+            });
+
+            renderMembers();
+        }
+
+        // Render member list
+        function renderMembers() {
+            const memberList = document.getElementById('memberList');
+            memberList.innerHTML = '';
+
+            const raidMemberIds = new Set([
+                ...raidComposition.tank.map(m => m.id),
+                ...raidComposition.healer.map(m => m.id),
+                ...raidComposition.dps.map(m => m.id)
+            ]);
+
+            const filteredMembers = allMembers.filter(m =>
+                activeFilter === 'all' || m.rank == activeFilter
+            );
+
+            filteredMembers.forEach(member => {
+                const card = document.createElement('div');
+                card.className = 'member-card';
+                if (raidMemberIds.has(member.id)) {
+                    card.classList.add('in-raid');
+                }
+                card.draggable = true;
+                card.dataset.memberId = member.id;
+
+                card.ondragstart = (e) => handleDragStart(e, member);
+                card.ondragend = handleDragEnd;
+
+                const classIcon = classIcons[member.class] || classIcons['Warrior'];
+                const spec = member.activeSpec || '';
+                const ilvl = member.ilvl ? `ilvl ${member.ilvl}` : '';
+
+                card.innerHTML = `
+                    <img src="${classIcon}" alt="${member.class}" class="member-class-icon">
+                    <div class="member-info">
+                        <div class="member-name" style="color: var(--${member.class.toLowerCase().replace(' ', '-')})">${member.name}</div>
+                        <div class="member-details">${spec}</div>
+                    </div>
+                    <span class="member-ilvl">${ilvl}</span>
+                `;
+
+                memberList.appendChild(card);
+            });
+
+            if (filteredMembers.length === 0) {
+                memberList.innerHTML = '<p style="color: var(--text-muted); padding: 1rem; text-align: center;">Aucun membre trouvé</p>';
+            }
+        }
+
+        // Drag and Drop handlers
+        let draggedMember = null;
+
+        function handleDragStart(e, member) {
+            draggedMember = member;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.role-section').forEach(s => s.classList.remove('drag-over'));
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e, role) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+
+            if (!draggedMember) return;
+
+            // Check if already in raid
+            const allRaidMembers = [...raidComposition.tank, ...raidComposition.healer, ...raidComposition.dps];
+            if (allRaidMembers.find(m => m.id === draggedMember.id)) {
+                draggedMember = null;
+                return;
+            }
+
+            // Add to composition
+            raidComposition[role].push(draggedMember);
+            draggedMember = null;
+
+            updateRaidDisplay();
+            renderMembers();
+            updateAnalysis();
+        }
+
+        // Remove member from raid
+        function removeFromRaid(memberId, role) {
+            raidComposition[role] = raidComposition[role].filter(m => m.id !== memberId);
+            updateRaidDisplay();
+            renderMembers();
+            updateAnalysis();
+        }
+
+        // Clear entire composition
+        function clearComposition() {
+            raidComposition = { tank: [], healer: [], dps: [] };
+            updateRaidDisplay();
+            renderMembers();
+            updateAnalysis();
+        }
+
+        // Update raid display
+        function updateRaidDisplay() {
+            const total = raidComposition.tank.length + raidComposition.healer.length + raidComposition.dps.length;
+            document.getElementById('raidCount').textContent = total;
+
+            // Update role counts
+            document.getElementById('tankCount').textContent = `${raidComposition.tank.length}/2`;
+            document.getElementById('healerCount').textContent = `${raidComposition.healer.length}/4`;
+            document.getElementById('dpsCount').textContent = `${raidComposition.dps.length}/14`;
+
+            // Render each role section
+            ['tank', 'healer', 'dps'].forEach(role => {
+                const container = document.getElementById(`${role}Members`);
+                container.innerHTML = '';
+
+                raidComposition[role].forEach(member => {
+                    const classIcon = classIcons[member.class] || classIcons['Warrior'];
+                    const div = document.createElement('div');
+                    div.className = 'raid-member';
+                    div.innerHTML = `
+                        <img src="${classIcon}" alt="${member.class}" class="member-class-icon">
+                        <span class="member-name" style="color: var(--${member.class.toLowerCase().replace(' ', '-')})">${member.name}</span>
+                        <button class="remove-member" onclick="removeFromRaid('${member.id}', '${role}')">&times;</button>
+                    `;
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        // Update analysis panel
+        function updateAnalysis() {
+            const grid = document.getElementById('analysisGrid');
+            const allRaidMembers = [...raidComposition.tank, ...raidComposition.healer, ...raidComposition.dps];
+            const classesInRaid = new Set(allRaidMembers.map(m => m.class));
+
+            let html = '';
+
+            // Group utilities by category
+            const categories = {
+                'Ressources': ['Battle Rez', 'Bloodlust'],
+                'Buffs': ['Intellect', 'Stamina', 'Attack Power'],
+                'Debuffs': ['Mystic Touch', 'Chaos Brand']
+            };
+
+            for (const [category, utilities] of Object.entries(categories)) {
+                html += `<div class="buff-category">
+                    <div class="buff-category-title">${category}</div>
+                    <div class="buff-list">`;
+
+                utilities.forEach(utility => {
+                    const data = raidUtility[utility];
+                    const hasProvider = data.providers.some(p => classesInRaid.has(p));
+                    const provider = hasProvider
+                        ? data.providers.find(p => classesInRaid.has(p))
+                        : data.providers[0];
+
+                    html += `
+                        <div class="buff-item">
+                            <span class="buff-status ${hasProvider ? 'available' : 'missing'}">
+                                ${hasProvider ? '✓' : '✗'}
+                            </span>
+                            <span class="buff-name">${data.icon} ${utility}</span>
+                            <span class="buff-provider">${provider}</span>
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+            }
+
+            // Add composition summary
+            html += `<div class="buff-category">
+                <div class="buff-category-title">Résumé</div>
+                <div class="buff-list">
+                    <div class="buff-item">
+                        <span class="buff-status ${raidComposition.tank.length >= 2 ? 'available' : 'missing'}">
+                            ${raidComposition.tank.length >= 2 ? '✓' : '✗'}
+                        </span>
+                        <span class="buff-name">Tanks (${raidComposition.tank.length}/2)</span>
+                    </div>
+                    <div class="buff-item">
+                        <span class="buff-status ${raidComposition.healer.length >= 4 ? 'available' : 'missing'}">
+                            ${raidComposition.healer.length >= 4 ? '✓' : '✗'}
+                        </span>
+                        <span class="buff-name">Healers (${raidComposition.healer.length}/4)</span>
+                    </div>
+                    <div class="buff-item">
+                        <span class="buff-status ${allRaidMembers.length >= 20 ? 'available' : 'missing'}">
+                            ${allRaidMembers.length >= 20 ? '✓' : '✗'}
+                        </span>
+                        <span class="buff-name">Total (${allRaidMembers.length}/20)</span>
+                    </div>
+                </div>
+            </div>`;
+
+            grid.innerHTML = html;
+        }
+
+        // Initialize on load
+        init();
+    </script>
+
+</body>
+</html>
