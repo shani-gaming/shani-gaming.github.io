@@ -905,9 +905,14 @@
                     return;
                 }
 
-                // Afficher chaque nouveau membre
+                // Afficher chaque nouveau membre (filtrer les inactifs côté client)
+                let displayedCount = 0;
                 querySnapshot.forEach((doc) => {
                     const member = doc.data();
+
+                    // Ignorer les membres inactifs (qui ont quitté la guilde)
+                    if (member.active === false) return;
+
                     const badge = document.createElement('div');
                     badge.className = 'member-badge';
 
@@ -934,7 +939,14 @@
                     }
 
                     membersList.appendChild(badge);
+                    displayedCount++;
                 });
+
+                // Si aucun membre actif n'a été affiché
+                if (displayedCount === 0) {
+                    membersList.classList.add('empty');
+                    membersList.innerHTML = '<p style="font-size: 0.9rem;">Aucun nouveau membre récemment.</p>';
+                }
 
             } catch (error) {
                 console.error('Erreur lors du chargement des nouveaux membres:', error);

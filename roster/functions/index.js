@@ -735,7 +735,8 @@ exports.syncGuildRoster = onSchedule(
           armoryLink: armoryLink,
           ilvl: characterDetails.ilvl,
           activeSpec: characterDetails.activeSpec,
-          professions: characterDetails.professions
+          professions: characterDetails.professions,
+          active: true  // Marquer comme actif (présent dans le roster)
         };
 
         currentMembersList.push(memberData);
@@ -768,6 +769,31 @@ exports.syncGuildRoster = onSchedule(
         }
       }
 
+      // Détecter les membres qui ont quitté la guilde
+      const currentMemberKeys = new Set(currentMembersList.map(m => `${m.name}-${m.realm}`));
+      const allMembersSnapshot = await db.collection('guild-members').where('active', '==', true).get();
+
+      const departedMembers = [];
+      const batch = db.batch();
+
+      allMembersSnapshot.forEach(doc => {
+        const memberId = doc.id;
+        if (!currentMemberKeys.has(memberId)) {
+          // Ce membre n'est plus dans le roster API = il a quitté
+          departedMembers.push(memberId);
+          batch.update(doc.ref, {
+            active: false,
+            leftAt: Date.now()
+          });
+          console.log('Member departed:', memberId);
+        }
+      });
+
+      if (departedMembers.length > 0) {
+        await batch.commit();
+        console.log('Marked', departedMembers.length, 'members as departed');
+      }
+
       const todayKey = new Date().toISOString().split('T')[0];
       await db.collection('guild-roster-snapshots').doc(todayKey).set({
         timestamp: Date.now(),
@@ -775,12 +801,14 @@ exports.syncGuildRoster = onSchedule(
         members: currentMembersList
       });
 
-      console.log('Roster sync complete:', currentRoster.length, 'members,', newMembers.length, 'new');
+      console.log('Roster sync complete:', currentRoster.length, 'members,', newMembers.length, 'new,', departedMembers.length, 'departed');
 
       return {
         success: true,
         memberCount: currentRoster.length,
-        newMembersCount: newMembers.length
+        newMembersCount: newMembers.length,
+        departedMembersCount: departedMembers.length,
+        departedMembers: departedMembers
       };
 
     } catch (error) {
@@ -956,6 +984,100 @@ exports.checkMembers = onRequest(
 
       } catch (error) {
         console.error('Error checking members:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+  }
+);
+
+/**
+ * Utility function to manage guild members (init active field, remove member)
+ * Usage:
+ * - ?action=init - Initialize all members with active: true
+ * - ?action=remove&member=Name-realm - Mark a member as departed
+ * - ?action=delete&member=Name-realm - Permanently delete a member
+ */
+exports.manageMembers = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        const action = req.query.action;
+        const memberKey = req.query.member;
+
+        if (action === 'init') {
+          // Initialize all members with active: true if not set
+          const snapshot = await db.collection('guild-members').get();
+          const batch = db.batch();
+          let updated = 0;
+
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.active === undefined) {
+              batch.update(doc.ref, { active: true });
+              updated++;
+            }
+          });
+
+          await batch.commit();
+          return res.json({
+            success: true,
+            message: `Initialized ${updated} members with active: true`,
+            totalMembers: snapshot.size
+          });
+        }
+
+        if (action === 'remove' && memberKey) {
+          // Mark member as departed (soft delete)
+          const memberRef = db.collection('guild-members').doc(memberKey);
+          const memberDoc = await memberRef.get();
+
+          if (!memberDoc.exists) {
+            return res.status(404).json({ error: `Member ${memberKey} not found` });
+          }
+
+          await memberRef.update({
+            active: false,
+            leftAt: Date.now()
+          });
+
+          return res.json({
+            success: true,
+            message: `Member ${memberKey} marked as departed`
+          });
+        }
+
+        if (action === 'delete' && memberKey) {
+          // Permanently delete member
+          const memberRef = db.collection('guild-members').doc(memberKey);
+          const memberDoc = await memberRef.get();
+
+          if (!memberDoc.exists) {
+            return res.status(404).json({ error: `Member ${memberKey} not found` });
+          }
+
+          await memberRef.delete();
+
+          return res.json({
+            success: true,
+            message: `Member ${memberKey} permanently deleted`
+          });
+        }
+
+        return res.status(400).json({
+          error: 'Invalid action',
+          usage: {
+            init: '?action=init - Initialize all members with active: true',
+            remove: '?action=remove&member=Name-realm - Mark member as departed',
+            delete: '?action=delete&member=Name-realm - Permanently delete member'
+          }
+        });
+
+      } catch (error) {
+        console.error('Error managing members:', error);
         res.status(500).json({ error: error.message });
       }
     });
