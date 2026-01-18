@@ -107,15 +107,19 @@ function initNavbar() {
  */
 function getBasePath() {
     const path = window.location.pathname;
-    const depth = (path.match(/\//g) || []).length - 1;
 
-    // Si on est à la racine ou en local avec juste /index.html
-    if (depth <= 0 || path === '/' || path.endsWith('/index.html') && depth === 1) {
+    // Compte le nombre de segments dans le chemin (exclut le fichier)
+    // /index.html -> 0 segments
+    // /composition/index.html -> 1 segment
+    // /roster/index.html -> 1 segment
+    const segments = path.split('/').filter(s => s && !s.includes('.'));
+
+    if (segments.length === 0) {
         return '.';
     }
 
-    // Sinon, remonte d'autant de niveaux que nécessaire
-    return '..'.repeat(depth - 1) || '.';
+    // Remonte d'un niveau par segment
+    return segments.map(() => '..').join('/');
 }
 
 /**
