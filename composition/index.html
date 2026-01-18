@@ -361,23 +361,31 @@
             align-items: center;
             gap: 0.5rem;
             font-size: 0.85rem;
+            padding: 0.4rem;
+            border-radius: 4px;
+            transition: all 0.2s;
         }
 
-        .buff-status {
-            width: 18px;
-            height: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
+        .buff-item.available {
+            background: rgba(0, 255, 152, 0.1);
+            border-left: 3px solid #00ff98;
         }
 
-        .buff-status.available {
-            color: #00ff98;
+        .buff-item.missing {
+            background: rgba(255, 107, 107, 0.1);
+            border-left: 3px solid #ff6b6b;
+            opacity: 0.6;
         }
 
-        .buff-status.missing {
-            color: #ff6b6b;
+        .buff-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .buff-item.missing .buff-icon {
+            filter: grayscale(100%);
         }
 
         .buff-name {
@@ -563,59 +571,54 @@
             return 'dps'; // Default to DPS
         }
 
-        // Buff/Debuff definitions - Complete list
+        // Buff/Debuff definitions - Based on WoW raid utility
         const raidUtility = {
-            // Ressources
-            'Battle Rez': {
-                providers: ['Death Knight', 'Druid', 'Warlock'],
-                icon: '💀',
-                category: 'Ressources'
-            },
-            'Bloodlust': {
-                providers: ['Shaman', 'Mage', 'Evoker', 'Hunter'],
-                icon: '⚡',
-                category: 'Ressources'
-            },
             // Buffs
-            'Intelligence': {
-                providers: ['Mage'],
-                icon: '📘',
+            'Fureur-du-ciel': {
+                providers: ['Shaman'],
+                icon: 'https://wow.zamimg.com/images/wow/icons/medium/spell_nature_invisibilitytotem.jpg',
                 category: 'Buffs'
             },
-            'Endurance': {
-                providers: ['Priest'],
-                icon: '❤️',
+            'Marque du chasseur': {
+                providers: ['Hunter'],
+                icon: 'https://wow.zamimg.com/images/wow/icons/medium/ability_hunter_markedfordeath.jpg',
                 category: 'Buffs'
             },
-            'Puissance d\'attaque': {
-                providers: ['Warrior'],
-                icon: '⚔️',
-                category: 'Buffs'
-            },
-            'Versatilité': {
+            'Marque du fauve': {
                 providers: ['Druid'],
-                icon: '🛡️',
+                icon: 'https://wow.zamimg.com/images/wow/icons/medium/spell_nature_regeneration.jpg',
+                category: 'Buffs'
+            },
+            'Bénédiction du bronze': {
+                providers: ['Evoker'],
+                icon: 'https://wow.zamimg.com/images/wow/icons/medium/ability_evoker_blessingofthebronze.jpg',
+                category: 'Buffs'
+            },
+            'Cri de guerre': {
+                providers: ['Warrior'],
+                icon: 'https://wow.zamimg.com/images/wow/icons/medium/ability_warrior_battleshout.jpg',
+                category: 'Buffs'
+            },
+            'Intelligence des Arcanes': {
+                providers: ['Mage'],
+                icon: 'https://wow.zamimg.com/images/wow/icons/medium/spell_holy_magicalsentry.jpg',
+                category: 'Buffs'
+            },
+            'Mot de pouvoir : Robustesse': {
+                providers: ['Priest'],
+                icon: 'https://wow.zamimg.com/images/wow/icons/medium/spell_holy_wordfortitude.jpg',
                 category: 'Buffs'
             },
             // Debuffs
-            'Dégâts infligés': {
-                providers: ['Monk', 'Demon Hunter'],
-                icon: '💥',
-                category: 'Debuffs',
-                description: 'Mystic Touch / Chaos Brand'
+            'Marque du chaos': {
+                providers: ['Demon Hunter'],
+                icon: 'https://wow.zamimg.com/images/wow/icons/medium/ability_demonhunter_empowerwards.jpg',
+                category: 'Debuffs'
             },
-            // Utility
-            'Techniques de mouvement': {
-                providers: ['Druid', 'Shaman'],
-                icon: '🏃',
-                category: 'Utilité',
-                description: 'Rugissement / Totem'
-            },
-            'En mêlée': {
-                providers: ['Death Knight', 'Demon Hunter', 'Paladin', 'Warrior', 'Monk'],
-                icon: '🗡️',
-                category: 'Utilité',
-                description: 'Grip / Aura / etc.'
+            'Toucher mystique': {
+                providers: ['Monk'],
+                icon: 'https://wow.zamimg.com/images/wow/icons/medium/ability_monk_sparring.jpg',
+                category: 'Debuffs'
             }
         };
 
@@ -874,7 +877,7 @@
             }
 
             // Order categories
-            const categoryOrder = ['Ressources', 'Buffs', 'Debuffs', 'Utilité'];
+            const categoryOrder = ['Buffs', 'Debuffs'];
 
             for (const category of categoryOrder) {
                 const utilities = categories[category];
@@ -892,11 +895,9 @@
                         : data.providers[0];
 
                     html += `
-                        <div class="buff-item">
-                            <span class="buff-status ${hasProvider ? 'available' : 'missing'}">
-                                ${hasProvider ? '✓' : '✗'}
-                            </span>
-                            <span class="buff-name">${data.icon} ${utility}</span>
+                        <div class="buff-item ${hasProvider ? 'available' : 'missing'}">
+                            <img src="${data.icon}" alt="${utility}" class="buff-icon">
+                            <span class="buff-name">${utility}</span>
                             <span class="buff-provider">${provider}</span>
                         </div>
                     `;
