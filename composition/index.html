@@ -442,6 +442,13 @@
                 <!-- Grade buttons will be added dynamically -->
             </div>
 
+            <div class="filters" id="roleFilters" style="border-bottom: none; padding-bottom: 0;">
+                <button class="filter-btn active" data-role="all" onclick="filterByRole('all')">Tous rôles</button>
+                <button class="filter-btn" data-role="tank" onclick="filterByRole('tank')" style="border-color: var(--tank);">Tanks</button>
+                <button class="filter-btn" data-role="healer" onclick="filterByRole('healer')" style="border-color: var(--healer);">Healers</button>
+                <button class="filter-btn" data-role="dps" onclick="filterByRole('dps')" style="border-color: var(--dps-ranged);">DPS</button>
+            </div>
+
             <div class="member-list" id="memberList">
                 <div class="loader-container">
                     <div class="loader"></div>
@@ -526,7 +533,15 @@
             'Warrior': 'https://guildsofwow.com/assets/images/class-icons/warrior.png'
         };
 
-        // Role detection based on spec
+        // Grade names mapping
+        const gradeNames = {
+            0: 'Grand Sage (GM)',
+            1: 'Gardien de Jade (Offs)',
+            2: 'Moine du Val (Reroll)',
+            3: 'Novice du Lotus (Membre)'
+        };
+
+        // Role detection based on spec (FR and EN)
         const specRoles = {
             // Tanks
             'Blood': 'tank', 'Vengeance': 'tank', 'Guardian': 'tank',
@@ -536,40 +551,71 @@
             'Restoration': 'healer', 'Holy': 'healer', 'Discipline': 'healer',
             'Mistweaver': 'healer', 'Preservation': 'healer', 'Restauration': 'healer',
             'Sacré': 'healer', 'Tisse-brume': 'healer', 'Préservation': 'healer',
-            // DPS (everything else)
+            // DPS (everything else defaults to dps)
         };
 
-        // Buff/Debuff definitions
+        // Get member role from spec
+        function getMemberRole(member) {
+            const spec = member.activeSpec;
+            if (spec && specRoles[spec]) {
+                return specRoles[spec];
+            }
+            return 'dps'; // Default to DPS
+        }
+
+        // Buff/Debuff definitions - Complete list
         const raidUtility = {
+            // Ressources
             'Battle Rez': {
                 providers: ['Death Knight', 'Druid', 'Warlock'],
-                icon: '💀'
+                icon: '💀',
+                category: 'Ressources'
             },
             'Bloodlust': {
                 providers: ['Shaman', 'Mage', 'Evoker', 'Hunter'],
-                icon: '⚡'
+                icon: '⚡',
+                category: 'Ressources'
             },
-            'Intellect': {
+            // Buffs
+            'Intelligence': {
                 providers: ['Mage'],
-                icon: '📘'
+                icon: '📘',
+                category: 'Buffs'
             },
-            'Stamina': {
+            'Endurance': {
                 providers: ['Priest'],
-                icon: '❤️'
+                icon: '❤️',
+                category: 'Buffs'
             },
-            'Attack Power': {
+            'Puissance d\'attaque': {
                 providers: ['Warrior'],
-                icon: '⚔️'
+                icon: '⚔️',
+                category: 'Buffs'
             },
-            'Mystic Touch': {
-                providers: ['Monk'],
-                icon: '👊',
-                description: '+5% Physical Damage'
+            'Versatilité': {
+                providers: ['Druid'],
+                icon: '🛡️',
+                category: 'Buffs'
             },
-            'Chaos Brand': {
-                providers: ['Demon Hunter'],
-                icon: '😈',
-                description: '+5% Magic Damage'
+            // Debuffs
+            'Dégâts infligés': {
+                providers: ['Monk', 'Demon Hunter'],
+                icon: '💥',
+                category: 'Debuffs',
+                description: 'Mystic Touch / Chaos Brand'
+            },
+            // Utility
+            'Techniques de mouvement': {
+                providers: ['Druid', 'Shaman'],
+                icon: '🏃',
+                category: 'Utilité',
+                description: 'Rugissement / Totem'
+            },
+            'En mêlée': {
+                providers: ['Death Knight', 'Demon Hunter', 'Paladin', 'Warrior', 'Monk'],
+                icon: '🗡️',
+                category: 'Utilité',
+                description: 'Grip / Aura / etc.'
             }
         };
 
@@ -580,7 +626,8 @@
             healer: [],
             dps: []
         };
-        let activeFilter = 'all';
+        let activeGradeFilter = 'all';
+        let activeRoleFilter = 'all';
         let knownGrades = new Set();
 
         // Initialize
@@ -625,14 +672,14 @@
         // Create grade filter buttons
         function createGradeFilters() {
             const container = document.getElementById('gradeFilters');
-            container.innerHTML = '<button class="filter-btn active" data-grade="all" onclick="filterByGrade(\'all\')">Tous</button>';
+            container.innerHTML = '<button class="filter-btn active" data-grade="all" onclick="filterByGrade(\'all\')">Tous rangs</button>';
 
             const sortedGrades = [...knownGrades].sort((a, b) => a - b);
             sortedGrades.forEach(grade => {
                 const btn = document.createElement('button');
                 btn.className = 'filter-btn';
                 btn.dataset.grade = grade;
-                btn.textContent = `Rang ${grade}`;
+                btn.textContent = gradeNames[grade] || `Rang ${grade}`;
                 btn.onclick = () => filterByGrade(grade);
                 container.appendChild(btn);
             });
@@ -640,11 +687,23 @@
 
         // Filter members by grade
         function filterByGrade(grade) {
-            activeFilter = grade;
+            activeGradeFilter = grade;
 
             // Update button states
-            document.querySelectorAll('.filter-btn').forEach(btn => {
+            document.querySelectorAll('#gradeFilters .filter-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.grade == grade);
+            });
+
+            renderMembers();
+        }
+
+        // Filter members by role
+        function filterByRole(role) {
+            activeRoleFilter = role;
+
+            // Update button states
+            document.querySelectorAll('#roleFilters .filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.role == role);
             });
 
             renderMembers();
@@ -661,9 +720,19 @@
                 ...raidComposition.dps.map(m => m.id)
             ]);
 
-            const filteredMembers = allMembers.filter(m =>
-                activeFilter === 'all' || m.rank == activeFilter
-            );
+            const filteredMembers = allMembers.filter(m => {
+                // Grade filter
+                const gradeMatch = activeGradeFilter === 'all' || m.rank == activeGradeFilter;
+
+                // Role filter
+                let roleMatch = true;
+                if (activeRoleFilter !== 'all') {
+                    const memberRole = getMemberRole(m);
+                    roleMatch = memberRole === activeRoleFilter;
+                }
+
+                return gradeMatch && roleMatch;
+            });
 
             filteredMembers.forEach(member => {
                 const card = document.createElement('div');
@@ -796,14 +865,21 @@
 
             let html = '';
 
-            // Group utilities by category
-            const categories = {
-                'Ressources': ['Battle Rez', 'Bloodlust'],
-                'Buffs': ['Intellect', 'Stamina', 'Attack Power'],
-                'Debuffs': ['Mystic Touch', 'Chaos Brand']
-            };
+            // Group utilities by category from raidUtility
+            const categories = {};
+            for (const [utilityName, data] of Object.entries(raidUtility)) {
+                const cat = data.category;
+                if (!categories[cat]) categories[cat] = [];
+                categories[cat].push(utilityName);
+            }
 
-            for (const [category, utilities] of Object.entries(categories)) {
+            // Order categories
+            const categoryOrder = ['Ressources', 'Buffs', 'Debuffs', 'Utilité'];
+
+            for (const category of categoryOrder) {
+                const utilities = categories[category];
+                if (!utilities) continue;
+
                 html += `<div class="buff-category">
                     <div class="buff-category-title">${category}</div>
                     <div class="buff-list">`;
