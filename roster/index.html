@@ -52,87 +52,8 @@
         }
 
         body {
-            padding-top: 80px;
+            padding-top: 120px; /* navbar + toolbar */
         }
-
-        .nav-links {
-            align-items: center;
-        }
-
-        .nav-link.active {
-            color: var(--primary);
-        }
-
-        /* Navbar Dropdown */
-        .nav-dropdown {
-            position: relative;
-        }
-
-        .nav-dropdown-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-
-        .nav-dropdown-menu {
-            position: absolute;
-            top: calc(100% + 0.5rem);
-            right: 0;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.5rem;
-            min-width: 200px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.2s ease;
-            z-index: 1000;
-        }
-
-        .nav-dropdown-menu.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .nav-dropdown-item {
-            width: 100%;
-            background: transparent;
-            border: none;
-            color: var(--text-primary);
-            padding: 0.75rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.9rem;
-            text-align: left;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .nav-dropdown-item:hover {
-            background: var(--primary-dim);
-            color: var(--primary);
-        }
-
-        .nav-dropdown-item span {
-            font-size: 1.1rem;
-        }
-
-        .nav-dropdown-item.admin-nav-item {
-            border-top: 1px solid var(--border);
-            margin-top: 0.5rem;
-            padding-top: 0.75rem;
-        }
-
 
         /* Stats Grid */
         .stats-grid {
@@ -1010,31 +931,24 @@
 </head>
 <body>
     <!-- Modern Navbar -->
-    <nav class="navbar">
-        <a href="../index.html" class="nav-logo">
-            <span style="color: var(--primary);">●</span> LES SAGES DE PANDARIE
-        </a>
-        <div class="nav-links">
-            <a href="../index.html" class="nav-link">Accueil</a>
-            <a href="#" class="nav-link active">Roster</a>
-            <div class="nav-dropdown">
-                <button class="nav-link nav-dropdown-btn" onclick="toggleNavDropdown()">
-                    ⚙️ Actions <span style="font-size: 0.7em;">▼</span>
-                </button>
-                <div class="nav-dropdown-menu" id="nav-dropdown-menu">
-                    <button class="nav-dropdown-item" onclick="exportToDiscord(); closeNavDropdown();">
-                        <span>💬</span> Export Discord
-                    </button>
-                    <button class="nav-dropdown-item" onclick="exportToCSV(); closeNavDropdown();">
-                        <span>📊</span> Export CSV
-                    </button>
-                    <button class="nav-dropdown-item admin-nav-item" onclick="toggleAdminMode(); closeNavDropdown();">
-                        <span>⚙️</span> Mode Admin
-                    </button>
-                </div>
-            </div>
+    <!-- Navbar générée par navbar.js -->
+    <nav class="navbar"></nav>
+    <script src="../scripts/navbar.js"></script>
+
+    <!-- Barre d'actions spécifique à la page -->
+    <div class="page-toolbar">
+        <div class="toolbar-actions">
+            <button class="toolbar-btn" onclick="exportToDiscord();">
+                <span>💬</span> Export Discord
+            </button>
+            <button class="toolbar-btn" onclick="exportToCSV();">
+                <span>📊</span> Export CSV
+            </button>
+            <button class="toolbar-btn admin-nav-item" onclick="toggleAdminMode();">
+                <span>⚙️</span> Mode Admin
+            </button>
         </div>
-    </nav>
+    </div>
 
     <div class="container">
         <!-- Bento Grid Dashboard -->

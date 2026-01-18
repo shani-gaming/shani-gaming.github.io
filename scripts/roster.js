@@ -46,26 +46,6 @@ function showToast(message, type = 'info') {
     }, 4000);
 }
 
-// Navbar Dropdown Toggle System
-function toggleNavDropdown() {
-    const menu = document.getElementById('nav-dropdown-menu');
-    menu.classList.toggle('active');
-}
-
-function closeNavDropdown() {
-    const menu = document.getElementById('nav-dropdown-menu');
-    menu.classList.remove('active');
-}
-
-// Close dropdown when clicking outside
-document.addEventListener('click', function(event) {
-    const dropdown = document.querySelector('.nav-dropdown');
-    const menu = document.getElementById('nav-dropdown-menu');
-    if (dropdown && menu && !dropdown.contains(event.target)) {
-        menu.classList.remove('active');
-    }
-});
-
 // Listen for auth state changes
 auth.onAuthStateChanged(async user => {
     currentUser = user;
