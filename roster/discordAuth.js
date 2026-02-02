@@ -134,6 +134,17 @@ const DiscordAuth = {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(authData));
         sessionStorage.removeItem('discord_oauth_state');
 
+        // Sign in anonymously to Firebase for Firestore permissions
+        if (data.hasAccess && typeof firebase !== 'undefined' && firebase.auth) {
+            try {
+                await firebase.auth().signInAnonymously();
+                console.log('Firebase anonymous auth successful');
+            } catch (firebaseError) {
+                console.warn('Firebase anonymous auth failed:', firebaseError);
+                // Continue anyway - Discord auth succeeded
+            }
+        }
+
         return authData;
     },
 
@@ -260,9 +271,33 @@ const DiscordAuth = {
     },
 
     /**
+     * Ensure Firebase anonymous auth is active
+     */
+    async ensureFirebaseAuth() {
+        if (typeof firebase === 'undefined' || !firebase.auth) {
+            console.warn('Firebase not available');
+            return false;
+        }
+
+        const currentUser = firebase.auth().currentUser;
+        if (currentUser) {
+            return true; // Already signed in
+        }
+
+        try {
+            await firebase.auth().signInAnonymously();
+            console.log('Firebase anonymous auth successful');
+            return true;
+        } catch (error) {
+            console.error('Firebase anonymous auth failed:', error);
+            return false;
+        }
+    },
+
+    /**
      * Initialize authentication check
      */
-    init(options = {}) {
+    async init(options = {}) {
         if (!this.ENABLED) {
             console.log('Discord auth is disabled');
             return;
@@ -270,6 +305,9 @@ const DiscordAuth = {
 
         if (!this.isAuthenticated()) {
             this.showLoginOverlay(options);
+        } else {
+            // User is Discord-authenticated, ensure Firebase auth is active
+            await this.ensureFirebaseAuth();
         }
     }
 };
