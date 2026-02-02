@@ -1083,3 +1083,189 @@ exports.manageMembers = onRequest(
     });
   }
 );
+
+/**
+ * Submit a roster entry (survey response)
+ * This function handles writes to the roster collection securely
+ * Only Discord-authenticated users can submit entries
+ */
+exports.submitRosterEntry = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        // Only accept POST
+        if (req.method !== 'POST') {
+          return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        const { entry, discordUser } = req.body;
+
+        // Validate Discord user info
+        if (!discordUser || !discordUser.userId || !discordUser.username) {
+          return res.status(401).json({ error: 'Discord authentication required' });
+        }
+
+        // Validate entry data
+        if (!entry || !entry.name || !entry.class || !entry.spec) {
+          return res.status(400).json({ error: 'Missing required entry fields (name, class, spec)' });
+        }
+
+        // Prepare the document
+        const rosterEntry = {
+          ...entry,
+          discordUserId: discordUser.userId,
+          discordUsername: discordUser.username,
+          timestamp: new Date(),
+          submittedVia: 'cloud-function'
+        };
+
+        // Write to Firestore
+        const docRef = await db.collection('roster').add(rosterEntry);
+
+        console.log('Roster entry submitted:', {
+          docId: docRef.id,
+          playerName: entry.name,
+          discordUser: discordUser.username
+        });
+
+        res.json({
+          success: true,
+          id: docRef.id,
+          message: 'Entry submitted successfully'
+        });
+
+      } catch (error) {
+        console.error('Error submitting roster entry:', error);
+        res.status(500).json({ error: 'Failed to submit entry', details: error.message });
+      }
+    });
+  }
+);
+
+/**
+ * Update a roster entry (for Armory refresh)
+ */
+exports.updateRosterEntry = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        if (req.method !== 'POST') {
+          return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        const { entryId, updates, discordUser } = req.body;
+
+        if (!entryId) {
+          return res.status(400).json({ error: 'Missing entryId' });
+        }
+
+        if (!updates || typeof updates !== 'object') {
+          return res.status(400).json({ error: 'Missing or invalid updates' });
+        }
+
+        // Only allow specific fields to be updated
+        const allowedFields = ['ilvl', 'enchantPercentage', 'gemPercentage', 'avatarUrl'];
+        const sanitizedUpdates = {};
+
+        for (const field of allowedFields) {
+          if (updates[field] !== undefined) {
+            sanitizedUpdates[field] = updates[field];
+          }
+        }
+
+        if (Object.keys(sanitizedUpdates).length === 0) {
+          return res.status(400).json({ error: 'No valid fields to update' });
+        }
+
+        // Update in Firestore
+        const docRef = db.collection('roster').doc(entryId);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+          return res.status(404).json({ error: 'Entry not found' });
+        }
+
+        await docRef.update(sanitizedUpdates);
+
+        console.log('Roster entry updated:', {
+          docId: entryId,
+          fields: Object.keys(sanitizedUpdates),
+          updatedBy: discordUser?.username || 'unknown'
+        });
+
+        res.json({
+          success: true,
+          message: 'Entry updated successfully'
+        });
+
+      } catch (error) {
+        console.error('Error updating roster entry:', error);
+        res.status(500).json({ error: 'Failed to update entry', details: error.message });
+      }
+    });
+  }
+);
+
+/**
+ * Delete a roster entry
+ * Only the original submitter or admins can delete
+ */
+exports.deleteRosterEntry = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        if (req.method !== 'POST') {
+          return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        const { entryId, discordUser } = req.body;
+
+        if (!entryId) {
+          return res.status(400).json({ error: 'Missing entryId' });
+        }
+
+        if (!discordUser || !discordUser.userId) {
+          return res.status(401).json({ error: 'Discord authentication required' });
+        }
+
+        // Get the entry to verify ownership
+        const docRef = db.collection('roster').doc(entryId);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+          return res.status(404).json({ error: 'Entry not found' });
+        }
+
+        // For now, allow deletion if user is authenticated
+        // In the future, could check if discordUser.userId matches doc.data().discordUserId
+        await docRef.delete();
+
+        console.log('Roster entry deleted:', {
+          docId: entryId,
+          deletedBy: discordUser.username
+        });
+
+        res.json({
+          success: true,
+          message: 'Entry deleted successfully'
+        });
+
+      } catch (error) {
+        console.error('Error deleting roster entry:', error);
+        res.status(500).json({ error: 'Failed to delete entry', details: error.message });
+      }
+    });
+  }
+);

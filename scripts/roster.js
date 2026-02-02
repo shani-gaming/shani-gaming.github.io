@@ -812,13 +812,34 @@ async function submitForm(event) {
     const nextIndex = roleArray.filter(p => p !== null).length;
 
     try {
-        // Add to Firestore
-        await db.collection('roster').add({
-            ...player,
-            section: section,
-            index: nextIndex,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        // Get Discord user info
+        const discordUser = DiscordAuth.getUserInfo();
+        if (!discordUser || !discordUser.userId) {
+            showToast('Erreur: Authentification Discord requise', 'error');
+            return;
+        }
+
+        // Submit via Cloud Function
+        const response = await fetch(`${FUNCTIONS_BASE_URL}/submitRosterEntry`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                entry: {
+                    ...player,
+                    section: section,
+                    index: nextIndex
+                },
+                discordUser: {
+                    userId: discordUser.userId,
+                    username: discordUser.username
+                }
+            })
         });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Erreur serveur');
+        }
 
         closeForm();
         showToast(`${player.name} a été inscrit comme ${player.spec} !`, 'success');
@@ -840,7 +861,24 @@ async function removePlayer(section, index) {
 
     if (confirm(`Retirer ${player.name} du roster ?`)) {
         try {
-            await db.collection('roster').doc(player.id).delete();
+            const discordUser = DiscordAuth.getUserInfo();
+            const response = await fetch(`${FUNCTIONS_BASE_URL}/deleteRosterEntry`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    entryId: player.id,
+                    discordUser: {
+                        userId: discordUser?.userId || 'admin',
+                        username: discordUser?.username || 'admin'
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Erreur serveur');
+            }
+
             showToast(`${player.name} a été retiré du roster.`, 'success');
         } catch (error) {
             console.error('Erreur lors de la suppression:', error);
@@ -921,9 +959,25 @@ async function editPlayer(section, index) {
         });
     }, 100);
 
-    // Delete old entry from Firestore
+    // Delete old entry from Firestore via Cloud Function
     try {
-        await db.collection('roster').doc(player.id).delete();
+        const discordUser = DiscordAuth.getUserInfo();
+        const response = await fetch(`${FUNCTIONS_BASE_URL}/deleteRosterEntry`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                entryId: player.id,
+                discordUser: {
+                    userId: discordUser?.userId || 'admin',
+                    username: discordUser?.username || 'admin'
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Erreur serveur');
+        }
     } catch (error) {
         console.error('Erreur lors de la suppression:', error);
         showToast('Erreur lors de la modification. Veuillez réessayer.', 'error');
@@ -965,13 +1019,29 @@ async function refreshPlayerArmory(playerId, playerName, realmSlug) {
             throw new Error('Données Armory incomplètes');
         }
 
-        // Update player in Firestore
-        await db.collection('roster').doc(playerId).update({
-            ilvl: data.character.equippedItemLevel || null,
-            enchantPercentage: data.equipment.enchantPercentage,
-            gemPercentage: data.equipment.gemPercentage,
-            avatarUrl: data.character.avatarUrl || null
+        // Update player in Firestore via Cloud Function
+        const discordUser = DiscordAuth.getUserInfo();
+        const updateResponse = await fetch(`${FUNCTIONS_BASE_URL}/updateRosterEntry`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                entryId: playerId,
+                updates: {
+                    ilvl: data.character.equippedItemLevel || null,
+                    enchantPercentage: data.equipment.enchantPercentage,
+                    gemPercentage: data.equipment.gemPercentage,
+                    avatarUrl: data.character.avatarUrl || null
+                },
+                discordUser: {
+                    userId: discordUser?.userId || 'admin',
+                    username: discordUser?.username || 'admin'
+                }
+            })
         });
+
+        if (!updateResponse.ok) {
+            throw new Error('Erreur lors de la mise à jour');
+        }
 
         showToast(`✅ Données mises à jour pour ${playerName}`, 'success');
 
@@ -1062,13 +1132,30 @@ async function refreshAllPlayers() {
                 const data = await response.json();
 
                 if (data.character && data.equipment) {
-                    await db.collection('roster').doc(player.id).update({
-                        ilvl: data.character.equippedItemLevel || null,
-                        enchantPercentage: data.equipment.enchantPercentage,
-                        gemPercentage: data.equipment.gemPercentage,
-                        avatarUrl: data.character.avatarUrl || null
+                    const discordUser = DiscordAuth.getUserInfo();
+                    const updateResponse = await fetch(`${FUNCTIONS_BASE_URL}/updateRosterEntry`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            entryId: player.id,
+                            updates: {
+                                ilvl: data.character.equippedItemLevel || null,
+                                enchantPercentage: data.equipment.enchantPercentage,
+                                gemPercentage: data.equipment.gemPercentage,
+                                avatarUrl: data.character.avatarUrl || null
+                            },
+                            discordUser: {
+                                userId: discordUser?.userId || 'admin',
+                                username: discordUser?.username || 'admin'
+                            }
+                        })
                     });
-                    completed++;
+
+                    if (updateResponse.ok) {
+                        completed++;
+                    } else {
+                        errors++;
+                    }
                 }
             } else {
                 errors++;
