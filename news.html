@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actualités - Les Sages de Pandarie</title>
+    <link rel="icon" type="image/png" href="img/logo.png">
+    <link rel="stylesheet" href="styles/common.css">
+    <style>
+        body { padding-top: 80px; }
+
+        .page-header {
+            padding: 4rem 0 2.5rem;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .news-section {
+            padding: 4rem 0;
+            min-height: 60vh;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .news-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .news-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .news-label.progression { color: var(--primary); }
+        .news-label.organisation { color: var(--accent); }
+        .news-label.recrutement { color: #7289da; }
+        .news-label.communaute { color: #f48cba; }
+        .news-label.default { color: var(--primary); }
+
+        .news-date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .news-title {
+            font-size: 1.3rem;
+            color: #fff;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .news-content {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            flex: 1;
+            line-height: 1.6;
+        }
+
+        .news-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .news-link:hover { color: #fff; }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .pagination-btn {
+            padding: 0.6rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 1024px) {
+            .news-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            .news-grid { grid-template-columns: 1fr; }
+            .page-header h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar"></nav>
+    <script src="scripts/navbar.js"></script>
+    <script src="scripts/news.js"></script>
+
+    <div class="page-header">
+        <div class="container">
+            <h1>Actualités</h1>
+            <p>Toutes les nouvelles de la guilde Les Sages de Pandarie</p>
+        </div>
+    </div>
+
+    <section class="news-section">
+        <div class="container">
+            <div class="news-grid" id="newsGrid"></div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 Les Sages de Pandarie • Hyjal EU</p>
+        </div>
+    </footer>
+
+    <script>
+        const PER_PAGE = 6;
+        let currentPage = 0;
+
+        const labelColors = {
+            'progression': 'progression',
+            'organisation': 'organisation',
+            'recrutement': 'recrutement',
+            'communauté': 'communaute'
+        };
+
+        function renderPage(page) {
+            const grid = document.getElementById('newsGrid');
+            const paginationEl = document.getElementById('pagination');
+            const totalPages = Math.ceil(NEWS.length / PER_PAGE);
+            const slice = NEWS.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
+
+            grid.innerHTML = slice.map(news => {
+                const date = new Date(news.date).toLocaleDateString('fr-FR', {
+                    day: 'numeric', month: 'long', year: 'numeric'
+                });
+                const colorClass = labelColors[news.label.toLowerCase()] || 'default';
+                const linkHtml = news.link
+                    ? `<a href="${news.link.url}" class="news-link">${news.link.text} →</a>`
+                    : '';
+
+                return `
+                    <div class="news-card">
+                        <div class="news-meta">
+                            <span class="news-label ${colorClass}">${news.label}</span>
+                            <span class="news-date">${date}</span>
+                        </div>
+                        <h3 class="news-title">${news.title}</h3>
+                        <p class="news-content">${news.content}</p>
+                        ${linkHtml}
+                    </div>
+                `;
+            }).join('');
+
+            if (totalPages > 1) {
+                paginationEl.innerHTML = `
+                    <button class="pagination-btn" onclick="changePage(${page - 1})" ${page === 0 ? 'disabled' : ''}>← Précédent</button>
+                    <span class="pagination-info">Page ${page + 1} / ${totalPages}</span>
+                    <button class="pagination-btn" onclick="changePage(${page + 1})" ${page >= totalPages - 1 ? 'disabled' : ''}>Suivant →</button>
+                `;
+            } else {
+                paginationEl.innerHTML = '';
+            }
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            renderPage(currentPage);
+        }
+
+        renderPage(0);
+    </script>
+
+</body>
+</html>

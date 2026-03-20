@@ -15,6 +15,7 @@ const navConfig = {
     // Liens principaux (affichés directement dans la navbar)
     mainLinks: [
         { text: 'Accueil', href: '/index.html' },
+        { text: 'Actualités', href: '/news.html' },
         { text: 'Sondage Midnight', href: '/roster/index.html' }
     ],
 
