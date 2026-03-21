@@ -712,16 +712,31 @@ exports.syncGuildRoster = onSchedule(
             characterDetails.activeSpec = profile.active_spec.name;
           }
 
-          // Métiers Midnight (endpoint dédié avec recettes)
+          // Métiers Midnight (endpoint dédié avec recettes, EN + FR en parallèle)
           try {
             const profUrl = `https://${GUILD_REGION}.api.blizzard.com/profile/wow/character/${character.realm.slug}/${character.name.toLowerCase()}/professions`;
-            const profResponse = await axios.get(profUrl, {
-              headers: { Authorization: `Bearer ${accessToken}` },
-              params: { namespace: `profile-${GUILD_REGION}`, locale: 'fr_FR' }
+            const [profResponseEn, profResponseFr] = await Promise.all([
+              axios.get(profUrl, {
+                headers: { Authorization: `Bearer ${accessToken}` },
+                params: { namespace: `profile-${GUILD_REGION}`, locale: 'en_US' }
+              }),
+              axios.get(profUrl, {
+                headers: { Authorization: `Bearer ${accessToken}` },
+                params: { namespace: `profile-${GUILD_REGION}`, locale: 'fr_FR' }
+              })
+            ]);
+
+            // Map FR recipe names by ID for quick lookup
+            const frRecipeMap = new Map();
+            [...(profResponseFr.data.primaries || []), ...(profResponseFr.data.secondaries || [])].forEach(prof => {
+              prof.tiers?.forEach(tier => {
+                (tier.known_recipes || []).forEach(r => frRecipeMap.set(r.id, r.name));
+              });
             });
+
             const allProfs = [
-              ...(profResponse.data.primaries || []),
-              ...(profResponse.data.secondaries || [])
+              ...(profResponseEn.data.primaries || []),
+              ...(profResponseEn.data.secondaries || [])
             ];
             characterDetails.midnightProfessions = allProfs
               .map(prof => {
@@ -731,7 +746,11 @@ exports.syncGuildRoster = onSchedule(
                   name: prof.profession.name,
                   skillPoints: midnightTier.skill_points,
                   maxSkillPoints: midnightTier.max_skill_points,
-                  recipes: (midnightTier.known_recipes || []).map(r => ({ id: r.id, name: r.name }))
+                  recipes: (midnightTier.known_recipes || []).map(r => ({
+                    id: r.id,
+                    name: r.name,
+                    nameFr: frRecipeMap.get(r.id) || r.name
+                  }))
                 };
               })
               .filter(Boolean);
@@ -784,6 +803,59 @@ exports.syncGuildRoster = onSchedule(
             lastSeen: Date.now()
           });
         }
+      }
+
+      // Enrichissement des noms FR via l'API game data (namespace static, meilleures traductions)
+      try {
+        const allRecipeIds = new Set();
+        currentMembersList.forEach(member => {
+          member.midnightProfessions?.forEach(prof => {
+            prof.recipes?.forEach(r => allRecipeIds.add(r.id));
+          });
+        });
+
+        if (allRecipeIds.size > 0) {
+          const recipeIdArray = [...allRecipeIds];
+          const frNameMap = new Map();
+          const BATCH_SIZE = 10;
+
+          for (let i = 0; i < recipeIdArray.length; i += BATCH_SIZE) {
+            const batchIds = recipeIdArray.slice(i, i + BATCH_SIZE);
+            const results = await Promise.allSettled(
+              batchIds.map(id =>
+                axios.get(`https://${GUILD_REGION}.api.blizzard.com/data/wow/recipe/${id}`, {
+                  headers: { Authorization: `Bearer ${accessToken}` },
+                  params: { namespace: `static-${GUILD_REGION}`, locale: 'fr_FR' }
+                })
+              )
+            );
+            results.forEach((result, idx) => {
+              if (result.status === 'fulfilled') {
+                frNameMap.set(batchIds[idx], result.value.data.name);
+              }
+            });
+          }
+
+          // Mettre à jour nameFr dans Firestore pour chaque membre
+          const frBatch = db.batch();
+          currentMembersList.forEach(member => {
+            if (!member.midnightProfessions?.length) return;
+            member.midnightProfessions.forEach(prof => {
+              prof.recipes?.forEach(r => {
+                const frName = frNameMap.get(r.id);
+                if (frName) r.nameFr = frName;
+              });
+            });
+            const memberKey = `${member.name}-${member.realm}`;
+            frBatch.update(db.collection('guild-members').doc(memberKey), {
+              midnightProfessions: member.midnightProfessions
+            });
+          });
+          await frBatch.commit();
+          console.log(`FR names enriched: ${frNameMap.size} unique recipes translated`);
+        }
+      } catch (frError) {
+        console.error('Failed to enrich FR recipe names:', frError.message);
       }
 
       // Détecter les membres qui ont quitté la guilde
