@@ -286,8 +286,7 @@
                 <div class="filter-pills" id="filterPills">
                     <button class="filter-pill active" data-filter="all" onclick="setFilter('all')">Tous</button>
                 </div>
-                <!-- Toggle EN/FR masqué : traductions Midnight pas encore dispo dans l'API Blizzard -->
-                <!-- <button id="langToggle" class="filter-pill" onclick="toggleLang()" title="Basculer la langue des recettes">🇫🇷 FR</button> -->
+                <button id="langToggle" class="filter-pill" onclick="toggleLang()" title="Basculer la langue des recettes">🇫🇷 FR</button>
             </div>
         </div>
     </div>
@@ -350,6 +349,7 @@
         }
 
         function wowheadLink(r) {
+            if (r.spellId) return `https://www.wowhead.com/spell=${r.spellId}`;
             return `https://www.wowhead.com/search?q=${encodeURIComponent(r.name)}`;
         }
 

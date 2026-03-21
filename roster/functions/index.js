@@ -715,23 +715,9 @@ exports.syncGuildRoster = onSchedule(
           // Métiers Midnight (endpoint dédié avec recettes, EN + FR en parallèle)
           try {
             const profUrl = `https://${GUILD_REGION}.api.blizzard.com/profile/wow/character/${character.realm.slug}/${character.name.toLowerCase()}/professions`;
-            const [profResponseEn, profResponseFr] = await Promise.all([
-              axios.get(profUrl, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-                params: { namespace: `profile-${GUILD_REGION}`, locale: 'en_US' }
-              }),
-              axios.get(profUrl, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-                params: { namespace: `profile-${GUILD_REGION}`, locale: 'fr_FR' }
-              })
-            ]);
-
-            // Map FR recipe names by ID for quick lookup
-            const frRecipeMap = new Map();
-            [...(profResponseFr.data.primaries || []), ...(profResponseFr.data.secondaries || [])].forEach(prof => {
-              prof.tiers?.forEach(tier => {
-                (tier.known_recipes || []).forEach(r => frRecipeMap.set(r.id, r.name));
-              });
+            const profResponseEn = await axios.get(profUrl, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              params: { namespace: `profile-${GUILD_REGION}`, locale: 'en_US' }
             });
 
             const allProfs = [
@@ -749,7 +735,8 @@ exports.syncGuildRoster = onSchedule(
                   recipes: (midnightTier.known_recipes || []).map(r => ({
                     id: r.id,
                     name: r.name,
-                    nameFr: frRecipeMap.get(r.id) || r.name
+                    nameFr: r.name,  // sera enrichi par Wowhead ci-dessous
+                    spellId: null
                   }))
                 };
               })
@@ -805,7 +792,7 @@ exports.syncGuildRoster = onSchedule(
         }
       }
 
-      // Enrichissement des noms FR via l'API game data (namespace static, meilleures traductions)
+      // Enrichissement via Wowhead tooltip API : nom FR + spell ID pour lien direct
       try {
         const allRecipeIds = new Set();
         currentMembersList.forEach(member => {
@@ -816,46 +803,53 @@ exports.syncGuildRoster = onSchedule(
 
         if (allRecipeIds.size > 0) {
           const recipeIdArray = [...allRecipeIds];
-          const frNameMap = new Map();
-          const BATCH_SIZE = 10;
+          // Map: recipeId → { nameFr, spellId }
+          const wowheadMap = new Map();
+          const BATCH_SIZE = 5;
 
           for (let i = 0; i < recipeIdArray.length; i += BATCH_SIZE) {
             const batchIds = recipeIdArray.slice(i, i + BATCH_SIZE);
             const results = await Promise.allSettled(
               batchIds.map(id =>
-                axios.get(`https://${GUILD_REGION}.api.blizzard.com/data/wow/recipe/${id}`, {
-                  headers: { Authorization: `Bearer ${accessToken}` },
-                  params: { namespace: `static-${GUILD_REGION}`, locale: 'fr_FR' }
+                axios.get(`https://nether.wowhead.com/tooltip/recipe/${id}`, {
+                  params: { locale: 'frFR' }
                 })
               )
             );
             results.forEach((result, idx) => {
               if (result.status === 'fulfilled') {
-                frNameMap.set(batchIds[idx], result.value.data.name);
+                const data = result.value.data;
+                const nameFr = data.name || null;
+                const spellMatch = (data.tooltip || '').match(/\/spell=(\d+)/);
+                const spellId = spellMatch ? parseInt(spellMatch[1]) : null;
+                wowheadMap.set(batchIds[idx], { nameFr, spellId });
               }
             });
           }
 
-          // Mettre à jour nameFr dans Firestore pour chaque membre
-          const frBatch = db.batch();
+          // Mettre à jour nameFr + spellId dans Firestore
+          const whBatch = db.batch();
           currentMembersList.forEach(member => {
             if (!member.midnightProfessions?.length) return;
             member.midnightProfessions.forEach(prof => {
               prof.recipes?.forEach(r => {
-                const frName = frNameMap.get(r.id);
-                if (frName) r.nameFr = frName;
+                const wh = wowheadMap.get(r.id);
+                if (wh) {
+                  if (wh.nameFr) r.nameFr = wh.nameFr;
+                  if (wh.spellId) r.spellId = wh.spellId;
+                }
               });
             });
             const memberKey = `${member.name}-${member.realm}`;
-            frBatch.update(db.collection('guild-members').doc(memberKey), {
+            whBatch.update(db.collection('guild-members').doc(memberKey), {
               midnightProfessions: member.midnightProfessions
             });
           });
-          await frBatch.commit();
-          console.log(`FR names enriched: ${frNameMap.size} unique recipes translated`);
+          await whBatch.commit();
+          console.log(`Wowhead enrichment done: ${wowheadMap.size} unique recipes (FR + spellId)`);
         }
-      } catch (frError) {
-        console.error('Failed to enrich FR recipe names:', frError.message);
+      } catch (whError) {
+        console.error('Failed to enrich via Wowhead:', whError.message);
       }
 
       // Détecter les membres qui ont quitté la guilde
