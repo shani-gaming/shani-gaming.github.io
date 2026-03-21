@@ -24,9 +24,8 @@ const navConfig = {
         {
             text: 'Outils',
             items: [
-                { text: 'Composition de Raid', href: '/composition/index.html' }
-                // Ajoute d'autres outils ici :
-                // { text: 'Nouvel Outil', href: '/chemin/vers/outil.html' }
+                { text: 'Composition de Raid', href: '/composition/index.html' },
+                { text: 'Métiers de la Guilde', href: '/professions.html' }
             ]
         }
         // Ajoute d'autres menus déroulants ici si besoin

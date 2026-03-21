@@ -686,7 +686,7 @@ exports.syncGuildRoster = onSchedule(
         let characterDetails = {
           ilvl: null,
           activeSpec: null,
-          professions: []
+          midnightProfessions: []
         };
 
         try {
@@ -712,14 +712,31 @@ exports.syncGuildRoster = onSchedule(
             characterDetails.activeSpec = profile.active_spec.name;
           }
 
-          // Métiers
-          if (profile.professions && profile.professions.primaries) {
-            characterDetails.professions = profile.professions.primaries.map(prof => ({
-              name: prof.profession.name,
-              tier: prof.tier,
-              skillPoints: prof.skill_points,
-              maxSkillPoints: prof.max_skill_points
-            }));
+          // Métiers Midnight (endpoint dédié avec recettes)
+          try {
+            const profUrl = `https://${GUILD_REGION}.api.blizzard.com/profile/wow/character/${character.realm.slug}/${character.name.toLowerCase()}/professions`;
+            const profResponse = await axios.get(profUrl, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              params: { namespace: `profile-${GUILD_REGION}`, locale: 'fr_FR' }
+            });
+            const allProfs = [
+              ...(profResponse.data.primaries || []),
+              ...(profResponse.data.secondaries || [])
+            ];
+            characterDetails.midnightProfessions = allProfs
+              .map(prof => {
+                const midnightTier = prof.tiers?.find(t => t.tier.name.startsWith('Midnight'));
+                if (!midnightTier) return null;
+                return {
+                  name: prof.profession.name,
+                  skillPoints: midnightTier.skill_points,
+                  maxSkillPoints: midnightTier.max_skill_points,
+                  recipes: (midnightTier.known_recipes || []).map(r => ({ id: r.id, name: r.name }))
+                };
+              })
+              .filter(Boolean);
+          } catch (profError) {
+            console.error(`Failed to fetch professions for ${character.name}:`, profError.message);
           }
         } catch (error) {
           console.error(`Failed to fetch details for ${character.name}:`, error.message);
@@ -735,7 +752,7 @@ exports.syncGuildRoster = onSchedule(
           armoryLink: armoryLink,
           ilvl: characterDetails.ilvl,
           activeSpec: characterDetails.activeSpec,
-          professions: characterDetails.professions,
+          midnightProfessions: characterDetails.midnightProfessions,
           active: true  // Marquer comme actif (présent dans le roster)
         };
 

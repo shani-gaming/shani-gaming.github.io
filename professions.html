@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Métiers — Les Sages de Pandarie</title>
+    <link rel="icon" type="image/png" href="img/logo.png">
+    <link rel="stylesheet" href="styles/common.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- Wowhead tooltips -->
+    <script>const wowhead_tooltips = { "colorLinks": true, "iconizeLinks": true, "renameLinks": false };</script>
+    <script src="https://wow.zamimg.com/widgets/power.js"></script>
+
+    <style>
+        body { padding-top: 80px; }
+
+        .page-header {
+            padding: 4rem 0 2.5rem;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .page-header h1 { font-size: 3rem; margin-bottom: 0.5rem; }
+        .page-header p { color: var(--text-muted); font-size: 1.1rem; }
+
+        /* Search & Filters */
+        .search-bar-section {
+            padding: 2rem 0 1.5rem;
+            background: var(--bg-surface);
+            position: sticky;
+            top: 70px;
+            z-index: 50;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            padding: 0.75rem 1.25rem;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .filter-pill:hover { border-color: var(--primary); color: var(--primary); }
+        .filter-pill.active { background: var(--primary); color: var(--bg-deep); border-color: var(--primary); font-weight: 600; }
+
+        /* Content */
+        .professions-section { padding: 3rem 0; min-height: 60vh; }
+
+        /* Search results (recipe-centric) */
+        .recipe-results { display: flex; flex-direction: column; gap: 1rem; }
+
+        .recipe-result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .recipe-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .recipe-crafters {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .crafter-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .crafter-name { color: #fff; font-weight: 600; }
+        .crafter-skill { color: var(--text-muted); font-size: 0.78rem; }
+
+        /* Member cards (default view) */
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .member-prof-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+
+        .member-prof-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+
+        .member-prof-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .member-prof-name { font-size: 1.1rem; font-weight: 700; color: #fff; }
+        .member-prof-realm { font-size: 0.78rem; color: var(--text-muted); }
+
+        .class-icon-small {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+        }
+
+        .profession-block { margin-bottom: 1rem; }
+        .profession-block:last-child { margin-bottom: 0; }
+
+        .profession-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .profession-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .profession-skill {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .skill-bar {
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+        }
+
+        .skill-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        .recipes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .recipe-item {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            padding: 0.2rem 0;
+        }
+
+        .recipe-item a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .recipe-item a:hover { color: var(--primary); }
+
+        .recipes-toggle {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 0.25rem 0;
+            margin-top: 0.25rem;
+        }
+
+        .recipes-toggle:hover { color: #fff; }
+
+        /* Empty / Loading states */
+        .state-message {
+            text-align: center;
+            padding: 4rem 0;
+            color: var(--text-muted);
+        }
+
+        .state-message .loader { margin: 0 auto 1rem; }
+
+        .stats-bar {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+
+        .stats-bar strong { color: var(--primary); }
+
+        @media (max-width: 600px) {
+            .members-grid { grid-template-columns: 1fr; }
+            .page-header h1 { font-size: 2rem; }
+            .search-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar"></nav>
+    <script src="scripts/navbar.js"></script>
+
+    <div class="page-header">
+        <div class="container">
+            <h1>Métiers de la Guilde</h1>
+            <p>Recettes Midnight — qui craft quoi</p>
+        </div>
+    </div>
+
+    <div class="search-bar-section">
+        <div class="container">
+            <div class="search-row">
+                <input
+                    type="search"
+                    id="searchInput"
+                    class="search-input"
+                    placeholder="Rechercher une recette... (ex: Scout's Scaled Vest)"
+                    autocomplete="off"
+                >
+                <div class="filter-pills" id="filterPills">
+                    <button class="filter-pill active" data-filter="all" onclick="setFilter('all')">Tous</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="professions-section">
+        <div class="container">
+            <div id="statsBar" class="stats-bar" style="display:none"></div>
+            <div id="content">
+                <div class="state-message">
+                    <div class="loader"></div>
+                    <p>Chargement des métiers...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 Les Sages de Pandarie • Hyjal EU</p>
+        </div>
+    </footer>
+
+    <script>
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyD0cmazoD42kD_H243Do5pIPGhwXFgOHYE",
+            authDomain: "guild-roster-67da7.firebaseapp.com",
+            projectId: "guild-roster-67da7",
+            storageBucket: "guild-roster-67da7.firebasestorage.app",
+            messagingSenderId: "971948767326",
+            appId: "1:971948767326:web:4377499f1ff23db1899ccf"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const classIcons = {
+            'Warrior': 'https://guildsofwow.com/assets/images/class-icons/warrior.png',
+            'Paladin': 'https://guildsofwow.com/assets/images/class-icons/paladin.png',
+            'Hunter': 'https://guildsofwow.com/assets/images/class-icons/hunter.png',
+            'Rogue': 'https://guildsofwow.com/assets/images/class-icons/rogue.png',
+            'Priest': 'https://guildsofwow.com/assets/images/class-icons/priest.png',
+            'Death Knight': 'https://guildsofwow.com/assets/images/class-icons/death-knight.png',
+            'Shaman': 'https://guildsofwow.com/assets/images/class-icons/shaman.png',
+            'Mage': 'https://guildsofwow.com/assets/images/class-icons/mage.png',
+            'Warlock': 'https://guildsofwow.com/assets/images/class-icons/warlock.png',
+            'Monk': 'https://guildsofwow.com/assets/images/class-icons/monk.png',
+            'Druid': 'https://guildsofwow.com/assets/images/class-icons/druid.png',
+            'Demon Hunter': 'https://guildsofwow.com/assets/images/class-icons/demon-hunter.png',
+            'Evoker': 'https://guildsofwow.com/assets/images/class-icons/evoker.png'
+        };
+
+        let allMembers = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+        const RECIPES_PREVIEW = 5;
+
+        async function loadProfessions() {
+            try {
+                const snapshot = await db.collection('guild-members')
+                    .where('active', '==', true)
+                    .get();
+
+                allMembers = [];
+                snapshot.forEach(doc => {
+                    const m = doc.data();
+                    if (m.midnightProfessions && m.midnightProfessions.length > 0) {
+                        allMembers.push(m);
+                    }
+                });
+
+                allMembers.sort((a, b) => a.name.localeCompare(b.name));
+                buildFilters();
+                render();
+            } catch (e) {
+                document.getElementById('content').innerHTML = `
+                    <div class="state-message">
+                        <p>Erreur lors du chargement des données.</p>
+                    </div>`;
+            }
+        }
+
+        function buildFilters() {
+            const profSet = new Set();
+            allMembers.forEach(m => m.midnightProfessions.forEach(p => profSet.add(p.name)));
+
+            const pills = document.getElementById('filterPills');
+            pills.innerHTML = `<button class="filter-pill active" data-filter="all" onclick="setFilter('all')">Tous</button>`;
+            [...profSet].sort().forEach(prof => {
+                pills.innerHTML += `<button class="filter-pill" data-filter="${prof}" onclick="setFilter('${prof}')">${prof}</button>`;
+            });
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-pill').forEach(p => {
+                p.classList.toggle('active', p.dataset.filter === filter);
+            });
+            render();
+        }
+
+        function render() {
+            const query = searchQuery.trim().toLowerCase();
+
+            if (query.length >= 2) {
+                renderSearch(query);
+            } else {
+                renderByMember();
+            }
+
+            // Re-init Wowhead tooltips
+            if (typeof WH !== 'undefined' && WH.GameTooltip) {
+                setTimeout(() => WH.GameTooltip.initializeProxies(), 200);
+            }
+        }
+
+        function renderSearch(query) {
+            // Build recipe → crafters index
+            const recipeMap = new Map();
+
+            allMembers.forEach(member => {
+                const profs = filterProfs(member.midnightProfessions);
+                profs.forEach(prof => {
+                    prof.recipes.forEach(recipe => {
+                        if (recipe.name.toLowerCase().includes(query)) {
+                            if (!recipeMap.has(recipe.id)) {
+                                recipeMap.set(recipe.id, { recipe, crafters: [] });
+                            }
+                            recipeMap.get(recipe.id).crafters.push({ member, prof });
+                        }
+                    });
+                });
+            });
+
+            updateStats(`${recipeMap.size} recette${recipeMap.size > 1 ? 's' : ''} trouvée${recipeMap.size > 1 ? 's' : ''}`);
+
+            if (recipeMap.size === 0) {
+                document.getElementById('content').innerHTML = `
+                    <div class="state-message"><p>Aucune recette trouvée pour "<strong>${searchQuery}</strong>".</p></div>`;
+                return;
+            }
+
+            let html = '<div class="recipe-results">';
+            recipeMap.forEach(({ recipe, crafters }) => {
+                const crafterBadges = crafters.map(({ member, prof }) => `
+                    <div class="crafter-badge">
+                        <img src="${classIcons[member.class] || ''}" style="width:20px;height:20px;border-radius:4px;" alt="">
+                        <span class="crafter-name">${member.name}</span>
+                        <span class="crafter-skill">${prof.skillPoints}/${prof.maxSkillPoints}</span>
+                    </div>
+                `).join('');
+
+                html += `
+                    <div class="recipe-result-card">
+                        <div class="recipe-name">
+                            <a href="https://www.wowhead.com/recipe=${recipe.id}" data-wowhead="recipe=${recipe.id}">${recipe.name}</a>
+                        </div>
+                        <div class="recipe-crafters">${crafterBadges}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            document.getElementById('content').innerHTML = html;
+        }
+
+        function renderByMember() {
+            const filtered = allMembers.filter(m => {
+                if (currentFilter === 'all') return true;
+                return m.midnightProfessions.some(p => p.name === currentFilter);
+            });
+
+            updateStats(`${filtered.length} membre${filtered.length > 1 ? 's' : ''} avec des recettes Midnight`);
+
+            if (filtered.length === 0) {
+                document.getElementById('content').innerHTML = `
+                    <div class="state-message">
+                        <p>Aucune donnée disponible.<br>
+                        La sync quotidienne (2h du matin) n'a pas encore tourné avec cette mise à jour.</p>
+                    </div>`;
+                return;
+            }
+
+            let html = '<div class="members-grid">';
+            filtered.forEach(member => {
+                const profs = filterProfs(member.midnightProfessions);
+                if (profs.length === 0) return;
+
+                const icon = classIcons[member.class] || '';
+                const realm = member.realm !== 'hyjal' ? ` <span style="color:var(--text-muted);font-size:0.75rem;">(${member.realm})</span>` : '';
+
+                const profsHtml = profs.map(prof => {
+                    const pct = Math.round(prof.skillPoints / prof.maxSkillPoints * 100);
+                    const preview = prof.recipes.slice(0, RECIPES_PREVIEW);
+                    const remaining = prof.recipes.length - RECIPES_PREVIEW;
+                    const id = `${member.name}-${prof.name}`.replace(/\s/g, '-');
+
+                    const recipesHtml = preview.map(r => `
+                        <div class="recipe-item">
+                            <a href="https://www.wowhead.com/recipe=${r.id}" data-wowhead="recipe=${r.id}">${r.name}</a>
+                        </div>
+                    `).join('');
+
+                    const moreHtml = remaining > 0 ? `
+                        <div id="more-${id}" style="display:none">
+                            ${prof.recipes.slice(RECIPES_PREVIEW).map(r => `
+                                <div class="recipe-item">
+                                    <a href="https://www.wowhead.com/recipe=${r.id}" data-wowhead="recipe=${r.id}">${r.name}</a>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button class="recipes-toggle" onclick="toggleMore('${id}', ${remaining}, this)">
+                            + ${remaining} recette${remaining > 1 ? 's' : ''} de plus
+                        </button>
+                    ` : '';
+
+                    return `
+                        <div class="profession-block">
+                            <div class="profession-header">
+                                <span class="profession-name">${prof.name}</span>
+                                <span class="profession-skill">${prof.skillPoints} / ${prof.maxSkillPoints}</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-bar-fill" style="width:${pct}%"></div>
+                            </div>
+                            <div class="recipes-list">${recipesHtml}</div>
+                            ${moreHtml}
+                        </div>
+                    `;
+                }).join('');
+
+                html += `
+                    <div class="member-prof-card">
+                        <div class="member-prof-header">
+                            <img src="${icon}" class="class-icon-small" alt="${member.class}">
+                            <div>
+                                <div class="member-prof-name">${member.name}${realm}</div>
+                                <div class="member-prof-realm">${member.class}${member.activeSpec ? ' — ' + member.activeSpec : ''}</div>
+                            </div>
+                        </div>
+                        ${profsHtml}
+                    </div>
+                `;
+            });
+            html += '</div>';
+            document.getElementById('content').innerHTML = html;
+        }
+
+        function filterProfs(profs) {
+            if (currentFilter === 'all') return profs;
+            return profs.filter(p => p.name === currentFilter);
+        }
+
+        function updateStats(text) {
+            const bar = document.getElementById('statsBar');
+            bar.style.display = 'flex';
+            bar.innerHTML = `<span><strong>${text}</strong> — données mises à jour chaque nuit à 2h</span>`;
+        }
+
+        function toggleMore(id, count, btn) {
+            const el = document.getElementById('more-' + id);
+            if (el.style.display === 'none') {
+                el.style.display = 'block';
+                btn.textContent = `Masquer`;
+            } else {
+                el.style.display = 'none';
+                btn.textContent = `+ ${count} recette${count > 1 ? 's' : ''} de plus`;
+            }
+        }
+
+        // Search with debounce
+        document.getElementById('searchInput').addEventListener('input', e => {
+            searchQuery = e.target.value;
+            clearTimeout(window._searchTimeout);
+            window._searchTimeout = setTimeout(render, 200);
+        });
+
+        loadProfessions();
+    </script>
+
+</body>
+</html>
