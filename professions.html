@@ -7,15 +7,15 @@
     <link rel="icon" type="image/png" href="img/logo.png">
     <link rel="stylesheet" href="styles/common.css">
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
     <!-- Wowhead tooltips -->
     <script>const wowhead_tooltips = { "colorLinks": true, "iconizeLinks": true, "renameLinks": false };</script>
     <script src="https://wow.zamimg.com/widgets/power.js"></script>
 
-    <style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
         body { padding-top: 80px; }
 
         .page-header {
@@ -286,6 +286,7 @@
                 <div class="filter-pills" id="filterPills">
                     <button class="filter-pill active" data-filter="all" onclick="setFilter('all')">Tous</button>
                 </div>
+                <button id="langToggle" class="filter-pill" onclick="toggleLang()" title="Basculer la langue des recettes">🇫🇷 FR</button>
             </div>
         </div>
     </div>
@@ -340,7 +341,16 @@
         let allMembers = [];
         let currentFilter = 'all';
         let searchQuery = '';
+        let currentLang = 'fr';
         const RECIPES_PREVIEW = 5;
+
+        function recipeName(r) {
+            return currentLang === 'fr' ? (r.nameFr || r.name) : r.name;
+        }
+
+        function wowheadLink(r) {
+            return `https://www.wowhead.com/search?q=${encodeURIComponent(r.name)}`;
+        }
 
         async function loadProfessions() {
             try {
@@ -440,7 +450,7 @@
                 html += `
                     <div class="recipe-result-card">
                         <div class="recipe-name">
-                            <a href="https://www.wowhead.com/recipe=${recipe.id}" data-wowhead="recipe=${recipe.id}">${recipe.name}</a>
+                            <a href="${wowheadLink(recipe)}" data-wowhead="recipe=${recipe.id}" target="_blank" rel="noopener">${recipeName(recipe)}</a>
                         </div>
                         <div class="recipe-crafters">${crafterBadges}</div>
                     </div>
@@ -483,7 +493,7 @@
 
                     const recipesHtml = preview.map(r => `
                         <div class="recipe-item">
-                            <a href="https://www.wowhead.com/recipe=${r.id}" data-wowhead="recipe=${r.id}">${r.name}</a>
+                            <a href="${wowheadLink(r)}" data-wowhead="recipe=${r.id}" target="_blank" rel="noopener">${recipeName(r)}</a>
                         </div>
                     `).join('');
 
@@ -491,7 +501,7 @@
                         <div id="more-${id}" style="display:none">
                             ${prof.recipes.slice(RECIPES_PREVIEW).map(r => `
                                 <div class="recipe-item">
-                                    <a href="https://www.wowhead.com/recipe=${r.id}" data-wowhead="recipe=${r.id}">${r.name}</a>
+                                    <a href="${wowheadLink(r)}" data-wowhead="recipe=${r.id}" target="_blank" rel="noopener">${recipeName(r)}</a>
                                 </div>
                             `).join('')}
                         </div>
@@ -541,6 +551,12 @@
             const bar = document.getElementById('statsBar');
             bar.style.display = 'flex';
             bar.innerHTML = `<span><strong>${text}</strong> — données mises à jour chaque nuit à 2h</span>`;
+        }
+
+        function toggleLang() {
+            currentLang = currentLang === 'fr' ? 'en' : 'fr';
+            document.getElementById('langToggle').textContent = currentLang === 'fr' ? '🇫🇷 FR' : '🇬🇧 EN';
+            render();
         }
 
         function toggleMore(id, count, btn) {
