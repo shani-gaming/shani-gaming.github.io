@@ -420,7 +420,7 @@
                 const profs = filterProfs(member.midnightProfessions);
                 profs.forEach(prof => {
                     prof.recipes.forEach(recipe => {
-                        if (recipe.name.toLowerCase().includes(query)) {
+                        if (recipe.name.toLowerCase().includes(query) || (recipe.nameFr || '').toLowerCase().includes(query)) {
                             if (!recipeMap.has(recipe.id)) {
                                 recipeMap.set(recipe.id, { recipe, crafters: [] });
                             }
