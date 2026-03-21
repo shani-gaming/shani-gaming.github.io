@@ -338,6 +338,15 @@
             'Evoker': 'https://guildsofwow.com/assets/images/class-icons/evoker.png'
         };
 
+        const PROF_FR = {
+            'Alchemy': 'Alchimie', 'Blacksmithing': 'Forge', 'Cooking': 'Cuisine',
+            'Enchanting': 'Enchantement', 'Engineering': 'Ingénierie', 'Fishing': 'Pêche',
+            'Herbalism': 'Herboristerie', 'Inscription': 'Calligraphie', 'Jewelcrafting': 'Joaillerie',
+            'Leatherworking': 'Travail du cuir', 'Mining': 'Minage', 'Skinning': 'Dépeçage',
+            'Tailoring': 'Couture'
+        };
+        function profName(name) { return PROF_FR[name] || name; }
+
         let allMembers = [];
         let currentFilter = 'all';
         let searchQuery = '';
@@ -385,7 +394,7 @@
             const pills = document.getElementById('filterPills');
             pills.innerHTML = `<button class="filter-pill active" data-filter="all" onclick="setFilter('all')">Tous</button>`;
             [...profSet].sort().forEach(prof => {
-                pills.innerHTML += `<button class="filter-pill" data-filter="${prof}" onclick="setFilter('${prof}')">${prof}</button>`;
+                pills.innerHTML += `<button class="filter-pill" data-filter="${prof}" onclick="setFilter('${prof}')">${profName(prof)}</button>`;
             });
         }
 
@@ -514,7 +523,7 @@
                     return `
                         <div class="profession-block">
                             <div class="profession-header">
-                                <span class="profession-name">${prof.name}</span>
+                                <span class="profession-name">${profName(prof.name)}</span>
                                 <span class="profession-skill">${prof.skillPoints} / ${prof.maxSkillPoints}</span>
                             </div>
                             <div class="skill-bar">
