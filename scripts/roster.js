@@ -298,7 +298,8 @@ function init() {
                     enchantPercentage: data.enchantPercentage !== undefined ? data.enchantPercentage : null,
                     gemPercentage: data.gemPercentage !== undefined ? data.gemPercentage : null,
                     avatarUrl: data.avatarUrl || null,
-                    realmSlug: data.realmSlug || null
+                    realmSlug: data.realmSlug || null,
+                    ilvl: data.ilvl || null
                 };
             }
         });
@@ -409,8 +410,8 @@ function renderRoster() {
 
         const specCell = `<td class="spec-cell">${specCellContent}</td>`;
 
-        // ilvl cell
-        const ilvlValue = player.notes ? extractIlvl(player.notes) : null;
+        // ilvl cell — priorité au champ ilvl Firestore (refresh Armory), fallback sur notes
+        const ilvlValue = player.ilvl || (player.notes ? extractIlvl(player.notes) : null);
         const ilvlCell = `<td class="ilvl-cell">${ilvlValue || '-'}</td>`;
 
         // Enchant badge
@@ -491,7 +492,7 @@ function showTooltip(event, player) {
     const avatarHTML = player.avatarUrl ?
         `<img src="${player.avatarUrl}" alt="${player.name}" class="tooltip-avatar">` : '';
 
-    const ilvl = player.notes ? extractIlvl(player.notes) : null;
+    const ilvl = player.ilvl || (player.notes ? extractIlvl(player.notes) : null);
     const className = getClassName(player.class);
     const specIconUrl = player.spec ? getSpecIcon(player.spec, player.class) : null;
     const specDisplay = specIconUrl ?
@@ -1184,14 +1185,13 @@ async function refreshAllPlayers() {
         showToast(`⚠️ ${completed} réussis, ${errors} erreur(s)`, 'warning');
     }
 
-    // Hide progress and reload roster after 2s
+    // Hide progress (onSnapshot met à jour l'UI automatiquement)
     setTimeout(() => {
         progressDiv.style.display = 'none';
         progressBar.style.width = '0%';
         refreshBtn.disabled = false;
         refreshBtn.style.opacity = '1';
         isRefreshingAll = false;
-        fetchRoster();
     }, 2000);
 }
 
