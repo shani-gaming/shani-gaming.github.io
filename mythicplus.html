@@ -283,9 +283,13 @@
             <div class="empty-state" id="emptyState">
                 <div class="empty-state-icon">⚔</div>
                 <div>
-                    <h3>Aucune donnée M+ pour cette saison</h3>
-                    <p>La saison Midnight vient de commencer ou aucun membre n'a encore complété de clé. Revenez bientôt !</p>
+                    <h3>Aucun score M+ pour cette saison</h3>
+                    <p>Aucun membre n'a encore de score pour cette saison.</p>
                 </div>
+            </div>
+
+            <div id="noDungeonNote" style="display:none; font-size:0.82rem; color:var(--text-muted); margin-bottom:1rem; padding: 0.6rem 1rem; background: rgba(255,255,255,0.04); border-radius:6px; border-left: 3px solid var(--border);">
+                Les colonnes de donjons apparaîtront dès les premières clés complétées — lancement Midnight M+ prévu mercredi.
             </div>
 
             <div class="table-wrap hidden" id="tableWrap">
@@ -435,12 +439,7 @@
             // Hide loader, show summary
             document.getElementById('loadProgress').style.display = 'none';
 
-            // Show season tabs if we have any data
-            const hasPrevious = members.some(m => (memberData[m.name.toLowerCase()]?.scorePrevious || 0) > 0);
-            if (hasPrevious) {
-                document.getElementById('seasonTabs').style.display = 'flex';
-            }
-
+            document.getElementById('seasonTabs').style.display = 'flex';
             updateSummary();
         }
 
@@ -550,10 +549,10 @@
                 </tr>`;
             }).join('');
 
-            // Show table if we have dungeon columns
-            if (dungeonList.length > 0) {
-                document.getElementById('tableWrap').classList.remove('hidden');
-            }
+            // Show table always once loaded; show dungeon note if no columns yet
+            document.getElementById('tableWrap').classList.remove('hidden');
+            document.getElementById('noDungeonNote').style.display =
+                dungeonList.length === 0 ? 'block' : 'none';
         }
 
         function setSort(col) {
