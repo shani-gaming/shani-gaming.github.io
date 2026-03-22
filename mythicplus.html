@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mythic+ — Les Sages de Pandarie</title>
+    <link rel="icon" type="image/png" href="img/logo.png">
+    <link rel="stylesheet" href="styles/common.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { padding-top: 80px; background: var(--bg-deep); }
+
+        .page-header {
+            padding: 4rem 0 2.5rem;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+        }
+        .page-header h1 { font-size: 3rem; margin-bottom: 0.5rem; }
+        .page-header p { color: var(--text-muted); font-size: 1.1rem; }
+        .page-header-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .season-label {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            padding: 0.15rem 0.6rem;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .content-section { padding: 2.5rem 0 4rem; }
+
+        /* Progress bar */
+        .load-progress {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .load-bar-wrap {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 2px;
+        }
+        .load-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* Empty state */
+        .empty-state {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 5rem 2rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .empty-state.visible { display: flex; }
+        .empty-state-icon {
+            font-size: 3rem;
+            opacity: 0.3;
+        }
+        .empty-state h3 { font-size: 1.3rem; color: var(--text-main); margin-bottom: 0.25rem; }
+        .empty-state p { font-size: 0.9rem; max-width: 380px; line-height: 1.6; }
+
+        /* Table */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+        .table-wrap.hidden { display: none; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: var(--bg-surface);
+            padding: 0.75rem 0.6rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            text-align: center;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.15s;
+        }
+        thead th:hover { color: var(--text-main); }
+        thead th.sort-active { color: var(--primary); }
+
+        thead th:first-child {
+            text-align: left;
+            padding-left: 1rem;
+            min-width: 170px;
+            position: sticky;
+            left: 0;
+            z-index: 4;
+            background: var(--bg-surface);
+        }
+        thead th:nth-child(2) {
+            min-width: 90px;
+            position: sticky;
+            left: 170px;
+            z-index: 4;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border);
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.1s;
+        }
+        tbody tr:hover { background: rgba(255,255,255,0.03); }
+        tbody tr:last-child { border-bottom: none; }
+
+        td {
+            padding: 0.55rem 0.6rem;
+            text-align: center;
+            vertical-align: middle;
+            background: var(--bg-card);
+        }
+        td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            text-align: left;
+            padding-left: 1rem;
+            font-weight: 600;
+        }
+        td:nth-child(2) {
+            position: sticky;
+            left: 170px;
+            z-index: 1;
+            font-weight: 700;
+            border-right: 1px solid var(--border);
+        }
+        tr:hover td { background: #252b33; }
+
+        .player-name { display: flex; align-items: center; gap: 0.5rem; }
+        .class-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .key-cell {
+            font-size: 0.88rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .timed-mark {
+            font-size: 0.55rem;
+            vertical-align: super;
+            opacity: 0.7;
+            margin-left: 1px;
+        }
+
+        /* Skeleton loading */
+        .skeleton {
+            display: inline-block;
+            width: 28px;
+            height: 13px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 3px;
+            animation: pulse 1.2s ease infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.35; }
+        }
+
+        .no-data { color: rgba(255,255,255,0.18); }
+        .sort-arrow { font-size: 0.6rem; margin-left: 2px; opacity: 0.5; }
+        .sort-active .sort-arrow { opacity: 1; }
+
+        /* Summary bar */
+        .summary-bar {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+        }
+        .summary-bar strong { color: var(--text-main); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar"></nav>
+    <script src="scripts/navbar.js"></script>
+
+    <div class="page-header">
+        <div class="container">
+            <div class="page-header-row">
+                <div>
+                    <div class="season-label">Saison 1</div>
+                    <h1>Mythic+</h1>
+                    <p>Midnight — Les Sages de Pandarie</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content-section">
+        <div class="container">
+
+            <div class="load-progress" id="loadProgress">
+                <span id="loadText">Chargement des membres…</span>
+                <div class="load-bar-wrap">
+                    <div class="load-bar" id="loadBar" style="width: 0%"></div>
+                </div>
+                <span id="loadCount"></span>
+            </div>
+
+            <div class="summary-bar" id="summaryBar" style="display:none"></div>
+
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-icon">⚔</div>
+                <div>
+                    <h3>Aucune donnée M+ pour cette saison</h3>
+                    <p>La saison Midnight vient de commencer ou aucun membre n'a encore complété de clé. Revenez bientôt !</p>
+                </div>
+            </div>
+
+            <div class="table-wrap hidden" id="tableWrap">
+                <table id="mpTable">
+                    <thead id="mpHead"></thead>
+                    <tbody id="mpBody"></tbody>
+                </table>
+            </div>
+
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 Les Sages de Pandarie • Hyjal EU • Données : <a href="https://raider.io" target="_blank" rel="noopener" style="color:var(--text-muted)">Raider.IO</a></p>
+        </div>
+    </footer>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD0cmazoD42kD_H243Do5pIPGhwXFgOHYE",
+            authDomain: "guild-roster-67da7.firebaseapp.com",
+            projectId: "guild-roster-67da7",
+            storageBucket: "guild-roster-67da7.firebasestorage.app",
+            messagingSenderId: "971948767326",
+            appId: "1:971948767326:web:4377499f1ff23db1899ccf"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // ─── WoW class colors ──────────────────────────────────────────────────
+        const CLASS_COLORS = {
+            'Death Knight': '#C41E3A', 'Demon Hunter': '#A330C9', 'Druid': '#FF7C0A',
+            'Evoker': '#33937F', 'Hunter': '#AAD372', 'Mage': '#3FC7EB',
+            'Monk': '#00FF98', 'Paladin': '#F48CBA', 'Priest': '#FFFFFF',
+            'Rogue': '#FFF468', 'Shaman': '#0070DD', 'Warlock': '#8788EE',
+            'Warrior': '#C69B3A'
+        };
+
+        // Key level → color (WoW quality scale)
+        function keyColor(lvl) {
+            if (!lvl) return 'rgba(255,255,255,0.2)';
+            if (lvl < 10) return '#9d9d9d';
+            if (lvl < 15) return '#1eff00';
+            if (lvl < 20) return '#0070ff';
+            if (lvl < 25) return '#a335ee';
+            return '#ff8000';
+        }
+
+        function scoreColor(score) {
+            if (!score) return 'var(--text-muted)';
+            if (score < 1000) return '#9d9d9d';
+            if (score < 1500) return '#1eff00';
+            if (score < 2000) return '#0070ff';
+            if (score < 2500) return '#a335ee';
+            return '#ff8000';
+        }
+
+        // ─── State ─────────────────────────────────────────────────────────────
+        let members = [];
+        let memberData = {};   // name.toLowerCase() → { score, cls, runs, status }
+        let dungeonList = [];  // [{ name, shortName }] — order of first appearance
+        let dungeonSet  = new Set();
+        let sortCol = 'score';
+        let sortDir = -1; // -1 = desc, 1 = asc
+
+        // ─── Firestore ─────────────────────────────────────────────────────────
+        async function loadMembers() {
+            const snap = await db.collection('guild-members').get();
+            members = [];
+            snap.forEach(doc => {
+                const d = doc.data();
+                if (d.name) members.push({ name: d.name, realm: d.realmSlug || 'hyjal' });
+            });
+            members.sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        // ─── Raider.IO ─────────────────────────────────────────────────────────
+        async function fetchRIO(member) {
+            try {
+                const fields = 'mythic_plus_scores_by_season:current,mythic_plus_best_runs';
+                const url = `https://raider.io/api/v1/characters/profile?region=eu&realm=${encodeURIComponent(member.realm)}&name=${encodeURIComponent(member.name)}&fields=${fields}`;
+                const r = await fetch(url);
+                if (r.status === 400 || r.status === 404) return null;
+                if (!r.ok) return null;
+                return await r.json();
+            } catch {
+                return null;
+            }
+        }
+
+        function setProgress(done, total) {
+            document.getElementById('loadBar').style.width = `${(done / total * 100).toFixed(1)}%`;
+            document.getElementById('loadCount').textContent = `${done}/${total}`;
+        }
+
+        async function fetchAll() {
+            const BATCH = 15;
+            let done = 0;
+
+            members.forEach(m => {
+                memberData[m.name.toLowerCase()] = { score: 0, cls: null, runs: {}, status: 'loading' };
+            });
+
+            setProgress(0, members.length);
+            renderTable();
+
+            for (let i = 0; i < members.length; i += BATCH) {
+                const batch = members.slice(i, i + BATCH);
+                const results = await Promise.allSettled(batch.map(m => fetchRIO(m)));
+
+                results.forEach((res, idx) => {
+                    const key = batch[idx].name.toLowerCase();
+                    if (res.status === 'fulfilled' && res.value) {
+                        const d = res.value;
+                        const score = d.mythic_plus_scores_by_season?.[0]?.scores?.all || 0;
+                        const runs  = {};
+                        (d.mythic_plus_best_runs || []).forEach(run => {
+                            runs[run.dungeon] = {
+                                level: run.mythic_level,
+                                timed: run.num_keystone_upgrades >= 1
+                            };
+                            if (!dungeonSet.has(run.dungeon)) {
+                                dungeonSet.add(run.dungeon);
+                                dungeonList.push({ name: run.dungeon, shortName: run.short_name });
+                            }
+                        });
+                        memberData[key] = { score, cls: d.class || null, runs, status: 'ok' };
+                    } else {
+                        memberData[key] = { score: 0, cls: null, runs: {}, status: 'notfound' };
+                    }
+                });
+
+                done += batch.length;
+                setProgress(done, members.length);
+                renderTable();
+            }
+
+            // Hide loader, show summary
+            document.getElementById('loadProgress').style.display = 'none';
+
+            const withData = members.filter(m => {
+                const d = memberData[m.name.toLowerCase()];
+                return d && d.score > 0;
+            });
+
+            if (withData.length === 0) {
+                document.getElementById('emptyState').classList.add('visible');
+                document.getElementById('tableWrap').classList.add('hidden');
+            } else {
+                document.getElementById('emptyState').classList.remove('visible');
+                document.getElementById('tableWrap').classList.remove('hidden');
+                const avgScore = Math.round(withData.reduce((s, m) => s + memberData[m.name.toLowerCase()].score, 0) / withData.length);
+                const best = withData.reduce((a, b) =>
+                    memberData[a.name.toLowerCase()].score > memberData[b.name.toLowerCase()].score ? a : b);
+                document.getElementById('summaryBar').style.display = 'flex';
+                document.getElementById('summaryBar').innerHTML = `
+                    <span><strong>${withData.length}</strong> membres avec des runs</span>
+                    <span>Score moyen : <strong style="color:${scoreColor(avgScore)}">${avgScore}</strong></span>
+                    <span>Meilleur score : <strong style="color:${scoreColor(memberData[best.name.toLowerCase()].score)}">${best.name}</strong> — ${Math.round(memberData[best.name.toLowerCase()].score)}</span>
+                `;
+            }
+        }
+
+        // ─── Render ────────────────────────────────────────────────────────────
+        function sortedMembers() {
+            return [...members].sort((a, b) => {
+                const da = memberData[a.name.toLowerCase()] || {};
+                const db2 = memberData[b.name.toLowerCase()] || {};
+                if (sortCol === 'name') return sortDir * a.name.localeCompare(b.name);
+                if (sortCol === 'score') return sortDir * ((da.score || 0) - (db2.score || 0));
+                const la = da.runs?.[sortCol]?.level || 0;
+                const lb = db2.runs?.[sortCol]?.level || 0;
+                return sortDir * (la - lb);
+            });
+        }
+
+        function arrow(col) {
+            if (sortCol !== col) return `<span class="sort-arrow">↕</span>`;
+            return `<span class="sort-arrow">${sortDir === -1 ? '↓' : '↑'}</span>`;
+        }
+
+        function renderTable() {
+            const head = document.getElementById('mpHead');
+            const body = document.getElementById('mpBody');
+
+            // ── Header ──
+            head.innerHTML = `<tr>
+                <th class="${sortCol === 'name' ? 'sort-active' : ''}" onclick="setSort('name')">Joueur ${arrow('name')}</th>
+                <th class="${sortCol === 'score' ? 'sort-active' : ''}" onclick="setSort('score')">Score ${arrow('score')}</th>
+                ${dungeonList.map(dg => {
+                    const safe = dg.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                    return `<th class="${sortCol === dg.name ? 'sort-active' : ''}"
+                              onclick="setSort('${safe}')"
+                              title="${dg.name}">
+                        ${dg.shortName} ${arrow(dg.name)}
+                    </th>`;
+                }).join('')}
+            </tr>`;
+
+            // ── Rows ──
+            const sorted = sortedMembers();
+            body.innerHTML = sorted.map(m => {
+                const key  = m.name.toLowerCase();
+                const d    = memberData[key] || { status: 'loading' };
+                const cc   = CLASS_COLORS[d.cls] || 'var(--text-muted)';
+                const loading = d.status === 'loading';
+                const found   = d.status === 'ok';
+
+                const scoreCell = loading
+                    ? `<span class="skeleton"></span>`
+                    : found && d.score > 0
+                        ? `<span style="color:${scoreColor(d.score)}">${Math.round(d.score)}</span>`
+                        : `<span class="no-data">—</span>`;
+
+                const dungeonCells = dungeonList.map(dg => {
+                    if (loading) return `<td><span class="skeleton"></span></td>`;
+                    const run = d.runs?.[dg.name];
+                    if (!run?.level) return `<td class="no-data">—</td>`;
+                    const timed = run.timed ? `<span class="timed-mark" title="Timed">✓</span>` : '';
+                    return `<td class="key-cell" style="color:${keyColor(run.level)}">+${run.level}${timed}</td>`;
+                }).join('');
+
+                return `<tr>
+                    <td>
+                        <div class="player-name">
+                            <span class="class-dot" style="background:${cc}"></span>
+                            <span style="color:${found ? cc : 'var(--text-muted)'}">${m.name}</span>
+                        </div>
+                    </td>
+                    <td>${scoreCell}</td>
+                    ${dungeonCells}
+                </tr>`;
+            }).join('');
+
+            // Show table if we have dungeon columns
+            if (dungeonList.length > 0) {
+                document.getElementById('tableWrap').classList.remove('hidden');
+            }
+        }
+
+        function setSort(col) {
+            if (sortCol === col) {
+                sortDir *= -1;
+            } else {
+                sortCol = col;
+                sortDir = col === 'name' ? 1 : -1;
+            }
+            renderTable();
+        }
+
+        // ─── Init ──────────────────────────────────────────────────────────────
+        async function init() {
+            await loadMembers();
+            if (members.length === 0) {
+                document.getElementById('loadProgress').style.display = 'none';
+                document.getElementById('emptyState').classList.add('visible');
+                return;
+            }
+            document.getElementById('loadText').textContent = `Récupération Raider.IO (${members.length} membres)…`;
+            await fetchAll();
+        }
+
+        init();
+    </script>
+</body>
+</html>
