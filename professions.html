@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="styles/common.css">
 
     <!-- Wowhead tooltips -->
-    <script>const wowhead_tooltips = { "colorLinks": true, "iconizeLinks": true, "renameLinks": false, "domain": "fr.wowhead.com" };</script>
+    <script>const wowhead_tooltips = { "colorLinks": true, "iconizeLinks": true, "renameLinks": false };</script>
     <script src="https://wow.zamimg.com/widgets/power.js"></script>
 
     <!-- Firebase SDK -->
@@ -460,7 +460,7 @@
                 html += `
                     <div class="recipe-result-card">
                         <div class="recipe-name">
-                            <a href="${wowheadLink(recipe)}" data-wowhead="recipe=${recipe.id}" target="_blank" rel="noopener">${recipeName(recipe)}</a>
+                            <a href="${wowheadLink(recipe)}" data-wowhead="domain=fr&recipe=${recipe.id}" target="_blank" rel="noopener">${recipeName(recipe)}</a>
                         </div>
                         <div class="recipe-crafters">${crafterBadges}</div>
                     </div>
@@ -503,7 +503,7 @@
 
                     const recipesHtml = preview.map(r => `
                         <div class="recipe-item">
-                            <a href="${wowheadLink(r)}" data-wowhead="recipe=${r.id}" target="_blank" rel="noopener">${recipeName(r)}</a>
+                            <a href="${wowheadLink(r)}" data-wowhead="domain=fr&recipe=${r.id}" target="_blank" rel="noopener">${recipeName(r)}</a>
                         </div>
                     `).join('');
 
@@ -511,7 +511,7 @@
                         <div id="more-${id}" style="display:none">
                             ${prof.recipes.slice(RECIPES_PREVIEW).map(r => `
                                 <div class="recipe-item">
-                                    <a href="${wowheadLink(r)}" data-wowhead="recipe=${r.id}" target="_blank" rel="noopener">${recipeName(r)}</a>
+                                    <a href="${wowheadLink(r)}" data-wowhead="domain=fr&recipe=${r.id}" target="_blank" rel="noopener">${recipeName(r)}</a>
                                 </div>
                             `).join('')}
                         </div>
