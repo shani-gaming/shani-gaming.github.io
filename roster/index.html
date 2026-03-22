@@ -55,35 +55,78 @@
             padding-top: 70px;
         }
 
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin-top: 1rem;
+        /* Page Header */
+        .page-header {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            padding: 2.5rem 0 2rem;
+            margin-bottom: 2rem;
         }
-
-        .stat-box {
-            background: var(--bg-elevated);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
+        .page-header-label {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
             letter-spacing: 0.1em;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            padding: 0.15rem 0.55rem;
+            margin-bottom: 0.6rem;
+            text-transform: uppercase;
+        }
+        .page-header h1 {
+            font-size: 2.4rem;
+            margin-bottom: 0.4rem;
+        }
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+        }
+        .page-header-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .page-header-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.75rem;
+            padding-bottom: 0.1rem;
+        }
+        .roster-summary {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .roster-summary strong {
+            color: var(--text-main);
+            font-weight: 700;
+        }
+        .roster-summary .sep { opacity: 0.3; }
+
+        /* Content section */
+        .content-section { padding: 0 0 4rem; }
+
+        /* Table card */
+        .table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem 1.5rem;
+        }
+        .table-card-header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
         }
 
 
@@ -957,117 +1000,82 @@
     <nav class="navbar"></nav>
     <script src="../scripts/navbar.js"></script>
 
-    <div class="container">
-        <!-- Bento Grid Dashboard -->
-        <section class="dashboard">
-            <div class="bento-grid">
-                <!-- Card: Objectif -->
-                <div class="card card-wide">
-                    <div class="card-label">OBJECTIF MIDNIGHT</div>
-                    <h3 class="card-title">Préparation Roster</h3>
-                    <p class="card-desc">
-                        Pour préparer le roster Midnight, nous avons besoin de connaître vos intentions de jeu.
-                        Cela nous permet d'anticiper les besoins en recrutement et construire une composition équilibrée.
-                    </p>
-                    <p class="card-desc" style="margin-top: 1rem;">
-                        <strong>Rythme :</strong> 1 soir / semaine (à définir)<br>
-                        <strong>Objectif :</strong> Clean Normal, puis Héroïque
-                    </p>
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <div class="page-header-row">
+                <div>
+                    <div class="page-header-label">Midnight</div>
+                    <h1>Roster Raid</h1>
+                    <p>1 soir / semaine &middot; Objectif : Normal puis Héroïque</p>
+                </div>
+                <div class="page-header-actions">
+                    <div class="roster-summary">
+                        <span><strong id="stat-total">0</strong> inscrits</span>
+                        <span class="sep">·</span>
+                        <span><strong id="stat-tanks">0</strong> tanks</span>
+                        <span class="sep">·</span>
+                        <span><strong id="stat-healers">0</strong> healers</span>
+                        <span class="sep">·</span>
+                        <span><strong id="stat-dps">0</strong> DPS</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="openForm()">S'inscrire au Roster</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <section class="content-section">
+        <div class="container">
+            <div class="table-card">
+                <div class="table-card-header">
+                    <div id="admin-controls-section" style="display: none; gap: 0.5rem; align-items: center;">
+                        <button class="admin-btn" id="refresh-all-btn" onclick="refreshAllPlayers()">↻ Rafraîchir</button>
+                        <button class="admin-btn" onclick="exportToDiscord()">Discord</button>
+                        <button class="admin-btn" onclick="exportToCSV()">CSV</button>
+                    </div>
+                    <button class="admin-btn admin-nav-item" onclick="toggleAdminMode()">Admin</button>
                 </div>
 
-                <!-- Card: Inscription -->
-                <div class="card">
-                    <div class="card-label">INSCRIPTION</div>
-                    <h3 class="card-title">Rejoindre le Roster</h3>
-                    <p class="card-desc" style="margin-bottom: 1.5rem;">
-                        Inscrivez-vous dès maintenant pour participer aux raids de la prochaine extension.
-                    </p>
-                    <button class="btn btn-primary" onclick="openForm()" style="width: 100%; margin-top: auto;">
-                        S'inscrire au Roster
-                    </button>
-                </div>
-
-                <!-- Card: Stats -->
-                <div class="card">
-                    <div class="card-label">STATISTIQUES</div>
-                    <h3 class="card-title">Composition Actuelle</h3>
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <div class="stat-value" id="stat-total">0</div>
-                            <div class="stat-label">Inscrits</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-value" id="stat-tanks">0</div>
-                            <div class="stat-label">Tanks</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-value" id="stat-healers">0</div>
-                            <div class="stat-label">Healers</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-value" id="stat-dps">0</div>
-                            <div class="stat-label">DPS</div>
-                        </div>
+                <div id="refresh-progress" style="display: none; margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem; color: var(--text-muted); font-size: 0.8rem;">
+                        <span id="refresh-status">Actualisation...</span>
+                        <span id="refresh-count">0/0</span>
+                    </div>
+                    <div style="width: 100%; height: 4px; background: var(--bg-surface); border-radius: 2px; overflow: hidden;">
+                        <div id="refresh-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width 0.3s ease;"></div>
                     </div>
                 </div>
 
-                <!-- Card: Roster Table -->
-                <div class="card card-full">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
-                        <div>
-                            <div class="card-label">ROSTER RAID 10</div>
-                            <h3 class="card-title" style="margin-bottom: 0;">Récapitulatif des Inscriptions</h3>
-                        </div>
-                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-top: 0.25rem;">
-                            <div id="admin-controls-section" style="display: none; gap: 0.5rem; align-items: center;">
-                                <button class="admin-btn" id="refresh-all-btn" onclick="refreshAllPlayers()">↻ Rafraîchir</button>
-                                <button class="admin-btn" onclick="exportToDiscord()">Discord</button>
-                                <button class="admin-btn" onclick="exportToCSV()">CSV</button>
-                            </div>
-                            <button class="admin-btn admin-nav-item" onclick="toggleAdminMode()">Admin</button>
-                        </div>
-                    </div>
-                    <div id="refresh-progress" style="display: none; margin-bottom: 1rem;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem; color: var(--text-secondary); font-size: 0.8rem;">
-                            <span id="refresh-status">Actualisation...</span>
-                            <span id="refresh-count">0/0</span>
-                        </div>
-                        <div style="width: 100%; height: 4px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden;">
-                            <div id="refresh-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); transition: width 0.3s ease;"></div>
-                        </div>
-                    </div>
-
-                    <div class="table-container">
-                        <table class="roster-table" id="roster-table">
-                            <thead>
-                                <tr>
-                                    <th class="th-name">Personnage</th>
-                                    <th class="th-class">Classe</th>
-                                    <th class="th-spec">Spécialisation</th>
-                                    <th class="th-ilvl">ilvl</th>
-                                    <th class="th-equip" style="text-align:center;">Équip.</th>
-                                    <th class="th-role">Rôle</th>
-                                    <th class="th-availability">Disponibilité</th>
-                                    <th class="th-actions" id="admin-column">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="roster-tbody">
-                                <!-- Generated by JS -->
-                            </tbody>
-                        </table>
-                        <div id="empty-roster" style="display: none; text-align: center; padding: 3rem; color: var(--text-secondary);">
-                            <p style="font-size: 1.2rem;">Aucun joueur inscrit pour le moment</p>
-                            <p style="margin-top: 0.5rem;">Cliquez sur "S'inscrire au Roster" pour commencer !</p>
-                        </div>
+                <div class="table-container">
+                    <table class="roster-table" id="roster-table">
+                        <thead>
+                            <tr>
+                                <th class="th-name">Personnage</th>
+                                <th class="th-class">Classe</th>
+                                <th class="th-spec">Spécialisation</th>
+                                <th class="th-ilvl">ilvl</th>
+                                <th class="th-equip" style="text-align:center;">Équip.</th>
+                                <th class="th-role">Rôle</th>
+                                <th class="th-availability">Disponibilité</th>
+                                <th class="th-actions" id="admin-column">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roster-tbody"></tbody>
+                    </table>
+                    <div id="empty-roster" style="display: none; text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <p style="font-size: 1.1rem;">Aucun joueur inscrit pour le moment</p>
+                        <p style="margin-top: 0.5rem; font-size: 0.9rem;">Cliquez sur "S'inscrire au Roster" pour commencer !</p>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <footer>
-            <p>Roster Raid • Midnight • Par Shani</p>
-        </footer>
-    </div>
+    <footer style="text-align:center; padding: 2rem 0; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border);">
+        <p>Roster Raid &middot; Midnight &middot; Les Sages de Pandarie</p>
+    </footer>
 
     <!-- Registration Form -->
     <div class="form-overlay" id="form-overlay">
