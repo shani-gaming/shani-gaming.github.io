@@ -227,9 +227,12 @@ h1, h2, h3 { font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
     }
 
     .nav-dropdown-menu {
+        display: none;
         position: static;
         transform: none;
         margin-top: 0;
+        opacity: 1;
+        visibility: visible;
         background: var(--bg-surface);
         border: none;
         border-left: 2px solid var(--primary);
@@ -241,8 +244,7 @@ h1, h2, h3 { font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
     }
 
     .nav-dropdown.open .nav-dropdown-menu {
-        opacity: 1;
-        visibility: visible;
+        display: block;
     }
 
     /* Sur mobile on force l'affichage inline sans hover */
