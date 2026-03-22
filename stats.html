@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistiques — Les Sages de Pandarie</title>
+    <link rel="icon" type="image/png" href="img/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/common.css">
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+
+    <style>
+        body { padding-top: 70px; background: var(--bg-deep); }
+
+        /* ── Page Header ── */
+        .page-header {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            padding: 2.5rem 0 2rem;
+        }
+        .page-header-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .page-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            padding: 0.15rem 0.6rem;
+            margin-bottom: 0.6rem;
+        }
+        .live-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse-dot 2s ease infinite;
+        }
+        @keyframes pulse-dot {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.7); }
+        }
+        .page-header h1 { font-size: 2.4rem; margin-bottom: 0.3rem; }
+        .page-header p { color: var(--text-muted); font-size: 0.92rem; }
+        .last-update { font-size: 0.78rem; color: var(--text-muted); opacity: 0.6; }
+
+        /* ── Content ── */
+        .content { padding: 2rem 0 5rem; }
+
+        /* ── KPI Strip ── */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--kpi-color, var(--primary));
+            opacity: 0.7;
+        }
+        .kpi-card:hover { border-color: rgba(255,255,255,0.18); }
+        .kpi-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+        .kpi-value {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: var(--kpi-color, var(--primary));
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 0.3rem;
+        }
+        .kpi-sub {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+        .kpi-trend {
+            position: absolute;
+            top: 1.25rem; right: 1.25rem;
+            font-size: 1.5rem;
+            opacity: 0.12;
+        }
+
+        /* ── Chart Cards ── */
+        .charts-row {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .charts-row.cols-1 { grid-template-columns: 1fr; }
+        .charts-row.cols-2-1 { grid-template-columns: 2fr 1fr; }
+        .charts-row.cols-2 { grid-template-columns: 1fr 1fr; }
+
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+        .chart-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .chart-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .chart-badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.15rem 0.5rem;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.06);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        /* ── Activity Table ── */
+        .activity-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        .activity-section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .activity-section-title.arrivals { color: var(--accent); }
+        .activity-section-title.departures { color: #f87171; }
+        .activity-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+        .member-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .member-row:last-child { border-bottom: none; }
+        .member-class-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .member-name {
+            font-weight: 600;
+            font-size: 0.88rem;
+            flex: 1;
+        }
+        .member-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .member-rank-badge {
+            font-size: 0.68rem;
+            padding: 0.1rem 0.35rem;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.06);
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .empty-activity {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            opacity: 0.5;
+            padding: 1rem 0;
+            font-style: italic;
+        }
+
+        /* ── Skeleton ── */
+        .skeleton {
+            background: rgba(255,255,255,0.06);
+            border-radius: 6px;
+            animation: shimmer 1.4s ease infinite;
+        }
+        @keyframes shimmer {
+            0%,100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .skeleton-kpi { height: 2.4rem; width: 4rem; margin-bottom: 0.3rem; }
+        .skeleton-chart { height: 260px; }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-row.cols-2-1,
+            .charts-row.cols-2 { grid-template-columns: 1fr; }
+            .activity-cols { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .kpi-grid { grid-template-columns: 1fr 1fr; }
+            .page-header h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar"></nav>
+    <script src="scripts/navbar.js"></script>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <div class="page-header-row">
+                <div>
+                    <div class="page-label">
+                        <span class="live-dot"></span>
+                        Live
+                    </div>
+                    <h1>Statistiques de Guilde</h1>
+                    <p>Analyse du roster · Les Sages de Pandarie · Hyjal</p>
+                </div>
+                <div class="last-update" id="lastUpdate">Chargement…</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="container">
+
+            <!-- KPI Strip -->
+            <div class="kpi-grid">
+                <div class="kpi-card" style="--kpi-color: var(--primary);">
+                    <div class="kpi-label">Total membres</div>
+                    <div class="kpi-value" id="kpi-total"><span class="skeleton skeleton-kpi"></span></div>
+                    <div class="kpi-sub" id="kpi-total-sub">&nbsp;</div>
+                    <div class="kpi-trend">⚔</div>
+                </div>
+                <div class="kpi-card" style="--kpi-color: var(--accent);">
+                    <div class="kpi-label">Membres actifs</div>
+                    <div class="kpi-value" id="kpi-active"><span class="skeleton skeleton-kpi"></span></div>
+                    <div class="kpi-sub" id="kpi-active-sub">&nbsp;</div>
+                    <div class="kpi-trend">✓</div>
+                </div>
+                <div class="kpi-card" style="--kpi-color: #60a5fa;">
+                    <div class="kpi-label">Arrivées (30j)</div>
+                    <div class="kpi-value" id="kpi-arrivals"><span class="skeleton skeleton-kpi"></span></div>
+                    <div class="kpi-sub" id="kpi-arrivals-sub">&nbsp;</div>
+                    <div class="kpi-trend">↑</div>
+                </div>
+                <div class="kpi-card" style="--kpi-color: #f87171;">
+                    <div class="kpi-label">Départs (30j)</div>
+                    <div class="kpi-value" id="kpi-departures"><span class="skeleton skeleton-kpi"></span></div>
+                    <div class="kpi-sub" id="kpi-departures-sub">&nbsp;</div>
+                    <div class="kpi-trend">↓</div>
+                </div>
+            </div>
+
+            <!-- Evolution Chart -->
+            <div class="charts-row cols-1">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Évolution du roster</div>
+                        <div class="chart-badge" id="evo-range">Chargement…</div>
+                    </div>
+                    <div id="chart-evolution"><div class="skeleton skeleton-chart"></div></div>
+                </div>
+            </div>
+
+            <!-- Classes + Ranks -->
+            <div class="charts-row cols-2-1">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Composition par classe</div>
+                        <div class="chart-badge" id="class-badge">Membres actifs</div>
+                    </div>
+                    <div id="chart-classes"><div class="skeleton skeleton-chart"></div></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Répartition des rangs</div>
+                    </div>
+                    <div id="chart-ranks"><div class="skeleton skeleton-chart"></div></div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="charts-row cols-1">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Activité récente</div>
+                        <div class="chart-badge" id="activity-badge">30 derniers jours</div>
+                    </div>
+                    <div class="activity-cols" id="activity-cols">
+                        <div>
+                            <div class="activity-section-title arrivals">
+                                <span class="activity-dot" style="background: var(--accent);"></span>
+                                Arrivées
+                            </div>
+                            <div id="arrivals-list"><div class="skeleton skeleton-chart" style="height:80px;"></div></div>
+                        </div>
+                        <div>
+                            <div class="activity-section-title departures">
+                                <span class="activity-dot" style="background: #f87171;"></span>
+                                Départs
+                            </div>
+                            <div id="departures-list"><div class="skeleton skeleton-chart" style="height:80px;"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+    // ── Firebase ──────────────────────────────────────────────────────────────
+    const firebaseConfig = {
+        apiKey: "AIzaSyD0cmazoD42kD_H243Do5pIPGhwXFgOHYE",
+        authDomain: "guild-roster-67da7.firebaseapp.com",
+        projectId: "guild-roster-67da7",
+        storageBucket: "guild-roster-67da7.firebasestorage.app",
+        messagingSenderId: "971948767326",
+        appId: "1:971948767326:web:4377499f1ff23db1899ccf"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // ── Mappings ──────────────────────────────────────────────────────────────
+    const CLASS_COLORS = {
+        warrior: '#C69B6D', paladin: '#F48CBA', hunter: '#AAD372',
+        rogue:   '#FFF468', priest:  '#FFFFFF', shaman: '#0070DD',
+        mage:    '#3FC7EB', warlock: '#8788EE', monk:   '#00FF98',
+        druid:   '#FF7C0A', dh:      '#A330C9', dk:     '#C41E3A',
+        evoker:  '#33937F'
+    };
+    const CLASS_NAMES = {
+        warrior: 'Guerrier',    paladin: 'Paladin',     hunter: 'Chasseur',
+        rogue:   'Voleur',      priest:  'Prêtre',      shaman: 'Chaman',
+        mage:    'Mage',        warlock: 'Démoniste',   monk:   'Moine',
+        druid:   'Druide',      dh:      'Chasseur de démons',
+        dk:      'Chevalier de la mort',                evoker: 'Évocateur'
+    };
+    const RANK_NAMES = {
+        0: 'Grand Maître', 1: 'Officier', 2: 'Officier Alt',
+        3: 'Membre', 4: 'Vétéran', 5: 'Recrue', 6: 'Invité'
+    };
+    const RANK_COLORS = [
+        '#eebb55', '#33ffaa', '#60a5fa', '#b1bac4',
+        '#a78bfa', '#fb923c', '#6b7280', '#374151'
+    ];
+
+    // ── ApexCharts base config ────────────────────────────────────────────────
+    const BASE = {
+        chart:   { background: 'transparent', toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+        theme:   { mode: 'dark' },
+        grid:    { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 3 },
+        tooltip: { theme: 'dark' },
+        colors:  ['#eebb55']
+    };
+
+    // ── Data ──────────────────────────────────────────────────────────────────
+    let members = [];
+    let snapshots = [];
+
+    async function init() {
+        const [membersSnap, snapshotsSnap] = await Promise.all([
+            db.collection('guild-members').get(),
+            db.collection('guild-roster-snapshots')
+                .orderBy(firebase.firestore.FieldPath.documentId())
+                .get()
+        ]);
+
+        members = membersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        snapshots = snapshotsSnap.docs.map(d => ({ date: d.id, ...d.data() }));
+
+        renderKPIs();
+        renderEvolution();
+        renderClasses();
+        renderRanks();
+        renderActivity();
+
+        document.getElementById('lastUpdate').textContent =
+            'Mis à jour le ' + new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    // ── KPIs ──────────────────────────────────────────────────────────────────
+    function renderKPIs() {
+        const active  = members.filter(m => m.active !== false);
+        const total   = members.length;
+        const activeN = active.length;
+
+        document.getElementById('kpi-total').textContent = total;
+        document.getElementById('kpi-total-sub').textContent = 'dans la guilde';
+        document.getElementById('kpi-active').textContent = activeN;
+        document.getElementById('kpi-active-sub').textContent =
+            `${Math.round(activeN / total * 100)}% du roster`;
+
+        // Arrivals / departures from snapshot comparison
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 864e5).toISOString().split('T')[0];
+        const oldSnap = snapshots.find(s => s.date >= thirtyDaysAgo) || snapshots[0];
+        const newSnap = snapshots[snapshots.length - 1];
+
+        if (oldSnap && newSnap && oldSnap.date !== newSnap.date) {
+            const oldNames = new Set((oldSnap.members || []).map(m => `${m.name}-${m.realm}`));
+            const newNames = new Set((newSnap.members || []).map(m => `${m.name}-${m.realm}`));
+            const arrivals   = (newSnap.members || []).filter(m => !oldNames.has(`${m.name}-${m.realm}`));
+            const departures = (oldSnap.members || []).filter(m => !newNames.has(`${m.name}-${m.realm}`));
+
+            document.getElementById('kpi-arrivals').textContent = arrivals.length;
+            document.getElementById('kpi-arrivals-sub').textContent = `depuis le ${fmtDate(oldSnap.date)}`;
+            document.getElementById('kpi-departures').textContent = departures.length;
+            document.getElementById('kpi-departures-sub').textContent =
+                arrivals.length - departures.length >= 0
+                    ? `+${arrivals.length - departures.length} net`
+                    : `${arrivals.length - departures.length} net`;
+        } else {
+            document.getElementById('kpi-arrivals').textContent = '—';
+            document.getElementById('kpi-departures').textContent = '—';
+        }
+    }
+
+    // ── Evolution Chart ───────────────────────────────────────────────────────
+    function renderEvolution() {
+        const data = snapshots.map(s => ({
+            x: new Date(s.date).getTime(),
+            y: s.memberCount || (s.members || []).length
+        })).filter(d => d.y > 0);
+
+        if (data.length === 0) {
+            document.getElementById('chart-evolution').innerHTML =
+                '<p style="color:var(--text-muted);padding:2rem;text-align:center;">Pas de données disponibles</p>';
+            return;
+        }
+
+        document.getElementById('evo-range').textContent =
+            `${fmtDate(snapshots[0]?.date)} → ${fmtDate(snapshots[snapshots.length-1]?.date)}`;
+
+        document.getElementById('chart-evolution').innerHTML = '';
+        new ApexCharts(document.getElementById('chart-evolution'), {
+            ...BASE,
+            chart: { ...BASE.chart, type: 'area', height: 240 },
+            series: [{ name: 'Membres', data }],
+            colors: ['#eebb55'],
+            fill: {
+                type: 'gradient',
+                gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.02, stops: [0, 95] }
+            },
+            stroke: { curve: 'smooth', width: 2.5 },
+            markers: { size: 0, hover: { size: 4 } },
+            xaxis: {
+                type: 'datetime',
+                labels: { style: { colors: '#b1bac4', fontSize: '11px' }, datetimeUTC: false },
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            yaxis: {
+                labels: { style: { colors: '#b1bac4', fontSize: '11px' } },
+                tickAmount: 4,
+                min: val => Math.max(0, val - 5)
+            },
+            dataLabels: { enabled: false },
+            tooltip: {
+                theme: 'dark',
+                x: { format: 'dd MMM yyyy' },
+                y: { formatter: v => `${v} membres` }
+            },
+            annotations: data.length > 1 ? {
+                points: [{
+                    x: data[data.length - 1].x,
+                    y: data[data.length - 1].y,
+                    marker: { size: 5, fillColor: '#eebb55', strokeColor: '#0d1117', strokeWidth: 2 },
+                    label: {
+                        text: `${data[data.length-1].y} membres`,
+                        style: { background: '#21262d', color: '#eebb55', fontSize: '11px', fontWeight: 600, padding: { top:4,bottom:4,left:8,right:8 } },
+                        borderColor: 'rgba(238,187,85,0.3)', offsetY: -12
+                    }
+                }]
+            } : {}
+        }).render();
+    }
+
+    // ── Classes Chart ─────────────────────────────────────────────────────────
+    function renderClasses() {
+        const active = members.filter(m => m.active !== false);
+        document.getElementById('class-badge').textContent = `${active.length} actifs`;
+
+        const counts = {};
+        active.forEach(m => {
+            const c = (m.class || 'unknown').toLowerCase();
+            counts[c] = (counts[c] || 0) + 1;
+        });
+
+        const sorted = Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .filter(([, v]) => v > 0);
+
+        const labels = sorted.map(([c]) => CLASS_NAMES[c] || c);
+        const values = sorted.map(([, v]) => v);
+        const colors = sorted.map(([c]) => CLASS_COLORS[c] || '#888888');
+
+        document.getElementById('chart-classes').innerHTML = '';
+        new ApexCharts(document.getElementById('chart-classes'), {
+            ...BASE,
+            chart: { ...BASE.chart, type: 'bar', height: 320 },
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    barHeight: '72%',
+                    distributed: true,
+                    borderRadius: 3,
+                    dataLabels: { position: 'right' }
+                }
+            },
+            series: [{ name: 'Membres', data: values }],
+            colors,
+            legend: { show: false },
+            xaxis: {
+                categories: labels,
+                labels: { style: { colors: Array(labels.length).fill('#b1bac4'), fontSize: '11px' } },
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            yaxis: {
+                labels: {
+                    style: { colors, fontSize: '12px', fontWeight: 600 },
+                    maxWidth: 170
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                textAnchor: 'start',
+                offsetX: 6,
+                style: { fontSize: '11px', fontWeight: 700, colors: ['#0d1117'] },
+                formatter: v => v
+            },
+            tooltip: { theme: 'dark', y: { formatter: v => `${v} membres` } }
+        }).render();
+    }
+
+    // ── Ranks Chart ───────────────────────────────────────────────────────────
+    function renderRanks() {
+        const active = members.filter(m => m.active !== false);
+        const counts = {};
+        active.forEach(m => {
+            const r = m.rank !== undefined ? m.rank : 99;
+            counts[r] = (counts[r] || 0) + 1;
+        });
+
+        const sorted = Object.entries(counts)
+            .sort((a, b) => Number(a[0]) - Number(b[0]));
+
+        const labels = sorted.map(([r]) => RANK_NAMES[r] || `Rang ${r}`);
+        const values = sorted.map(([, v]) => v);
+        const colors = sorted.map(([, ], i) => RANK_COLORS[i % RANK_COLORS.length]);
+
+        document.getElementById('chart-ranks').innerHTML = '';
+        new ApexCharts(document.getElementById('chart-ranks'), {
+            ...BASE,
+            chart: { ...BASE.chart, type: 'donut', height: 320 },
+            series: values,
+            labels,
+            colors,
+            legend: {
+                position: 'bottom',
+                fontSize: '11px',
+                labels: { colors: Array(labels.length).fill('#b1bac4') },
+                markers: { width: 8, height: 8, radius: 4 },
+                itemMargin: { horizontal: 8, vertical: 4 }
+            },
+            dataLabels: {
+                enabled: true,
+                style: { fontSize: '11px', fontWeight: 700, colors: ['#0d1117'] },
+                dropShadow: { enabled: false }
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '60%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'Total',
+                                fontSize: '12px',
+                                color: '#b1bac4',
+                                formatter: w => w.globals.seriesTotals.reduce((a, b) => a + b, 0)
+                            },
+                            value: { fontSize: '22px', fontWeight: 800, color: '#ffffff', offsetY: 4 }
+                        }
+                    }
+                }
+            },
+            tooltip: { theme: 'dark', y: { formatter: v => `${v} membres` } },
+            stroke: { width: 2, colors: ['#21262d'] }
+        }).render();
+    }
+
+    // ── Activity ──────────────────────────────────────────────────────────────
+    function renderActivity() {
+        if (snapshots.length < 2) {
+            document.getElementById('arrivals-list').innerHTML = '<p class="empty-activity">Données insuffisantes</p>';
+            document.getElementById('departures-list').innerHTML = '<p class="empty-activity">Données insuffisantes</p>';
+            return;
+        }
+
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 864e5).toISOString().split('T')[0];
+        const oldSnap = snapshots.find(s => s.date >= thirtyDaysAgo) || snapshots[0];
+        const newSnap = snapshots[snapshots.length - 1];
+
+        document.getElementById('activity-badge').textContent =
+            `${fmtDate(oldSnap.date)} → ${fmtDate(newSnap.date)}`;
+
+        const oldMembers = oldSnap.members || [];
+        const newMembers = newSnap.members || [];
+        const oldNames = new Set(oldMembers.map(m => `${m.name}-${m.realm}`));
+        const newNames = new Set(newMembers.map(m => `${m.name}-${m.realm}`));
+
+        const arrivals   = newMembers.filter(m => !oldNames.has(`${m.name}-${m.realm}`));
+        const departures = oldMembers.filter(m => !newNames.has(`${m.name}-${m.realm}`));
+
+        document.getElementById('arrivals-list').innerHTML =
+            arrivals.length ? arrivals.map(m => memberRowHtml(m, 'arrival')).join('') :
+            '<p class="empty-activity">Aucune arrivée détectée</p>';
+
+        document.getElementById('departures-list').innerHTML =
+            departures.length ? departures.map(m => memberRowHtml(m, 'departure')).join('') :
+            '<p class="empty-activity">Aucun départ détecté</p>';
+    }
+
+    function memberRowHtml(m, type) {
+        const cls   = (m.class || '').toLowerCase();
+        const color = CLASS_COLORS[cls] || '#888';
+        const name  = CLASS_NAMES[cls] || cls;
+        const rank  = RANK_NAMES[m.rank] || (m.rank !== undefined ? `Rang ${m.rank}` : '');
+        const accentColor = type === 'arrival' ? 'var(--accent)' : '#f87171';
+        return `
+            <div class="member-row">
+                <span class="member-class-dot" style="background:${color};"></span>
+                <span class="member-name" style="color:${color};">${m.name}</span>
+                <span class="member-meta">${m.realm || ''}</span>
+                ${rank ? `<span class="member-rank-badge">${rank}</span>` : ''}
+                <span style="font-size:0.85rem; color:${accentColor}; font-weight:700;">${type === 'arrival' ? '+' : '−'}</span>
+            </div>`;
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function fmtDate(dateStr) {
+        if (!dateStr) return '—';
+        const [y, m, d] = dateStr.split('-');
+        return `${d}/${m}/${y}`;
+    }
+
+    // ── Boot ──────────────────────────────────────────────────────────────────
+    init().catch(err => {
+        console.error('Erreur chargement stats:', err);
+        document.getElementById('lastUpdate').textContent = 'Erreur de chargement';
+    });
+    </script>
+
+</body>
+</html>
