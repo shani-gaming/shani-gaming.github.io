@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progression — Les Sages de Pandarie</title>
+    <link rel="icon" type="image/png" href="img/logo.png">
+    <link rel="stylesheet" href="styles/common.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <style>
+        body { padding-top: 80px; background: var(--bg-base); }
+
+        .page-header {
+            padding: 4rem 0 2.5rem;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+        }
+        .page-header h1 { font-size: 3rem; margin-bottom: 0.5rem; }
+        .page-header p { color: var(--text-muted); font-size: 1.1rem; }
+        .page-header-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        /* Admin */
+        .admin-btn {
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .admin-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .admin-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(212,175,55,0.1); }
+
+        /* Season label */
+        .season-label {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            padding: 0.15rem 0.6rem;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        /* Raids grid */
+        .progression-section { padding: 3rem 0 4rem; }
+        .raids-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        @media (max-width: 1000px) { .raids-grid { grid-template-columns: 1fr; } }
+
+        /* Raid card */
+        .raid-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .raid-card:hover { border-color: var(--border-glow); }
+
+        .raid-artwork {
+            height: 160px;
+            background-size: cover;
+            background-position: center top;
+            position: relative;
+        }
+        .raid-artwork::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 80px;
+            background: linear-gradient(transparent, var(--bg-card));
+        }
+
+        .raid-info {
+            padding: 1.25rem 1.25rem 0;
+        }
+        .raid-name {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 0.2rem;
+        }
+        .raid-meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; }
+
+        /* Difficulty rows */
+        .difficulties { padding: 0 1.25rem 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
+
+        .diff-row {
+            display: grid;
+            grid-template-columns: 70px 1fr 40px;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .diff-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+        }
+        .diff-bar-wrap {
+            height: 20px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: default;
+            position: relative;
+        }
+        .diff-bar-wrap.admin-mode { cursor: pointer; }
+        .diff-bar-wrap.admin-mode:hover { outline: 1px solid var(--primary); }
+        .diff-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+        .diff-count {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        /* Progress bar colors */
+        .bar-none { background: transparent; }
+        .bar-partial { background: linear-gradient(90deg, #e65100, #ff9800); }
+        .bar-full { background: linear-gradient(90deg, #2e7d32, #4caf50); }
+
+        /* Count colors */
+        .count-none { color: var(--text-muted); }
+        .count-partial { color: #ff9800; }
+        .count-full { color: #4caf50; }
+
+        /* Boss panel (admin) */
+        .boss-panel {
+            display: none;
+            padding: 0.75rem 1.25rem;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border);
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .boss-panel.open { display: flex; }
+        .boss-panel-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+        .boss-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.4rem 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s;
+            user-select: none;
+        }
+        .boss-toggle:hover { background: rgba(255,255,255,0.05); }
+        .boss-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            object-fit: cover;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .boss-name { font-size: 0.9rem; flex: 1; }
+        .kill-badge {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .kill-badge.killed {
+            background: #4caf50;
+            border-color: #4caf50;
+            color: #fff;
+        }
+        .kill-badge.alive {
+            background: transparent;
+            border-color: var(--text-muted);
+            color: transparent;
+        }
+
+        /* Admin notice */
+        .admin-notice {
+            display: none;
+            background: rgba(212,175,55,0.08);
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        .admin-notice.visible { display: block; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar"></nav>
+    <script src="scripts/navbar.js"></script>
+
+    <div class="page-header">
+        <div class="container">
+            <div class="page-header-row">
+                <div>
+                    <div class="season-label">Saison 1</div>
+                    <h1>Progression Raid</h1>
+                    <p>Midnight — Les Sages de Pandarie</p>
+                </div>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <button id="adminBtn" class="admin-btn" onclick="toggleAdmin()">Admin</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="progression-section">
+        <div class="container">
+            <div id="adminNotice" class="admin-notice">
+                Mode admin actif — cliquez sur une barre de difficulté pour gérer les kills boss par boss.
+            </div>
+            <div class="raids-grid" id="raidsGrid">
+                <div style="color: var(--text-muted); padding: 2rem;">Chargement...</div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 Les Sages de Pandarie • Hyjal EU</p>
+        </div>
+    </footer>
+
+    <script>
+        // Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyD0cmazoD42kD_H243Do5pIPGhwXFgOHYE",
+            authDomain: "guild-roster-67da7.firebaseapp.com",
+            projectId: "guild-roster-67da7",
+            storageBucket: "guild-roster-67da7.firebasestorage.app",
+            messagingSenderId: "971948767326",
+            appId: "1:971948767326:web:4377499f1ff23db1899ccf"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // ─── Configuration des raids ───────────────────────────────────────────
+        const RAIDS = [
+            {
+                id: 'dreamrift',
+                name: 'Faille du Rêve',
+                imageUrl: 'https://wow.zamimg.com/uploads/screenshots/normal/1267841.jpg',
+                bosses: [
+                    { id: 'chimaerus', name: 'Chimaerus', icon: 'ui-ej-boss-malformed-manifestation' }
+                ]
+            },
+            {
+                id: 'voidspire',
+                name: 'Flèche du Vide',
+                imageUrl: 'https://wow.zamimg.com/uploads/screenshots/normal/1267840.jpg',
+                bosses: [
+                    { id: 'averzian',       name: 'Impérator Averzian',    icon: 'ui-ej-boss-host-general' },
+                    { id: 'vorasius',       name: 'Vorasius',              icon: 'ui-ej-boss-kaiju' },
+                    { id: 'salhadaar',      name: 'Roi-Déchu Salhadaar',   icon: 'ui-ej-boss-salhadaar' },
+                    { id: 'vaelgor',        name: 'Vaelgor & Ezzorak',     icon: 'ui-ej-boss-dragon-duo' },
+                    { id: 'vanguard',       name: 'Avant-garde aveuglée',  icon: 'ui-ej-boss-paladin-trio' },
+                    { id: 'alleria',        name: 'Couronne du Cosmos',    icon: 'ui-ej-boss-alleria' }
+                ]
+            },
+            {
+                id: 'march-queldasas',
+                name: "Marche sur Quel'Danas",
+                imageUrl: 'https://wow.zamimg.com/uploads/screenshots/normal/1267842.jpg',
+                bosses: [
+                    { id: 'beloren', name: "Belo'ren, Enfant d'Al'ar", icon: 'ui-ej-boss-light-void-phoenix' },
+                    { id: 'lura',    name: 'La Nuit Tombe',            icon: 'ui-ej-boss-lura-midnight' }
+                ]
+            }
+        ];
+
+        const DIFFICULTIES = [
+            { id: 'lfr',    label: 'RDR' },
+            { id: 'normal', label: 'Normal' },
+            { id: 'heroic', label: 'Héroïque' },
+            { id: 'mythic', label: 'Mythique' }
+        ];
+
+        // ─── State ─────────────────────────────────────────────────────────────
+        let isAdmin = false;
+        let progressionData = {}; // raidId → { kills: { diff: { bossId: bool } } }
+        let openPanel = null; // "raidId-diffId"
+
+        // ─── Firestore ─────────────────────────────────────────────────────────
+        function listenProgression() {
+            db.collection('progression').onSnapshot(snapshot => {
+                progressionData = {};
+                snapshot.forEach(doc => {
+                    progressionData[doc.id] = doc.data();
+                });
+                render();
+            });
+        }
+
+        async function toggleKill(raidId, diffId, bossId) {
+            if (!isAdmin) return;
+            const current = progressionData[raidId]?.kills?.[diffId]?.[bossId] || false;
+            const ref = db.collection('progression').doc(raidId);
+            await ref.set({
+                kills: { [diffId]: { [bossId]: !current } }
+            }, { merge: true });
+        }
+
+        async function initRaidDoc(raidId, bosses) {
+            const ref = db.collection('progression').doc(raidId);
+            const doc = await ref.get();
+            if (!doc.exists) {
+                const kills = {};
+                DIFFICULTIES.forEach(d => {
+                    kills[d.id] = {};
+                    bosses.forEach(b => { kills[d.id][b.id] = false; });
+                });
+                await ref.set({ kills });
+            }
+        }
+
+        // ─── Admin ─────────────────────────────────────────────────────────────
+        function toggleAdmin() {
+            if (isAdmin) {
+                auth.signOut();
+                isAdmin = false;
+                updateAdminUI();
+                return;
+            }
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).then(async result => {
+                const email = result.user.email;
+                const adminDoc = await db.collection('admins').doc(email).get();
+                if (adminDoc.exists) {
+                    isAdmin = true;
+                    updateAdminUI();
+                    // Init Firestore docs for raids that don't exist yet
+                    for (const raid of RAIDS) {
+                        await initRaidDoc(raid.id, raid.bosses);
+                    }
+                } else {
+                    auth.signOut();
+                    alert("Vous n'êtes pas administrateur.");
+                }
+            }).catch(err => {
+                console.error('Auth error:', err);
+            });
+        }
+
+        function updateAdminUI() {
+            const btn = document.getElementById('adminBtn');
+            const notice = document.getElementById('adminNotice');
+            if (isAdmin) {
+                btn.textContent = 'Quitter admin';
+                btn.classList.add('active');
+                notice.classList.add('visible');
+            } else {
+                btn.textContent = 'Admin';
+                btn.classList.remove('active');
+                notice.classList.remove('visible');
+                openPanel = null;
+            }
+            render();
+        }
+
+        // ─── Render ────────────────────────────────────────────────────────────
+        function getKills(raidId, diffId) {
+            return progressionData[raidId]?.kills?.[diffId] || {};
+        }
+
+        function countKills(raidId, diffId, bosses) {
+            const kills = getKills(raidId, diffId);
+            return bosses.filter(b => kills[b.id]).length;
+        }
+
+        function barClass(killed, total) {
+            if (killed === 0) return 'bar-none';
+            if (killed === total) return 'bar-full';
+            return 'bar-partial';
+        }
+
+        function countClass(killed, total) {
+            if (killed === 0) return 'count-none';
+            if (killed === total) return 'count-full';
+            return 'count-partial';
+        }
+
+        function render() {
+            const grid = document.getElementById('raidsGrid');
+
+            grid.innerHTML = RAIDS.map(raid => {
+                const total = raid.bosses.length;
+
+                const diffsHtml = DIFFICULTIES.map(diff => {
+                    const killed = countKills(raid.id, diff.id, raid.bosses);
+                    const pct = total > 0 ? (killed / total * 100) : 0;
+                    const panelKey = `${raid.id}-${diff.id}`;
+                    const isOpen = openPanel === panelKey;
+
+                    // Boss panel (admin mode)
+                    const bossesHtml = raid.bosses.map(boss => {
+                        const isKilled = getKills(raid.id, diff.id)[boss.id] || false;
+                        const iconUrl = `https://wow.zamimg.com/images/wow/journal/${boss.icon}.png`;
+                        return `
+                            <div class="boss-toggle" onclick="handleBossClick('${raid.id}', '${diff.id}', '${boss.id}')">
+                                <img class="boss-icon" src="${iconUrl}" alt="${boss.name}"
+                                     onerror="this.style.background='var(--bg-surface)';this.removeAttribute('src')">
+                                <span class="boss-name">${boss.name}</span>
+                                <div class="kill-badge ${isKilled ? 'killed' : 'alive'}">✓</div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    const bossPanel = isAdmin ? `
+                        <div class="boss-panel ${isOpen ? 'open' : ''}" id="panel-${raid.id}-${diff.id}">
+                            <div class="boss-panel-title">${diff.label} — Boss tués</div>
+                            ${bossesHtml}
+                        </div>
+                    ` : '';
+
+                    return `
+                        <div class="diff-row">
+                            <span class="diff-label">${diff.label}</span>
+                            <div class="diff-bar-wrap ${isAdmin ? 'admin-mode' : ''}"
+                                 onclick="${isAdmin ? `togglePanel('${raid.id}', '${diff.id}')` : ''}">
+                                <div class="diff-bar ${barClass(killed, total)}"
+                                     style="width: ${pct}%"></div>
+                            </div>
+                            <span class="diff-count ${countClass(killed, total)}">${killed}/${total}</span>
+                        </div>
+                        ${bossPanel}
+                    `;
+                }).join('');
+
+                return `
+                    <div class="raid-card">
+                        <div class="raid-artwork"
+                             style="background-image: url('${raid.imageUrl}'); background-color: var(--bg-surface);">
+                        </div>
+                        <div class="raid-info">
+                            <div class="raid-name">${raid.name}</div>
+                            <div class="raid-meta">Niveau 90 · ${total} boss</div>
+                        </div>
+                        <div class="difficulties">${diffsHtml}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function togglePanel(raidId, diffId) {
+            const key = `${raidId}-${diffId}`;
+            openPanel = openPanel === key ? null : key;
+            render();
+        }
+
+        async function handleBossClick(raidId, diffId, bossId) {
+            await toggleKill(raidId, diffId, bossId);
+        }
+
+        // ─── Init ──────────────────────────────────────────────────────────────
+        listenProgression();
+    </script>
+</body>
+</html>
