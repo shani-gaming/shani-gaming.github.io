@@ -368,15 +368,20 @@ function renderRoster() {
         const characterUrl = player.realmSlug ?
             `https://worldofwarcraft.blizzard.com/fr-fr/character/eu/${player.realmSlug}/${player.name.toLowerCase()}` : null;
 
-        // Name cell with hover tooltip
+        // Name cell with avatar
+        const avatarImg = player.avatarUrl
+            ? `<img src="${player.avatarUrl}" alt="" style="width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--${player.class}, #555); object-fit: cover; flex-shrink: 0;">`
+            : `<span style="width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.08); display: inline-block; flex-shrink: 0;"></span>`;
+
         const nameCell = `
-            <td class="player-name-cell"
-                onmouseenter="showTooltip(event, ${JSON.stringify(player).replace(/"/g, '&quot;')})"
-                onmouseleave="hideTooltip()">
-                ${characterUrl ?
-                    `<a href="${characterUrl}" target="_blank" rel="noopener noreferrer" class="player-name-link">${player.name}</a>` :
-                    `<span style="color: var(--gold);">${player.name}</span>`
-                }
+            <td class="player-name-cell">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    ${avatarImg}
+                    ${characterUrl ?
+                        `<a href="${characterUrl}" target="_blank" rel="noopener noreferrer" class="player-name-link">${player.name}</a>` :
+                        `<span style="color: var(--gold);">${player.name}</span>`
+                    }
+                </div>
             </td>
         `;
 
