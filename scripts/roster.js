@@ -418,19 +418,13 @@ function renderRoster() {
         const ilvlValue = player.ilvl || (player.notes ? extractIlvl(player.notes) : null);
         const ilvlCell = `<td class="ilvl-cell">${ilvlValue || '-'}</td>`;
 
-        // Équipement : enchants + gems fusionnés
+        // Équipement : enchants + gems sur une seule ligne
         const enchantBadge = getStatBadge(player.enchantPercentage);
         const gemBadge = getStatBadge(player.gemPercentage);
+        const sep = `<span style="color:var(--text-muted);font-size:0.65rem;margin:0 0.3rem;vertical-align:middle;">·</span>`;
         const equipCell = `
-            <td style="text-align: center;">
-                <div style="display: flex; flex-direction: column; gap: 0.15rem; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 0.3rem;">
-                        <span style="font-size: 0.65rem; color: var(--text-secondary); width: 1rem; text-align: right;">E</span>${enchantBadge}
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 0.3rem;">
-                        <span style="font-size: 0.65rem; color: var(--text-secondary); width: 1rem; text-align: right;">G</span>${gemBadge}
-                    </div>
-                </div>
+            <td style="text-align: center; white-space: nowrap;">
+                <span style="font-size:0.6rem;color:var(--text-muted);margin-right:0.2rem;vertical-align:middle;" title="Enchantements">E</span>${enchantBadge}${sep}<span style="font-size:0.6rem;color:var(--text-muted);margin-right:0.2rem;vertical-align:middle;" title="Gemmes">G</span>${gemBadge}
             </td>
         `;
 
@@ -439,25 +433,15 @@ function renderRoster() {
 
         let roleContent = roleBadge;
         if (player.flexRole) {
-            // Map flex role to display name
-            const flexRoleMap = {
-                'tank': 'Tank',
-                'healer': 'Healer',
-                'melee': 'DPS',
-                'ranged': 'DPS',
-                'dps': 'DPS'
-            };
+            const flexRoleMap = { 'tank': 'Tank', 'healer': 'Healer', 'melee': 'DPS', 'ranged': 'DPS', 'dps': 'DPS' };
             const flexRoleName = flexRoleMap[player.flexRole] || player.flexRole;
             const flexClass = ['melee', 'ranged', 'dps'].includes(player.flexRole) ? 'melee' : player.flexRole;
-            roleContent = `
-                <div style="display: flex; flex-direction: column; gap: 0.2rem; align-items: center;">
-                    ${roleBadge}
-                    <span class="role-badge ${flexClass}" style="opacity: 0.6;">↳ ${flexRoleName}</span>
-                </div>
-            `;
+            const flexSep = `<span style="color:var(--text-muted);font-size:0.6rem;margin:0 0.2rem;vertical-align:middle;">·</span>`;
+            const flexBadge = `<span class="role-badge ${flexClass}" style="opacity:0.55;font-size:0.66rem;padding:0.18rem 0.4rem;">↳ ${flexRoleName}</span>`;
+            roleContent = `${roleBadge}${flexSep}${flexBadge}`;
         }
 
-        const roleCell = `<td style="text-align: center;">${roleContent}</td>`;
+        const roleCell = `<td style="text-align: center; white-space: nowrap;">${roleContent}</td>`;
 
         // Availability badges — jours abrégés
         const dayAbbr = { 'Lundi': 'Lun', 'Mardi': 'Mar', 'Mercredi': 'Mer', 'Jeudi': 'Jeu', 'Vendredi': 'Ven', 'Samedi': 'Sam', 'Dimanche': 'Dim' };
