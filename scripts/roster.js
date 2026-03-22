@@ -492,7 +492,6 @@ function showTooltip(event, player) {
     const avatarHTML = player.avatarUrl ?
         `<img src="${player.avatarUrl}" alt="${player.name}" class="tooltip-avatar">` : '';
 
-    const ilvl = player.ilvl || (player.notes ? extractIlvl(player.notes) : null);
     const className = getClassName(player.class);
     const specIconUrl = player.spec ? getSpecIcon(player.spec, player.class) : null;
     const specDisplay = specIconUrl ?
@@ -508,24 +507,6 @@ function showTooltip(event, player) {
             </div>
         </div>
         <div class="tooltip-stats">
-            ${ilvl ? `
-                <div class="tooltip-stat-row">
-                    <span class="tooltip-stat-label">Item Level</span>
-                    <span class="tooltip-stat-value" style="color: var(--gold);">${ilvl}</span>
-                </div>
-            ` : ''}
-            ${player.enchantPercentage !== null ? `
-                <div class="tooltip-stat-row">
-                    <span class="tooltip-stat-label">Enchantements</span>
-                    <span class="tooltip-stat-value">${getStatBadge(player.enchantPercentage)}</span>
-                </div>
-            ` : ''}
-            ${player.gemPercentage !== null ? `
-                <div class="tooltip-stat-row">
-                    <span class="tooltip-stat-label">Gemmes</span>
-                    <span class="tooltip-stat-value">${getStatBadge(player.gemPercentage)}</span>
-                </div>
-            ` : ''}
             ${player.offSpec ? `
                 <div class="tooltip-stat-row">
                     <span class="tooltip-stat-label">Off Spec</span>
@@ -1045,11 +1026,7 @@ async function refreshPlayerArmory(playerId, playerName, realmSlug) {
         }
 
         showToast(`✅ Données mises à jour pour ${playerName}`, 'success');
-
-        // Reload roster to show updated data
-        setTimeout(() => {
-            fetchRoster();
-        }, 500);
+        // onSnapshot handles the UI refresh automatically
 
     } catch (error) {
         console.error('Erreur refresh Armory:', error);
