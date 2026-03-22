@@ -547,13 +547,17 @@ exports.submitApplication = onRequest(
           color: color,
           fields: [
             {
+              name: '🔴 Contact OBLIGATOIRE via Battle.net',
+              value: `\`\`\`${battletag || 'Non renseigné'}\`\`\`Le candidat n'est pas encore dans notre Discord. **Envoyez-lui une demande d'ami Battle.net** pour le contacter.`,
+              inline: false
+            },
+            {
               name: '⚔️ Item Level',
               value: characterDetails.averageItemLevel ? `${characterDetails.averageItemLevel} (équipé: ${characterDetails.equippedItemLevel})` : 'N/A',
               inline: true
             },
             { name: '🏰 Royaume', value: characterDetails.realm, inline: true },
             { name: '⚡ Faction', value: characterDetails.faction || 'N/A', inline: true },
-            { name: '🎮 BattleTag', value: battletag || 'Non renseigné', inline: false },
             {
               name: '📝 Présentation & Expérience',
               value: formData.presentation.substring(0, 1024) || 'Aucune'
@@ -574,7 +578,7 @@ exports.submitApplication = onRequest(
 
         // Envoi au Webhook
         await axios.post(webhookUrl, {
-          content: '@here Nouvelle candidature reçue !',
+          content: `@here Nouvelle candidature de **${characterDetails.name}** ! Contactez via Battle.net : \`${battletag || 'Non renseigné'}\``,
           embeds: [embed]
         });
 

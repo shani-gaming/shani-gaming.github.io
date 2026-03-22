@@ -907,7 +907,12 @@
             </div>
 
             <div id="stepForm" class="hidden">
-                <div id="selectedCharSummary" style="text-align: center; margin-bottom: 2rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;"></div>
+                <div id="selectedCharSummary" style="text-align: center; margin-bottom: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;"></div>
+                <div style="background: rgba(255, 152, 0, 0.1); border: 1px solid rgba(255, 152, 0, 0.4); border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1.5rem; font-size: 0.88rem; line-height: 1.6;">
+                    <strong style="color: #ff9800;">⚠️ Important avant d'envoyer</strong><br>
+                    Nos recruteurs vous contacteront <strong>uniquement via Battle.net</strong>.<br>
+                    Veillez à <strong>accepter les demandes d'amis Battle.net</strong> de joueurs inconnus dans vos paramètres de confidentialité.
+                </div>
                 <div class="form-group">
                     <label class="form-label">Présentation & Expérience</label>
                     <textarea id="inputPresentation" class="form-textarea" placeholder="Parlez-nous de vous, votre expérience sur WoW, vos anciennes guildes..."></textarea>
@@ -922,8 +927,13 @@
             <div id="stepSuccess" class="hidden" style="text-align: center; padding: 2rem;">
                 <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
                 <h3 style="color: #fff; margin-bottom: 1rem;">Candidature envoyée !</h3>
-                <p style="color: var(--text-muted);">Nous avons bien reçu votre demande sur Discord. Un officier vous recontactera très bientôt.</p>
-                <button onclick="closeModal()" class="btn btn-outline" style="margin-top: 2rem;">Fermer</button>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem;">Votre candidature a bien été transmise à nos recruteurs.</p>
+                <div style="background: rgba(255, 152, 0, 0.1); border: 1px solid rgba(255, 152, 0, 0.35); border-radius: 8px; padding: 1rem 1.25rem; text-align: left; font-size: 0.88rem; line-height: 1.7;">
+                    <strong style="color: #ff9800;">Prochaine étape — action requise de votre part</strong><br>
+                    Un officier va vous envoyer une <strong>demande d'ami Battle.net</strong> dans les prochains jours.<br>
+                    <strong>Pensez à activer l'option "Recevoir des demandes d'amis" dans vos paramètres Battle.net</strong>, sinon nous ne pourrons pas vous contacter.
+                </div>
+                <button onclick="closeModal()" class="btn btn-outline" style="margin-top: 1.75rem;">Fermer</button>
             </div>
         </div>
     </div>
