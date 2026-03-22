@@ -1176,12 +1176,8 @@
                 const fourteenDaysAgoDate = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
                     .toISOString().split('T')[0];
 
-                // Récupère les 20 derniers snapshots, filtre client-side (évite index composite)
-                const snapshotsSnap = await getDocs(query(
-                    collection(db, 'guild-roster-snapshots'),
-                    orderBy(documentId(), 'desc'),
-                    limit(20)
-                ));
+                // Charge tous les snapshots sans orderBy (évite tout index Firestore)
+                const snapshotsSnap = await getDocs(collection(db, 'guild-roster-snapshots'));
 
                 membersList.innerHTML = '';
 
@@ -1190,7 +1186,7 @@
                     return;
                 }
 
-                const snapDocs = snapshotsSnap.docs.slice().reverse(); // du plus ancien au plus récent
+                const snapDocs = snapshotsSnap.docs.slice().sort((a, b) => a.id.localeCompare(b.id));
                 const recentDoc = snapDocs[snapDocs.length - 1];
                 const oldDoc = snapDocs.find(d => d.id >= fourteenDaysAgoDate);
 
