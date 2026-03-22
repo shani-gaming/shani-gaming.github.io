@@ -368,7 +368,7 @@
             members = [];
             snap.forEach(doc => {
                 const d = doc.data();
-                if (d.name) members.push({ name: d.name, realm: d.realmSlug || 'hyjal' });
+                if (d.name) members.push({ name: d.name, realm: d.realmSlug || d.realm || 'hyjal' });
             });
             members.sort((a, b) => a.name.localeCompare(b.name));
         }
