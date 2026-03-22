@@ -809,8 +809,8 @@ async function submitForm(event) {
     const section = roleMap[player.role];
     const roleArray = roster[section];
 
-    // Find next available index (supports unlimited roster)
-    const nextIndex = roleArray.filter(p => p !== null).length;
+    // Find next available index (toujours en fin de tableau pour éviter d'écraser un slot existant)
+    const nextIndex = roleArray.length;
 
     try {
         // Get Discord user info
