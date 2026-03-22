@@ -1176,32 +1176,33 @@
                 const fourteenDaysAgoDate = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
                     .toISOString().split('T')[0];
 
-                // Snapshot de référence (le plus ancien dans les 14 derniers jours)
-                const [oldSnap, recentSnap] = await Promise.all([
-                    getDocs(query(
-                        collection(db, 'guild-roster-snapshots'),
-                        where(documentId(), '>=', fourteenDaysAgoDate),
-                        orderBy(documentId()),
-                        limit(1)
-                    )),
-                    getDocs(query(
-                        collection(db, 'guild-roster-snapshots'),
-                        orderBy(documentId(), 'desc'),
-                        limit(1)
-                    ))
-                ]);
+                // Récupère les 20 derniers snapshots, filtre client-side (évite index composite)
+                const snapshotsSnap = await getDocs(query(
+                    collection(db, 'guild-roster-snapshots'),
+                    orderBy(documentId(), 'desc'),
+                    limit(20)
+                ));
 
                 membersList.innerHTML = '';
 
-                if (oldSnap.empty || recentSnap.empty || oldSnap.docs[0].id === recentSnap.docs[0].id) {
+                if (snapshotsSnap.empty) {
+                    membersList.innerHTML = '<p style="font-size: 0.9rem; color: var(--text-muted);">Aucun nouveau membre récemment.</p>';
+                    return;
+                }
+
+                const snapDocs = snapshotsSnap.docs.slice().reverse(); // du plus ancien au plus récent
+                const recentDoc = snapDocs[snapDocs.length - 1];
+                const oldDoc = snapDocs.find(d => d.id >= fourteenDaysAgoDate);
+
+                if (!oldDoc || oldDoc.id === recentDoc.id) {
                     membersList.innerHTML = '<p style="font-size: 0.9rem; color: var(--text-muted);">Aucun nouveau membre récemment.</p>';
                     return;
                 }
 
                 const oldNames = new Set(
-                    (oldSnap.docs[0].data().members || []).map(m => `${m.name}-${m.realm}`)
+                    (oldDoc.data().members || []).map(m => `${m.name}-${m.realm}`)
                 );
-                const newMembers = (recentSnap.docs[0].data().members || [])
+                const newMembers = (recentDoc.data().members || [])
                     .filter(m => !oldNames.has(`${m.name}-${m.realm}`))
                     .slice(0, 5);
 
