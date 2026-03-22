@@ -1075,8 +1075,8 @@ async function refreshAllPlayers() {
     ['tanks', 'healers', 'melee', 'ranged'].forEach(section => {
         if (roster[section]) {
             roster[section].forEach(player => {
-                if (player && player.id && player.name && player.realmSlug) {
-                    allPlayers.push(player);
+                if (player && player.id && player.name) {
+                    allPlayers.push({ ...player, realmSlug: player.realmSlug || 'hyjal' });
                 }
             });
         }
