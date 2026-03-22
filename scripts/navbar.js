@@ -104,10 +104,18 @@ function initNavbar() {
         html += `<a href="${basePath}${navConfig.cta.href}" class="btn btn-primary">${navConfig.cta.text}</a>`;
     }
 
+    // Bouton hamburger
+    html += `
+        <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
+    `;
+
     navbar.innerHTML = html;
 
     // Initialise les événements dropdown
     initDropdownEvents();
+    initHamburgerEvents();
 }
 
 /**
@@ -183,6 +191,38 @@ function initDropdownEvents() {
     // Ferme les dropdowns quand on clique ailleurs
     document.addEventListener('click', () => {
         document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
+    });
+}
+
+/**
+ * Initialise le menu hamburger pour mobile
+ */
+function initHamburgerEvents() {
+    const hamburger = document.querySelector('.nav-hamburger');
+    const navLinks = document.querySelector('.nav-links');
+    const navbar = document.querySelector('nav.navbar');
+
+    if (!hamburger || !navLinks) return;
+
+    hamburger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = navbar.classList.contains('nav-open');
+        navbar.classList.toggle('nav-open', !isOpen);
+        hamburger.setAttribute('aria-expanded', String(!isOpen));
+    });
+
+    // Ferme le menu si on clique sur un lien
+    navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            navbar.classList.remove('nav-open');
+            hamburger.setAttribute('aria-expanded', 'false');
+        });
+    });
+
+    // Ferme le menu si on clique ailleurs
+    document.addEventListener('click', () => {
+        navbar.classList.remove('nav-open');
+        hamburger.setAttribute('aria-expanded', 'false');
     });
 }
 

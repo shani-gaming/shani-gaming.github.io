@@ -150,6 +150,108 @@ h1, h2, h3 { font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
     background: rgba(238, 187, 85, 0.1);
 }
 
+/* Hamburger */
+.nav-hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    z-index: 200;
+}
+
+.nav-hamburger span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--text-main);
+    border-radius: 2px;
+    transition: transform 0.3s, opacity 0.3s;
+}
+
+/* Croix quand ouvert */
+.nav-open .nav-hamburger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-open .nav-hamburger span:nth-child(2) { opacity: 0; }
+.nav-open .nav-hamburger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 768px) {
+    .nav-hamburger {
+        display: flex;
+    }
+
+    .navbar {
+        padding: 1rem 1.25rem;
+        flex-wrap: wrap;
+    }
+
+    /* Le bouton CTA "Rejoindre" */
+    .navbar > .btn {
+        display: none;
+    }
+
+    .nav-links {
+        display: none;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+        width: 100%;
+        padding: 0.5rem 0 1rem;
+        border-top: 1px solid var(--border);
+        margin-top: 0.75rem;
+    }
+
+    .nav-open .nav-links {
+        display: flex;
+    }
+
+    .nav-link {
+        padding: 0.65rem 0;
+        font-size: 1rem;
+        width: 100%;
+    }
+
+    .nav-dropdown {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .nav-dropdown-btn {
+        padding: 0.65rem 0;
+        font-size: 1rem;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .nav-dropdown-menu {
+        position: static;
+        transform: none;
+        margin-top: 0;
+        background: var(--bg-surface);
+        border: none;
+        border-left: 2px solid var(--primary);
+        border-radius: 0;
+        padding: 0.25rem 0 0.25rem 1rem;
+        box-shadow: none;
+        min-width: unset;
+        width: 100%;
+    }
+
+    .nav-dropdown.open .nav-dropdown-menu {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Sur mobile on force l'affichage inline sans hover */
+    .nav-dropdown-item {
+        padding: 0.5rem 0;
+        font-size: 0.95rem;
+    }
+}
+
 /* Page Toolbar (pour actions spécifiques à une page) */
 .page-toolbar {
     position: fixed;
