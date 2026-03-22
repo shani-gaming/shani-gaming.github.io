@@ -204,6 +204,35 @@
         .sort-arrow { font-size: 0.6rem; margin-left: 2px; opacity: 0.5; }
         .sort-active .sort-arrow { opacity: 1; }
 
+        /* Season tabs */
+        .season-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .season-tab {
+            padding: 0.45rem 1.1rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .season-tab:hover { border-color: var(--primary); color: var(--primary); }
+        .season-tab.active {
+            background: var(--primary-dim);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .season-tab.prev-tab.active {
+            background: rgba(100,100,120,0.15);
+            border-color: rgba(180,180,200,0.4);
+            color: rgba(180,180,200,0.9);
+        }
+
         /* Summary bar */
         .summary-bar {
             display: flex;
@@ -242,6 +271,11 @@
                     <div class="load-bar" id="loadBar" style="width: 0%"></div>
                 </div>
                 <span id="loadCount"></span>
+            </div>
+
+            <div class="season-tabs" id="seasonTabs" style="display:none">
+                <button class="season-tab active" onclick="switchSeason('current')">Saison actuelle</button>
+                <button class="season-tab prev-tab" onclick="switchSeason('previous')">Saison précédente</button>
             </div>
 
             <div class="summary-bar" id="summaryBar" style="display:none"></div>
@@ -312,11 +346,17 @@
 
         // ─── State ─────────────────────────────────────────────────────────────
         let members = [];
-        let memberData = {};   // name.toLowerCase() → { score, cls, runs, status }
+        let memberData = {};   // name.toLowerCase() → { scoreCurrent, scorePrevious, cls, runs, status }
         let dungeonList = [];  // [{ name, shortName }] — order of first appearance
         let dungeonSet  = new Set();
         let sortCol = 'score';
         let sortDir = -1; // -1 = desc, 1 = asc
+        let activeSeason = 'current'; // 'current' | 'previous'
+
+        function getScore(key) {
+            const d = memberData[key] || {};
+            return activeSeason === 'previous' ? (d.scorePrevious || 0) : (d.scoreCurrent || 0);
+        }
 
         // ─── Firestore ─────────────────────────────────────────────────────────
         async function loadMembers() {
@@ -332,7 +372,7 @@
         // ─── Raider.IO ─────────────────────────────────────────────────────────
         async function fetchRIO(member) {
             try {
-                const fields = 'mythic_plus_scores_by_season:current,mythic_plus_best_runs';
+                const fields = 'mythic_plus_scores_by_season:current,mythic_plus_scores_by_season:previous,mythic_plus_best_runs';
                 const url = `https://raider.io/api/v1/characters/profile?region=eu&realm=${encodeURIComponent(member.realm)}&name=${encodeURIComponent(member.name)}&fields=${fields}`;
                 const r = await fetch(url);
                 if (r.status === 400 || r.status === 404) return null;
@@ -367,8 +407,10 @@
                     const key = batch[idx].name.toLowerCase();
                     if (res.status === 'fulfilled' && res.value) {
                         const d = res.value;
-                        const score = d.mythic_plus_scores_by_season?.[0]?.scores?.all || 0;
-                        const runs  = {};
+                        const seasons = d.mythic_plus_scores_by_season || [];
+                        const scoreCurrent  = seasons[0]?.scores?.all || 0;
+                        const scorePrevious = seasons[1]?.scores?.all || 0;
+                        const runs = {};
                         (d.mythic_plus_best_runs || []).forEach(run => {
                             runs[run.dungeon] = {
                                 level: run.mythic_level,
@@ -379,9 +421,9 @@
                                 dungeonList.push({ name: run.dungeon, shortName: run.short_name });
                             }
                         });
-                        memberData[key] = { score, cls: d.class || null, runs, status: 'ok' };
+                        memberData[key] = { scoreCurrent, scorePrevious, cls: d.class || null, runs, status: 'ok' };
                     } else {
-                        memberData[key] = { score: 0, cls: null, runs: {}, status: 'notfound' };
+                        memberData[key] = { scoreCurrent: 0, scorePrevious: 0, cls: null, runs: {}, status: 'notfound' };
                     }
                 });
 
@@ -393,25 +435,45 @@
             // Hide loader, show summary
             document.getElementById('loadProgress').style.display = 'none';
 
-            const withData = members.filter(m => {
-                const d = memberData[m.name.toLowerCase()];
-                return d && d.score > 0;
-            });
+            // Show season tabs if we have any data
+            const hasPrevious = members.some(m => (memberData[m.name.toLowerCase()]?.scorePrevious || 0) > 0);
+            if (hasPrevious) {
+                document.getElementById('seasonTabs').style.display = 'flex';
+            }
 
+            updateSummary();
+        }
+
+        // ─── Season switch ─────────────────────────────────────────────────────
+        function switchSeason(season) {
+            activeSeason = season;
+            document.querySelectorAll('.season-tab').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.season-tab').forEach(btn => {
+                if ((season === 'current' && !btn.classList.contains('prev-tab')) ||
+                    (season === 'previous' && btn.classList.contains('prev-tab'))) {
+                    btn.classList.add('active');
+                }
+            });
+            updateSummary();
+            renderTable();
+        }
+
+        function updateSummary() {
+            const withData = members.filter(m => getScore(m.name.toLowerCase()) > 0);
             if (withData.length === 0) {
                 document.getElementById('emptyState').classList.add('visible');
                 document.getElementById('tableWrap').classList.add('hidden');
+                document.getElementById('summaryBar').style.display = 'none';
             } else {
                 document.getElementById('emptyState').classList.remove('visible');
                 document.getElementById('tableWrap').classList.remove('hidden');
-                const avgScore = Math.round(withData.reduce((s, m) => s + memberData[m.name.toLowerCase()].score, 0) / withData.length);
-                const best = withData.reduce((a, b) =>
-                    memberData[a.name.toLowerCase()].score > memberData[b.name.toLowerCase()].score ? a : b);
+                const avg = Math.round(withData.reduce((s, m) => s + getScore(m.name.toLowerCase()), 0) / withData.length);
+                const best = withData.reduce((a, b) => getScore(a.name.toLowerCase()) > getScore(b.name.toLowerCase()) ? a : b);
                 document.getElementById('summaryBar').style.display = 'flex';
                 document.getElementById('summaryBar').innerHTML = `
                     <span><strong>${withData.length}</strong> membres avec des runs</span>
-                    <span>Score moyen : <strong style="color:${scoreColor(avgScore)}">${avgScore}</strong></span>
-                    <span>Meilleur score : <strong style="color:${scoreColor(memberData[best.name.toLowerCase()].score)}">${best.name}</strong> — ${Math.round(memberData[best.name.toLowerCase()].score)}</span>
+                    <span>Score moyen : <strong style="color:${scoreColor(avg)}">${avg}</strong></span>
+                    <span>Meilleur score : <strong style="color:${scoreColor(getScore(best.name.toLowerCase()))}">${best.name}</strong> — ${Math.round(getScore(best.name.toLowerCase()))}</span>
                 `;
             }
         }
@@ -422,7 +484,7 @@
                 const da = memberData[a.name.toLowerCase()] || {};
                 const db2 = memberData[b.name.toLowerCase()] || {};
                 if (sortCol === 'name') return sortDir * a.name.localeCompare(b.name);
-                if (sortCol === 'score') return sortDir * ((da.score || 0) - (db2.score || 0));
+                if (sortCol === 'score') return sortDir * (getScore(a.name.toLowerCase()) - getScore(b.name.toLowerCase()));
                 const la = da.runs?.[sortCol]?.level || 0;
                 const lb = db2.runs?.[sortCol]?.level || 0;
                 return sortDir * (la - lb);
@@ -461,10 +523,11 @@
                 const loading = d.status === 'loading';
                 const found   = d.status === 'ok';
 
+                const sc = getScore(key);
                 const scoreCell = loading
                     ? `<span class="skeleton"></span>`
-                    : found && d.score > 0
-                        ? `<span style="color:${scoreColor(d.score)}">${Math.round(d.score)}</span>`
+                    : sc > 0
+                        ? `<span style="color:${scoreColor(sc)}">${Math.round(sc)}</span>`
                         : `<span class="no-data">—</span>`;
 
                 const dungeonCells = dungeonList.map(dg => {
