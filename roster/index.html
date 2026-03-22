@@ -90,8 +90,7 @@
         /* Roster Table */
         .table-container {
             overflow-x: auto;
-            border-radius: 8px;
-            background: rgba(20, 20, 30, 0.6);
+            border-radius: 10px;
             border: 1px solid var(--border);
         }
 
@@ -99,82 +98,88 @@
             width: 100%;
             border-collapse: collapse;
             font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
         }
 
-        .roster-table thead {
-            background: linear-gradient(135deg, rgba(30, 30, 45, 0.9), rgba(20, 20, 30, 0.9));
-            border-bottom: 2px solid var(--gold);
-        }
-
-        .roster-table th {
-            padding: 0.75rem 0.75rem;
-            text-align: left;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--gold);
+        .roster-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: var(--bg-surface);
+            padding: 0.75rem 0.6rem;
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.07em;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border);
             white-space: nowrap;
-            opacity: 0.85;
+            opacity: 1;
         }
 
-        .roster-table th.th-ilvl,
-        .roster-table th.th-equip,
-        .roster-table th.th-role,
-        .roster-table th.th-actions {
-            text-align: center;
+        .roster-table thead th.th-name,
+        .roster-table thead th.th-class,
+        .roster-table thead th.th-spec {
+            text-align: left;
         }
 
-        .roster-table th.th-availability {
-            text-align: center;
+        .roster-table thead th.th-name {
+            padding-left: 1rem;
             min-width: 160px;
         }
 
         .roster-table tbody tr {
-            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
-            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.1s;
         }
 
-        .roster-table tbody tr:hover {
-            background: rgba(212, 175, 55, 0.05);
+        .roster-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .roster-table tbody tr:hover td {
+            background: #252b33;
         }
 
         .roster-table td {
-            padding: 0.6rem 0.75rem;
-            color: var(--text);
-            font-size: 0.92rem;
+            padding: 0.55rem 0.6rem;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            background: var(--bg-card);
+            vertical-align: middle;
+        }
+
+        .roster-table td:first-child {
+            padding-left: 1rem;
         }
 
         .player-name-cell {
             font-weight: 600;
-            cursor: pointer;
-            position: relative;
         }
 
         .player-name-link {
-            color: var(--gold);
             text-decoration: none;
-            border-bottom: 1px dotted transparent;
-            transition: border-color 0.2s;
+            transition: opacity 0.15s;
         }
 
         .player-name-link:hover {
-            border-bottom-color: var(--gold);
+            opacity: 0.8;
         }
 
         .class-cell {
-            font-weight: 600;
+            font-weight: 500;
         }
 
         .spec-cell {
-            color: var(--text-secondary);
+            color: var(--text-muted);
         }
 
         .ilvl-cell {
             text-align: center;
-            font-weight: 600;
-            color: var(--gold);
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-main);
         }
 
         .stat-badge {

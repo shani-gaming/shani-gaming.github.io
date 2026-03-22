@@ -368,16 +368,17 @@ function renderRoster() {
 
         // Name cell with avatar
         const avatarImg = player.avatarUrl
-            ? `<img src="${player.avatarUrl}" alt="" style="width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--${player.class}, #555); object-fit: cover; flex-shrink: 0;">`
-            : `<span style="width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.08); display: inline-block; flex-shrink: 0;"></span>`;
+            ? `<img src="${player.avatarUrl}" alt="" style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--${player.class}, #555); object-fit: cover; flex-shrink: 0;">`
+            : `<span style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.1); display: inline-block; flex-shrink: 0;"></span>`;
 
+        const nameColor = `var(--${player.class}, var(--text-main))`;
         const nameCell = `
             <td class="player-name-cell">
                 <div style="display: flex; align-items: center; gap: 0.6rem;">
                     ${avatarImg}
                     ${characterUrl ?
-                        `<a href="${characterUrl}" target="_blank" rel="noopener noreferrer" class="player-name-link">${player.name}</a>` :
-                        `<span style="color: var(--gold);">${player.name}</span>`
+                        `<a href="${characterUrl}" target="_blank" rel="noopener noreferrer" class="player-name-link" style="color:${nameColor};">${player.name}</a>` :
+                        `<span style="color:${nameColor};">${player.name}</span>`
                     }
                 </div>
             </td>
