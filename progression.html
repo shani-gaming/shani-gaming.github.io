@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
     <style>
-        body { padding-top: 80px; background: var(--bg-base); }
+        body { padding-top: 80px; background: var(--bg-deep); }
 
         .page-header {
             padding: 4rem 0 2.5rem;
@@ -75,7 +75,7 @@
             overflow: hidden;
             transition: border-color 0.2s;
         }
-        .raid-card:hover { border-color: var(--border-glow); }
+        .raid-card:hover { border-color: rgba(255,255,255,0.2); }
 
         .raid-artwork {
             height: 160px;
@@ -91,19 +91,19 @@
             background: linear-gradient(transparent, var(--bg-card));
         }
 
-        .raid-info {
-            padding: 1.25rem 1.25rem 0;
-        }
+        .raid-info { padding: 1.25rem 1.25rem 0.75rem; }
         .raid-name {
             font-family: var(--font-display);
             font-size: 1.3rem;
             color: var(--primary);
             margin-bottom: 0.2rem;
         }
-        .raid-meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .raid-meta { font-size: 0.8rem; color: var(--text-muted); }
 
         /* Difficulty rows */
-        .difficulties { padding: 0 1.25rem 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        .difficulties { padding: 0 1.25rem 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; }
+
+        .diff-block { display: flex; flex-direction: column; gap: 0.4rem; }
 
         .diff-row {
             display: grid;
@@ -118,19 +118,16 @@
             color: var(--text-muted);
         }
         .diff-bar-wrap {
-            height: 20px;
+            height: 16px;
             background: rgba(255,255,255,0.06);
             border-radius: 4px;
             overflow: hidden;
-            cursor: default;
             position: relative;
         }
-        .diff-bar-wrap.admin-mode { cursor: pointer; }
-        .diff-bar-wrap.admin-mode:hover { outline: 1px solid var(--primary); }
         .diff-bar {
             height: 100%;
             border-radius: 4px;
-            transition: width 0.4s ease;
+            transition: width 0.5s ease;
         }
         .diff-count {
             font-size: 0.8rem;
@@ -149,63 +146,68 @@
         .count-partial { color: #ff9800; }
         .count-full { color: #4caf50; }
 
-        /* Boss panel (admin) */
-        .boss-panel {
-            display: none;
-            padding: 0.75rem 1.25rem;
-            background: var(--bg-surface);
-            border-top: 1px solid var(--border);
-            flex-direction: column;
-            gap: 0.4rem;
-        }
-        .boss-panel.open { display: flex; }
-        .boss-panel-title {
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            color: var(--primary);
-            text-transform: uppercase;
-            margin-bottom: 0.25rem;
-        }
-        .boss-toggle {
+        /* Boss icon strip (toujours visible) */
+        .boss-strip {
             display: flex;
+            gap: 6px;
+            padding-left: 70px; /* aligne avec la barre */
+            flex-wrap: wrap;
+        }
+
+        .boss-cell {
+            position: relative;
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.4rem 0.5rem;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.15s;
-            user-select: none;
+            gap: 3px;
         }
-        .boss-toggle:hover { background: rgba(255,255,255,0.05); }
-        .boss-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 4px;
+
+        .boss-cell img {
+            width: 32px;
+            height: 32px;
+            border-radius: 5px;
+            border: 2px solid transparent;
             object-fit: cover;
-            border: 1px solid var(--border);
-            flex-shrink: 0;
+            transition: all 0.25s ease;
+            filter: grayscale(1) brightness(0.4);
+            cursor: default;
         }
-        .boss-name { font-size: 0.9rem; flex: 1; }
-        .kill-badge {
-            width: 22px; height: 22px;
-            border-radius: 50%;
-            border: 2px solid var(--border);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.7rem;
-            transition: all 0.15s;
-            flex-shrink: 0;
+        .boss-cell img.admin-clickable { cursor: pointer; }
+        .boss-cell img.admin-clickable:hover { transform: scale(1.12); }
+
+        /* État: tué mais pas full clear → orange */
+        .boss-cell img.state-partial {
+            filter: none;
+            border-color: #ff9800;
+            box-shadow: 0 0 8px rgba(255, 152, 0, 0.55);
         }
-        .kill-badge.killed {
-            background: #4caf50;
+        /* État: tué + full clear → vert */
+        .boss-cell img.state-full {
+            filter: none;
             border-color: #4caf50;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.55);
+        }
+
+        /* Tooltip nom du boss au hover */
+        .boss-cell::after {
+            content: attr(data-name);
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0d1117;
             color: #fff;
+            font-size: 0.68rem;
+            white-space: nowrap;
+            padding: 3px 7px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 10;
         }
-        .kill-badge.alive {
-            background: transparent;
-            border-color: var(--text-muted);
-            color: transparent;
-        }
+        .boss-cell:hover::after { opacity: 1; }
 
         /* Admin notice */
         .admin-notice {
@@ -244,7 +246,7 @@
     <section class="progression-section">
         <div class="container">
             <div id="adminNotice" class="admin-notice">
-                Mode admin actif — cliquez sur une barre de difficulté pour gérer les kills boss par boss.
+                Mode admin actif — cliquez sur l'icône d'un boss pour basculer son état de kill.
             </div>
             <div class="raids-grid" id="raidsGrid">
                 <div style="color: var(--text-muted); padding: 2rem;">Chargement...</div>
@@ -316,7 +318,6 @@
         // ─── State ─────────────────────────────────────────────────────────────
         let isAdmin = false;
         let progressionData = {}; // raidId → { kills: { diff: { bossId: bool } } }
-        let openPanel = null; // "raidId-diffId"
 
         // ─── Firestore ─────────────────────────────────────────────────────────
         function listenProgression() {
@@ -390,7 +391,6 @@
                 btn.textContent = 'Admin';
                 btn.classList.remove('active');
                 notice.classList.remove('visible');
-                openPanel = null;
             }
             render();
         }
@@ -426,42 +426,35 @@
                 const diffsHtml = DIFFICULTIES.map(diff => {
                     const killed = countKills(raid.id, diff.id, raid.bosses);
                     const pct = total > 0 ? (killed / total * 100) : 0;
-                    const panelKey = `${raid.id}-${diff.id}`;
-                    const isOpen = openPanel === panelKey;
+                    const isFull = killed === total && total > 0;
 
-                    // Boss panel (admin mode)
-                    const bossesHtml = raid.bosses.map(boss => {
+                    // Icônes boss — toujours visibles
+                    const iconsHtml = raid.bosses.map(boss => {
                         const isKilled = getKills(raid.id, diff.id)[boss.id] || false;
                         const iconUrl = `https://wow.zamimg.com/images/wow/journal/${boss.icon}.png`;
+                        let stateClass = '';
+                        if (isKilled) stateClass = isFull ? 'state-full' : 'state-partial';
+                        const clickAttr = isAdmin
+                            ? `onclick="handleBossClick('${raid.id}', '${diff.id}', '${boss.id}')" class="${stateClass} admin-clickable"`
+                            : `class="${stateClass}"`;
                         return `
-                            <div class="boss-toggle" onclick="handleBossClick('${raid.id}', '${diff.id}', '${boss.id}')">
-                                <img class="boss-icon" src="${iconUrl}" alt="${boss.name}"
-                                     onerror="this.style.background='var(--bg-surface)';this.removeAttribute('src')">
-                                <span class="boss-name">${boss.name}</span>
-                                <div class="kill-badge ${isKilled ? 'killed' : 'alive'}">✓</div>
-                            </div>
-                        `;
+                            <div class="boss-cell" data-name="${boss.name}">
+                                <img src="${iconUrl}" ${clickAttr} alt="${boss.name}"
+                                     onerror="this.style.opacity='0.15';this.removeAttribute('src')">
+                            </div>`;
                     }).join('');
 
-                    const bossPanel = isAdmin ? `
-                        <div class="boss-panel ${isOpen ? 'open' : ''}" id="panel-${raid.id}-${diff.id}">
-                            <div class="boss-panel-title">${diff.label} — Boss tués</div>
-                            ${bossesHtml}
-                        </div>
-                    ` : '';
-
                     return `
-                        <div class="diff-row">
-                            <span class="diff-label">${diff.label}</span>
-                            <div class="diff-bar-wrap ${isAdmin ? 'admin-mode' : ''}"
-                                 onclick="${isAdmin ? `togglePanel('${raid.id}', '${diff.id}')` : ''}">
-                                <div class="diff-bar ${barClass(killed, total)}"
-                                     style="width: ${pct}%"></div>
+                        <div class="diff-block">
+                            <div class="diff-row">
+                                <span class="diff-label">${diff.label}</span>
+                                <div class="diff-bar-wrap">
+                                    <div class="diff-bar ${barClass(killed, total)}" style="width: ${pct}%"></div>
+                                </div>
+                                <span class="diff-count ${countClass(killed, total)}">${killed}/${total}</span>
                             </div>
-                            <span class="diff-count ${countClass(killed, total)}">${killed}/${total}</span>
-                        </div>
-                        ${bossPanel}
-                    `;
+                            <div class="boss-strip">${iconsHtml}</div>
+                        </div>`;
                 }).join('');
 
                 return `
@@ -474,15 +467,8 @@
                             <div class="raid-meta">Niveau 90 · ${total} boss</div>
                         </div>
                         <div class="difficulties">${diffsHtml}</div>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
-        }
-
-        function togglePanel(raidId, diffId) {
-            const key = `${raidId}-${diffId}`;
-            openPanel = openPanel === key ? null : key;
-            render();
         }
 
         async function handleBossClick(raidId, diffId, bossId) {
