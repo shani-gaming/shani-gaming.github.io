@@ -107,20 +107,20 @@
         }
 
         .roster-table th {
-            padding: 1rem 0.75rem;
+            padding: 0.75rem 0.75rem;
             text-align: left;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            font-size: 0.85rem;
-            font-weight: 700;
+            font-size: 0.75rem;
+            font-weight: 600;
             color: var(--gold);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.08em;
             white-space: nowrap;
+            opacity: 0.85;
         }
 
         .roster-table th.th-ilvl,
-        .roster-table th.th-enchant,
-        .roster-table th.th-gems,
+        .roster-table th.th-equip,
         .roster-table th.th-role,
         .roster-table th.th-actions {
             text-align: center;
@@ -128,7 +128,7 @@
 
         .roster-table th.th-availability {
             text-align: center;
-            min-width: 200px;
+            min-width: 160px;
         }
 
         .roster-table tbody tr {
@@ -141,9 +141,9 @@
         }
 
         .roster-table td {
-            padding: 0.875rem 0.75rem;
+            padding: 0.6rem 0.75rem;
             color: var(--text);
-            font-size: 1rem;
+            font-size: 0.92rem;
         }
 
         .player-name-cell {
@@ -205,14 +205,14 @@
 
         .role-badge {
             display: inline-block;
-            padding: 0.4rem 0.75rem;
+            padding: 0.25rem 0.6rem;
             border-radius: 4px;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             text-align: center;
-            min-width: 80px;
+            min-width: 60px;
         }
 
         .role-badge.tank {
@@ -242,24 +242,25 @@
         .availability-badges {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.3rem;
+            gap: 0.2rem;
             justify-content: center;
         }
 
         .availability-badge {
             display: inline-block;
-            padding: 0.25rem 0.6rem;
-            background: rgba(212, 175, 55, 0.15);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 4px;
-            color: var(--gold);
-            font-size: 0.75rem;
+            padding: 0.15rem 0.4rem;
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 3px;
+            color: rgba(212, 175, 55, 0.8);
+            font-size: 0.7rem;
             font-weight: 500;
             white-space: nowrap;
         }
 
         .actions-cell {
             text-align: center;
+            white-space: nowrap;
         }
 
         .table-action-btn {
@@ -909,7 +910,7 @@
                 display: none;
             }
 
-            .roster-table td:nth-child(8),
+            .roster-table td:nth-child(7),
             .actions-cell {
                 display: none;
             }
@@ -1039,8 +1040,7 @@
                                     <th class="th-class">Classe</th>
                                     <th class="th-spec">Spécialisation</th>
                                     <th class="th-ilvl">ilvl</th>
-                                    <th class="th-enchant">Enchants</th>
-                                    <th class="th-gems">Gemmes</th>
+                                    <th class="th-equip" style="text-align:center;">Équip.</th>
                                     <th class="th-role">Rôle</th>
                                     <th class="th-availability">Disponibilité</th>
                                     <th class="th-actions" id="admin-column">Actions</th>

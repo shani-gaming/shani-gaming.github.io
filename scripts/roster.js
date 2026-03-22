@@ -84,15 +84,13 @@ function updateAdminButton() {
         adminControlsSection.style.display = (currentUser && isUserAdmin) ? 'flex' : 'none';
     }
 
+    adminBtn.classList.toggle('connected', !!(currentUser && isUserAdmin));
     if (currentUser && isUserAdmin) {
-        adminBtn.textContent = '✓ Admin';
-        adminBtn.classList.add('connected');
+        adminBtn.textContent = 'Admin (connecté)';
     } else if (currentUser && !isUserAdmin) {
         adminBtn.textContent = 'Non autorisé';
-        adminBtn.classList.remove('connected');
     } else {
         adminBtn.textContent = 'Admin';
-        adminBtn.classList.remove('connected');
     }
 }
 
@@ -419,13 +417,21 @@ function renderRoster() {
         const ilvlValue = player.ilvl || (player.notes ? extractIlvl(player.notes) : null);
         const ilvlCell = `<td class="ilvl-cell">${ilvlValue || '-'}</td>`;
 
-        // Enchant badge
+        // Équipement : enchants + gems fusionnés
         const enchantBadge = getStatBadge(player.enchantPercentage);
-        const enchantCell = `<td style="text-align: center;">${enchantBadge}</td>`;
-
-        // Gem badge
         const gemBadge = getStatBadge(player.gemPercentage);
-        const gemCell = `<td style="text-align: center;">${gemBadge}</td>`;
+        const equipCell = `
+            <td style="text-align: center;">
+                <div style="display: flex; flex-direction: column; gap: 0.15rem; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 0.3rem;">
+                        <span style="font-size: 0.65rem; color: var(--text-secondary); width: 1rem; text-align: right;">E</span>${enchantBadge}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.3rem;">
+                        <span style="font-size: 0.65rem; color: var(--text-secondary); width: 1rem; text-align: right;">G</span>${gemBadge}
+                    </div>
+                </div>
+            </td>
+        `;
 
         // Role badge with flex role
         const roleBadge = `<span class="role-badge ${player.roleType}">${player.roleName}</span>`;
@@ -452,9 +458,10 @@ function renderRoster() {
 
         const roleCell = `<td style="text-align: center;">${roleContent}</td>`;
 
-        // Availability badges
+        // Availability badges — jours abrégés
+        const dayAbbr = { 'Lundi': 'Lun', 'Mardi': 'Mar', 'Mercredi': 'Mer', 'Jeudi': 'Jeu', 'Vendredi': 'Ven', 'Samedi': 'Sam', 'Dimanche': 'Dim' };
         const availabilityBadges = player.availability && Array.isArray(player.availability) ?
-            player.availability.map(day => `<span class="availability-badge">${day}</span>`).join('') :
+            player.availability.map(day => `<span class="availability-badge" title="${day}">${dayAbbr[day] || day}</span>`).join('') :
             '-';
         const availabilityCell = `<td style="text-align: center;"><div class="availability-badges">${availabilityBadges}</div></td>`;
 
@@ -467,7 +474,7 @@ function renderRoster() {
             </td>
         ` : '<td class="actions-cell" style="display: none;"></td>';
 
-        row.innerHTML = nameCell + classCell + specCell + ilvlCell + enchantCell + gemCell + roleCell + availabilityCell + actionsCell;
+        row.innerHTML = nameCell + classCell + specCell + ilvlCell + equipCell + roleCell + availabilityCell + actionsCell;
         tbody.appendChild(row);
     });
 }
