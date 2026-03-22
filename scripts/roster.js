@@ -447,11 +447,11 @@ function renderRoster() {
                 'dps': 'DPS'
             };
             const flexRoleName = flexRoleMap[player.flexRole] || player.flexRole;
-            const flexClass = player.flexRole === 'dps' ? 'melee' : player.flexRole; // Use melee class for dps styling
+            const flexClass = ['melee', 'ranged', 'dps'].includes(player.flexRole) ? 'melee' : player.flexRole;
             roleContent = `
-                <div style="display: flex; flex-direction: column; gap: 0.25rem; align-items: center;">
+                <div style="display: flex; flex-direction: column; gap: 0.2rem; align-items: center;">
                     ${roleBadge}
-                    <span class="role-badge ${flexClass}" style="opacity: 0.7; font-size: 0.75rem;">Flex: ${flexRoleName}</span>
+                    <span class="role-badge ${flexClass}" style="opacity: 0.6;">↳ ${flexRoleName}</span>
                 </div>
             `;
         }

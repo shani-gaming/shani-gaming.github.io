@@ -179,10 +179,13 @@
 
         .stat-badge {
             display: inline-block;
-            padding: 0.25rem 0.5rem;
+            padding: 0.25rem 0.4rem;
             border-radius: 4px;
-            font-size: 0.85rem;
+            font-size: 0.78rem;
             font-weight: 600;
+            min-width: 3rem;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
         }
 
         .stat-badge.full {
@@ -205,14 +208,15 @@
 
         .role-badge {
             display: inline-block;
-            padding: 0.25rem 0.6rem;
+            padding: 0.25rem 0.5rem;
             border-radius: 4px;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             text-align: center;
-            min-width: 60px;
+            min-width: 54px;
+            white-space: nowrap;
         }
 
         .role-badge.tank {
@@ -227,16 +231,12 @@
             color: #40e0d0;
         }
 
-        .role-badge.melee {
-            background: rgba(255, 124, 128, 0.15);
-            border: 1.5px solid #ff7c80;
-            color: #ff7c80;
-        }
-
+        /* melee et ranged = même couleur DPS — la distinction est déjà dans la spé */
+        .role-badge.melee,
         .role-badge.ranged {
-            background: rgba(255, 209, 102, 0.15);
-            border: 1.5px solid #ffd166;
-            color: #ffd166;
+            background: rgba(251, 146, 60, 0.15);
+            border: 1.5px solid #fb923c;
+            color: #fb923c;
         }
 
         .availability-badges {
