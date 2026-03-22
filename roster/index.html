@@ -52,7 +52,7 @@
         }
 
         body {
-            padding-top: 120px; /* navbar + toolbar */
+            padding-top: 70px;
         }
 
         /* Stats Grid */
@@ -264,21 +264,37 @@
 
         .table-action-btn {
             background: transparent;
-            border: 1px solid var(--border);
+            border: 1px solid transparent;
             color: var(--text-secondary);
-            padding: 0.4rem 0.75rem;
-            margin: 0 0.25rem;
+            padding: 0.35rem 0.5rem;
+            margin: 0 0.1rem;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s ease;
+            font-size: 1rem;
+            line-height: 1;
+            transition: all 0.15s ease;
         }
 
-        .table-action-btn:hover {
-            border-color: var(--gold);
-            color: var(--gold);
-            background: rgba(212, 175, 55, 0.1);
+        .table-action-btn:hover { border-color: var(--border); }
+        .table-action-btn.btn-refresh:hover { color: #60a5fa; border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.08); }
+        .table-action-btn.btn-edit:hover { color: var(--gold); border-color: rgba(212,175,55,0.4); background: rgba(212,175,55,0.08); }
+        .table-action-btn.btn-delete:hover { color: #f87171; border-color: rgba(248,113,113,0.4); background: rgba(248,113,113,0.08); }
+
+        /* Admin button (inline, like progression.html) */
+        .admin-btn {
+            padding: 0.45rem 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-family: inherit;
         }
+        .admin-btn:hover { border-color: var(--gold); color: var(--gold); }
+        .admin-btn.connected { border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.08); }
 
         /* Equipment badges */
         .equipment-badges {
@@ -935,21 +951,6 @@
     <nav class="navbar"></nav>
     <script src="../scripts/navbar.js"></script>
 
-    <!-- Barre d'actions spécifique à la page -->
-    <div class="page-toolbar">
-        <div class="toolbar-actions">
-            <button class="toolbar-btn" onclick="exportToDiscord();">
-                <span>💬</span> Export Discord
-            </button>
-            <button class="toolbar-btn" onclick="exportToCSV();">
-                <span>📊</span> Export CSV
-            </button>
-            <button class="toolbar-btn admin-nav-item" onclick="toggleAdminMode();">
-                <span>⚙️</span> Mode Admin
-            </button>
-        </div>
-    </div>
-
     <div class="container">
         <!-- Bento Grid Dashboard -->
         <section class="dashboard">
@@ -978,22 +979,6 @@
                     <button class="btn btn-primary" onclick="openForm()" style="width: 100%; margin-top: auto;">
                         S'inscrire au Roster
                     </button>
-
-                    <!-- Admin Controls -->
-                    <div class="admin-controls" id="admin-controls-section" style="margin-top: 1rem; padding-top: 1rem;">
-                        <button class="admin-btn-small" onclick="refreshAllPlayers()" id="refresh-all-btn" style="flex: 1;">
-                            <span>🔄</span> Rafraîchir tout
-                        </button>
-                        <div id="refresh-progress" style="display: none; margin-top: 0.5rem; width: 100%;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem; color: var(--text-secondary); font-size: 0.8rem;">
-                                <span id="refresh-status">Actualisation...</span>
-                                <span id="refresh-count">0/0</span>
-                            </div>
-                            <div style="width: 100%; height: 6px; background: var(--bg-elevated); border-radius: 3px; overflow: hidden;">
-                                <div id="refresh-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); transition: width 0.3s ease;"></div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Card: Stats -->
@@ -1022,8 +1007,29 @@
 
                 <!-- Card: Roster Table -->
                 <div class="card card-full">
-                    <div class="card-label">ROSTER RAID 10</div>
-                    <h3 class="card-title" style="margin-bottom: 1.5rem;">Récapitulatif des Inscriptions</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+                        <div>
+                            <div class="card-label">ROSTER RAID 10</div>
+                            <h3 class="card-title" style="margin-bottom: 0;">Récapitulatif des Inscriptions</h3>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-top: 0.25rem;">
+                            <div id="admin-controls-section" style="display: none; gap: 0.5rem; align-items: center;">
+                                <button class="admin-btn" id="refresh-all-btn" onclick="refreshAllPlayers()">↻ Rafraîchir</button>
+                                <button class="admin-btn" onclick="exportToDiscord()">Discord</button>
+                                <button class="admin-btn" onclick="exportToCSV()">CSV</button>
+                            </div>
+                            <button class="admin-btn admin-nav-item" onclick="toggleAdminMode()">Admin</button>
+                        </div>
+                    </div>
+                    <div id="refresh-progress" style="display: none; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem; color: var(--text-secondary); font-size: 0.8rem;">
+                            <span id="refresh-status">Actualisation...</span>
+                            <span id="refresh-count">0/0</span>
+                        </div>
+                        <div style="width: 100%; height: 4px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden;">
+                            <div id="refresh-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
 
                     <div class="table-container">
                         <table class="roster-table" id="roster-table">

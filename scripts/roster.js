@@ -76,23 +76,23 @@ auth.onAuthStateChanged(async user => {
 // Update admin button state
 function updateAdminButton() {
     const adminBtn = document.querySelector('.admin-nav-item');
-    if (!adminBtn) return; // Button not found, skip update
+    if (!adminBtn) return;
 
     // Show/hide admin controls section
     const adminControlsSection = document.getElementById('admin-controls-section');
     if (adminControlsSection) {
-        adminControlsSection.style.display = (currentUser && isUserAdmin) ? 'block' : 'none';
+        adminControlsSection.style.display = (currentUser && isUserAdmin) ? 'flex' : 'none';
     }
 
     if (currentUser && isUserAdmin) {
-        adminBtn.innerHTML = '<span>✅</span> Admin (Connecté)';
-        adminBtn.style.color = 'var(--primary)';
+        adminBtn.textContent = '✓ Admin';
+        adminBtn.classList.add('connected');
     } else if (currentUser && !isUserAdmin) {
-        adminBtn.innerHTML = '<span>⚠️</span> Pas autorisé';
-        adminBtn.style.color = 'var(--text-muted)';
+        adminBtn.textContent = 'Non autorisé';
+        adminBtn.classList.remove('connected');
     } else {
-        adminBtn.innerHTML = '<span>⚙️</span> Mode Admin';
-        adminBtn.style.color = '';
+        adminBtn.textContent = 'Admin';
+        adminBtn.classList.remove('connected');
     }
 }
 
@@ -461,9 +461,9 @@ function renderRoster() {
         // Actions cell (admin only)
         const actionsCell = isUserAdmin ? `
             <td class="actions-cell" style="display: table-cell;">
-                <button class="table-action-btn" onclick="refreshPlayerArmory('${player.id}', '${player.name}', '${player.realmSlug || 'hyjal'}')">🔄</button>
-                <button class="table-action-btn" onclick="editPlayer('${player.sectionKey}', ${player.sectionIndex})">✏</button>
-                <button class="table-action-btn" onclick="removePlayer('${player.sectionKey}', ${player.sectionIndex})">🗑</button>
+                <button class="table-action-btn btn-refresh" title="Actualiser armurerie" onclick="refreshPlayerArmory('${player.id}', '${player.name}', '${player.realmSlug || 'hyjal'}')">↻</button>
+                <button class="table-action-btn btn-edit" title="Modifier" onclick="editPlayer('${player.sectionKey}', ${player.sectionIndex})">✎</button>
+                <button class="table-action-btn btn-delete" title="Supprimer" onclick="removePlayer('${player.sectionKey}', ${player.sectionIndex})">✕</button>
             </td>
         ` : '<td class="actions-cell" style="display: none;"></td>';
 
