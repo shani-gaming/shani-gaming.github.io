@@ -380,8 +380,7 @@
         dk:      'Chevalier de la mort',                evoker: 'Évocateur'
     };
     const RANK_NAMES = {
-        0: 'Grand Maître', 1: 'Officier', 2: 'Officier Alt',
-        3: 'Membre', 4: 'Vétéran', 5: 'Recrue', 6: 'Invité'
+        0: 'Grand Sage', 1: 'Gardien de jade', 2: 'Moine du val', 3: 'Novice lotus'
     };
     const RANK_COLORS = [
         '#eebb55', '#33ffaa', '#60a5fa', '#b1bac4',
@@ -424,7 +423,7 @@
 
     // ── KPIs ──────────────────────────────────────────────────────────────────
     function renderKPIs() {
-        const active  = members.filter(m => m.active !== false);
+        const active  = members.filter(m => m.rank !== undefined && m.rank <= 2);
         const total   = members.length;
         const activeN = active.length;
 
@@ -520,7 +519,7 @@
 
     // ── Classes Chart ─────────────────────────────────────────────────────────
     function renderClasses() {
-        const active = members.filter(m => m.active !== false);
+        const active = members.filter(m => m.rank !== undefined && m.rank <= 2);
         document.getElementById('class-badge').textContent = `${active.length} actifs`;
 
         const counts = {};
@@ -578,9 +577,8 @@
 
     // ── Ranks Chart ───────────────────────────────────────────────────────────
     function renderRanks() {
-        const active = members.filter(m => m.active !== false);
         const counts = {};
-        active.forEach(m => {
+        members.forEach(m => {
             const r = m.rank !== undefined ? m.rank : 99;
             counts[r] = (counts[r] || 0) + 1;
         });
