@@ -17,6 +17,7 @@ const discordClientId = defineSecret('DISCORD_CLIENT_ID');
 const discordClientSecret = defineSecret('DISCORD_CLIENT_SECRET');
 const discordGuildId = defineSecret('DISCORD_GUILD_ID');
 const discordWebhookUrl = defineSecret('DISCORD_WEBHOOK_URL');
+const raidHelperApiKey = defineSecret('RAIDHELPER_API_KEY');
 // CORS configuration - Allow GitHub Pages and custom domain
 const corsOptions = {
   origin: [
@@ -1352,6 +1353,124 @@ exports.deleteRosterEntry = onRequest(
       } catch (error) {
         console.error('Error deleting roster entry:', error);
         res.status(500).json({ error: 'Failed to delete entry', details: error.message });
+      }
+    });
+  }
+);
+
+/**
+ * Récupère les events Raid-Helper à venir pour le serveur Discord
+ */
+exports.getRaidHelperEvents = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10,
+    secrets: [discordGuildId, raidHelperApiKey]
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        const serverId = discordGuildId.value();
+        const apiKey   = raidHelperApiKey.value();
+
+        const response = await axios.get(
+          `https://raid-helper.dev/api/v2/servers/${serverId}/events`,
+          {
+            headers: { Authorization: apiKey }
+          }
+        );
+
+        const data = response.data;
+        // L'API retourne { postedEvents: [], scheduledEvents: [] }
+        const events = [
+          ...(data.postedEvents    || []),
+          ...(data.scheduledEvents || [])
+        ]
+          .filter(e => e.startTime * 1000 >= Date.now()) // à venir uniquement
+          .sort((a, b) => a.startTime - b.startTime)
+          .map(e => ({
+            id:          e.id,
+            title:       e.title,
+            description: e.description || '',
+            startTime:   e.startTime,
+            endTime:     e.endTime || null,
+            type:        e.templateId || null,
+            signUps:     e.signUpsAmount || 0,
+            leader:      e.leaderName || null,
+            color:       e.color || null,
+            imageUrl:    e.imageUrl || null,
+          }));
+
+        res.json({ events });
+      } catch (error) {
+        console.error('Error fetching Raid-Helper events:', error.message);
+        res.status(500).json({ error: 'Failed to fetch events', details: error.message });
+      }
+    });
+  }
+);
+
+/**
+ * Récupère le détail d'un event Raid-Helper (signups par rôle/classe)
+ */
+exports.getEventDetails = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10,
+    secrets: [raidHelperApiKey]
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        const { eventId } = req.query;
+        if (!eventId) return res.status(400).json({ error: 'Missing eventId' });
+
+        const apiKey   = raidHelperApiKey.value();
+        const response = await axios.get(
+          `https://raid-helper.dev/api/v2/events/${eventId}`,
+          { headers: { Authorization: apiKey } }
+        );
+
+        const e = response.data;
+        const signUps  = (e.signUps || []);
+
+        // Sépare les inscrits par statut
+        const primary   = signUps.filter(s => s.status === 'primary');
+        const absences  = signUps.filter(s => s.className === 'Absence');
+        const bench     = signUps.filter(s => s.className === 'Bench');
+        const late      = signUps.filter(s => s.className === 'Late');
+        const tentative = signUps.filter(s => s.className === 'Tentative');
+
+        // Compte par rôle (inscrits primaires uniquement)
+        const roleSummary = { Tanks: 0, Melee: 0, Ranged: 0, Healers: 0 };
+        primary.forEach(s => {
+          if (roleSummary[s.roleName] !== undefined) roleSummary[s.roleName]++;
+        });
+
+        const mapPlayer = s => ({
+          name:  s.name,
+          class: s.className,
+          spec:  s.specName,
+          role:  s.roleName,
+          note:  s.note || null,
+        });
+
+        res.json({
+          id:          e.id,
+          title:       e.displayTitle || e.title,
+          startTime:   e.startTime,
+          imageUrl:    e.imageUrl || null,
+          leader:      e.leaderName || null,
+          roleSummary,
+          signUps:     primary.sort((a, b) => a.position - b.position).map(mapPlayer),
+          absences:    absences.map(mapPlayer),
+          bench:       bench.map(mapPlayer),
+          late:        late.map(mapPlayer),
+          tentative:   tentative.map(mapPlayer),
+        });
+      } catch (error) {
+        console.error('Error fetching event details:', error.message);
+        res.status(500).json({ error: 'Failed to fetch event details', details: error.message });
       }
     });
   }
