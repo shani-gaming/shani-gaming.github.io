@@ -38,15 +38,19 @@
         .page-header p  { color: var(--text-muted); font-size: 0.92rem; }
 
         .admin-btn {
-            display: inline-flex; align-items: center; gap: 0.5rem;
-            padding: 0.5rem 1rem; background: transparent;
-            border: 1px solid var(--border); border-radius: 6px;
-            color: var(--text-muted); font-size: 0.82rem; font-weight: 600;
-            cursor: pointer; transition: all 0.2s; font-family: inherit;
-            text-decoration: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-family: inherit;
         }
         .admin-btn:hover { border-color: var(--primary); color: var(--primary); }
-        .admin-btn.connected { border-color: var(--accent); color: var(--accent); }
+        .admin-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(212,175,55,0.1); }
 
         .admin-bar {
             display: none; align-items: center; gap: 0.75rem;
@@ -166,19 +170,19 @@
         }
         .player-discord { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.05rem; }
 
-        /* Alts badge with tooltip */
+        /* Alts badge */
         .alts-badge {
             display: inline-flex; align-items: center;
             font-size: 0.62rem; font-weight: 700; color: var(--text-muted);
             background: var(--bg-surface); border: 1px solid var(--border);
             border-radius: 10px; padding: 0.1rem 0.4rem;
-            cursor: default; position: relative; flex-shrink: 0;
+            cursor: default; flex-shrink: 0;
         }
-        .alts-badge:hover .alts-tooltip { display: block; }
-        .alts-tooltip {
-            display: none;
-            position: absolute;
-            top: calc(100% + 6px); left: 0;
+        .alts-badge:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* Global tooltip (position:fixed, escapes overflow containers) */
+        .global-tooltip {
+            position: fixed;
             background: var(--bg-surface);
             border: 1px solid var(--border);
             border-radius: 6px;
@@ -187,15 +191,17 @@
             font-size: 0.75rem;
             font-weight: 500;
             color: var(--text);
-            z-index: 10;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            min-width: 100px;
+            z-index: 9999;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+            pointer-events: none;
+            display: none;
         }
-        .alts-tooltip-title {
+        .global-tooltip.visible { display: block; }
+        .global-tooltip-title {
             font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em;
             color: var(--text-muted); margin-bottom: 0.35rem; font-weight: 700;
         }
-        .alts-tooltip-item { padding: 0.1rem 0; }
+        .global-tooltip-item { padding: 0.1rem 0; }
 
         /* Cells */
         .cell {
@@ -288,6 +294,8 @@
         </div>
     </div>
 
+    <div class="global-tooltip" id="globalTooltip"></div>
+
     <div class="content">
         <div class="container">
             <div id="att-container">
@@ -340,13 +348,14 @@
         const bar = document.getElementById('adminBar');
         if (isAdmin) {
             btn.textContent = '✓ Admin';
-            btn.classList.add('connected');
+            btn.classList.add('active');
             bar.style.display = 'flex';
         } else if (user) {
             btn.textContent = 'Non autorisé';
+            btn.classList.remove('active');
         } else {
             btn.textContent = '🔐 Admin';
-            btn.classList.remove('connected');
+            btn.classList.remove('active');
             bar.style.display = 'none';
         }
     });
@@ -563,12 +572,7 @@
             const pctClass = pct >= 75 ? 'summary-pct' : pct >= 50 ? 'summary-pct mid' : 'summary-pct low';
 
             const altsBadge = p.alts && p.alts.length
-                ? `<span class="alts-badge">+${p.alts.length}
-                       <span class="alts-tooltip">
-                           <div class="alts-tooltip-title">Rerolls</div>
-                           ${p.alts.map(a => `<div class="alts-tooltip-item">${escHtml(a)}</div>`).join('')}
-                       </span>
-                   </span>`
+                ? `<span class="alts-badge" data-alts="${escHtml(p.alts.join('|'))}">+${p.alts.length}</span>`
                 : '';
 
             html += `<tr>`;
@@ -626,6 +630,39 @@
     }
 
     loadAttendance();
+
+    // ── Rerolls tooltip ───────────────────────────────────────────────────────
+    const tooltip = document.getElementById('globalTooltip');
+
+    document.addEventListener('mouseover', e => {
+        const badge = e.target.closest('.alts-badge');
+        if (!badge) return;
+        const alts = badge.dataset.alts ? badge.dataset.alts.split('|') : [];
+        if (!alts.length) return;
+
+        tooltip.innerHTML = `<div class="global-tooltip-title">Rerolls</div>` +
+            alts.map(a => `<div class="global-tooltip-item">${a}</div>`).join('');
+        tooltip.classList.add('visible');
+        positionTooltip(badge);
+    });
+
+    document.addEventListener('mouseout', e => {
+        if (e.target.closest('.alts-badge')) {
+            tooltip.classList.remove('visible');
+        }
+    });
+
+    document.addEventListener('scroll', () => tooltip.classList.remove('visible'), true);
+
+    function positionTooltip(el) {
+        const rect = el.getBoundingClientRect();
+        let top  = rect.bottom + 6;
+        let left = rect.left;
+        // Keep inside viewport
+        if (left + 160 > window.innerWidth) left = window.innerWidth - 165;
+        tooltip.style.top  = top  + 'px';
+        tooltip.style.left = left + 'px';
+    }
     </script>
 
 </body>
