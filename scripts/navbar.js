@@ -35,8 +35,13 @@ const navConfig = {
                 { text: 'Métiers de la Guilde', href: '/professions.html' },
                 { text: 'Statistiques', href: '/stats.html' }
             ]
+        },
+        {
+            text: 'Événements',
+            items: [
+                { text: 'Calendrier', href: '/events.html' }
+            ]
         }
-        // Ajoute d'autres menus déroulants ici si besoin
     ],
 
     // Bouton CTA (call-to-action) - optionnel

@@ -322,6 +322,91 @@
             background-image: url('https://www.pcgamesn.com/wp-content/sites/pcgamesn/2025/03/world-of-warcraft-housing.jpg'); /* Ambiance Taverne/Social */
         }
 
+        /* ── Events Widget ── */
+        .events-widget-section {
+            padding: 4rem 0 2rem;
+        }
+        .section-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .events-widget-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+        .event-widget-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            transition: border-color 0.2s, transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .event-widget-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--primary);
+        }
+        .event-widget-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+        .skeleton-card { min-height: 120px; animation: shimmer 1.4s ease infinite; }
+        @keyframes shimmer { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .event-date-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--primary);
+        }
+        .event-widget-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .event-widget-meta {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: auto;
+        }
+        .event-signup-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-radius: 20px;
+            padding: 0.15rem 0.6rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+        @media (max-width: 768px) {
+            .events-widget-grid { grid-template-columns: 1fr; }
+        }
+
         /* Responsive Homepage-specific */
         @media (max-width: 1024px) {
             .hero-content { grid-template-columns: 1fr; text-align: center; }
@@ -562,6 +647,21 @@
                         <p>Parce que WoW, c'est aussi se poser, discuter et profiter de l'univers du jeu tranquillement.</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Events Widget ── -->
+    <section class="events-widget-section">
+        <div class="container">
+            <div class="section-header-row">
+                <h2 style="font-size:2rem;">Prochains Événements</h2>
+                <a href="events.html" class="btn btn-outline" style="font-size:0.85rem; padding:0.5rem 1rem;">Voir le calendrier →</a>
+            </div>
+            <div class="events-widget-grid" id="eventsWidgetGrid">
+                <div class="event-widget-card skeleton-card"></div>
+                <div class="event-widget-card skeleton-card"></div>
+                <div class="event-widget-card skeleton-card"></div>
             </div>
         </div>
     </section>
@@ -1250,6 +1350,57 @@
 
         // Charger les membres au chargement de la page
         loadNewMembers();
+    </script>
+
+    <script>
+    // ── Events Widget ─────────────────────────────────────────────────────────
+    const EVENTS_API = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getRaidHelperEvents';
+
+    const DAYS_FR   = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+    const MONTHS_FR = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+
+    function fmtEventDate(ts) {
+        const d = new Date(ts * 1000);
+        return `${DAYS_FR[d.getDay()]} ${d.getDate()} ${MONTHS_FR[d.getMonth()]} · ${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function extractTitle(event) {
+        // La première ligne de la description contient le vrai titre
+        const firstLine = (event.description || '').split('\n')[0].trim();
+        // On retire les emojis de début si besoin
+        const cleaned = firstLine.replace(/^[\p{Emoji}\s]+/u, '').trim();
+        return cleaned || event.title || 'Événement';
+    }
+
+    async function loadEventsWidget() {
+        const grid = document.getElementById('eventsWidgetGrid');
+        try {
+            const res    = await fetch(EVENTS_API);
+            const { events } = await res.json();
+            const next3  = events.slice(0, 3);
+
+            if (!next3.length) {
+                grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;grid-column:1/-1;">Aucun événement prévu pour le moment.</p>';
+                return;
+            }
+
+            grid.innerHTML = next3.map(e => `
+                <div class="event-widget-card">
+                    <div class="event-date-badge">📅 ${fmtEventDate(e.startTime)}</div>
+                    <div class="event-widget-title">${extractTitle(e)}</div>
+                    <div class="event-widget-meta">
+                        <span class="event-signup-pill">⚔ ${e.signUps} inscrit${e.signUps > 1 ? 's' : ''}</span>
+                        ${e.leader ? `<span>RL : ${e.leader}</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            console.error('Events widget error:', err);
+            grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;grid-column:1/-1;">Impossible de charger les événements.</p>';
+        }
+    }
+
+    loadEventsWidget();
     </script>
 </body>
 </html>

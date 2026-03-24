@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Événements — Les Sages de Pandarie</title>
+    <link rel="icon" type="image/png" href="img/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/common.css">
+
+    <style>
+        body { padding-top: 70px; background: var(--bg-deep); }
+
+        /* ── Page Header ── */
+        .page-header {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            padding: 2.5rem 0 2rem;
+        }
+        .page-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            padding: 0.15rem 0.6rem;
+            margin-bottom: 0.6rem;
+        }
+        .live-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse-dot 2s ease infinite;
+        }
+        @keyframes pulse-dot {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.7); }
+        }
+        .page-header h1 { font-size: 2.4rem; margin-bottom: 0.3rem; }
+        .page-header p { color: var(--text-muted); font-size: 0.92rem; }
+
+        /* ── Content ── */
+        .content { padding: 2.5rem 0 5rem; }
+
+        /* ── Month Group ── */
+        .month-group { margin-bottom: 2.5rem; }
+        .month-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+
+        /* ── Event Card ── */
+        .event-card {
+            display: grid;
+            grid-template-columns: 80px 1fr auto;
+            align-items: start;
+            gap: 1.25rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 0.75rem;
+            transition: border-color 0.2s, transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .event-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: 3px;
+            background: var(--primary);
+            border-radius: 3px 0 0 3px;
+        }
+        .event-card:hover {
+            border-color: rgba(238,187,85,0.4);
+            transform: translateX(3px);
+        }
+
+        /* Date block */
+        .event-date-block {
+            text-align: center;
+            background: var(--bg-surface);
+            border-radius: 8px;
+            padding: 0.6rem 0.4rem;
+            border: 1px solid var(--border);
+        }
+        .event-day-name {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .event-day-num {
+            font-size: 1.8rem;
+            font-weight: 800;
+            line-height: 1;
+            color: var(--primary);
+            margin: 0.1rem 0;
+        }
+        .event-month {
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        /* Event body */
+        .event-body {}
+        .event-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.4rem;
+            line-height: 1.3;
+        }
+        .event-time {
+            font-size: 0.82rem;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .event-description {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.55;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Sidebar meta */
+        .event-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.5rem;
+            min-width: 90px;
+        }
+        .signup-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-radius: 20px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .leader-badge {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: right;
+        }
+
+        /* ── Empty / Error ── */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+        .empty-state p { font-size: 0.95rem; margin-top: 0.5rem; opacity: 0.6; }
+
+        /* ── Skeleton ── */
+        .skeleton-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            height: 100px;
+            margin-bottom: 0.75rem;
+            animation: shimmer 1.4s ease infinite;
+        }
+        @keyframes shimmer { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .event-card {
+                grid-template-columns: 64px 1fr;
+            }
+            .event-meta { display: none; }
+            .event-card .event-body { grid-column: 2; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar"></nav>
+    <script src="scripts/navbar.js"></script>
+
+    <div class="page-header">
+        <div class="container">
+            <div class="page-label">
+                <span class="live-dot"></span>
+                Raid-Helper
+            </div>
+            <h1>Calendrier des Événements</h1>
+            <p>Les Sages de Pandarie · Hyjal · synchronisé depuis Discord</p>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="container">
+            <div id="events-container">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const EVENTS_API  = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getRaidHelperEvents';
+    const DAYS_FR     = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+    const DAYS_SHORT  = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+    const MONTHS_FR   = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+    const MONTHS_SHORT= ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+
+    function fmtTime(ts) {
+        const d = new Date(ts * 1000);
+        return `${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function extractTitle(event) {
+        const firstLine = (event.description || '').split('\n')[0].trim();
+        const cleaned   = firstLine.replace(/^[\p{Emoji}\s\[\]]+/u, '').replace(/\s*—\s*.*$/, '').trim();
+        return cleaned || event.title || 'Événement';
+    }
+
+    function extractDescription(event) {
+        const lines = (event.description || '').split('\n').slice(1);
+        return lines.filter(l => l.trim() && !l.startsWith('📅') && !l.startsWith('🕘') && !l.startsWith('🕙')).join('\n').trim();
+    }
+
+    function groupByMonth(events) {
+        const groups = {};
+        events.forEach(e => {
+            const d   = new Date(e.startTime * 1000);
+            const key = `${d.getFullYear()}-${d.getMonth()}`;
+            if (!groups[key]) groups[key] = { label: `${MONTHS_FR[d.getMonth()]} ${d.getFullYear()}`, events: [] };
+            groups[key].events.push(e);
+        });
+        return Object.values(groups);
+    }
+
+    function renderEvent(e) {
+        const d     = new Date(e.startTime * 1000);
+        const title = extractTitle(e);
+        const desc  = extractDescription(e);
+        const time  = fmtTime(e.startTime);
+        const endT  = e.endTime ? ` — ${fmtTime(e.endTime)}` : '';
+
+        return `
+            <div class="event-card">
+                <div class="event-date-block">
+                    <div class="event-day-name">${DAYS_SHORT[d.getDay()]}</div>
+                    <div class="event-day-num">${d.getDate()}</div>
+                    <div class="event-month">${MONTHS_SHORT[d.getMonth()]}</div>
+                </div>
+                <div class="event-body">
+                    <div class="event-title">${title}</div>
+                    <div class="event-time">${time}${endT}</div>
+                    ${desc ? `<div class="event-description">${desc.replace(/\n/g,'<br>')}</div>` : ''}
+                </div>
+                <div class="event-meta">
+                    <span class="signup-badge">⚔ ${e.signUps} inscrit${e.signUps > 1 ? 's' : ''}</span>
+                    ${e.leader ? `<div class="leader-badge">RL : ${e.leader}</div>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    async function loadEvents() {
+        const container = document.getElementById('events-container');
+        try {
+            const res = await fetch(EVENTS_API);
+            const { events } = await res.json();
+
+            if (!events.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size:2rem;">📅</div>
+                        <p>Aucun événement à venir pour le moment.</p>
+                    </div>`;
+                return;
+            }
+
+            const groups = groupByMonth(events);
+            container.innerHTML = groups.map(g => `
+                <div class="month-group">
+                    <div class="month-label">${g.label}</div>
+                    ${g.events.map(renderEvent).join('')}
+                </div>
+            `).join('');
+        } catch (err) {
+            console.error('Events load error:', err);
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div style="font-size:2rem;">⚠</div>
+                    <p>Impossible de charger les événements.</p>
+                </div>`;
+        }
+    }
+
+    loadEvents();
+    </script>
+
+</body>
+</html>
