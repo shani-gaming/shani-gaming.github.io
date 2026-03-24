@@ -26,8 +26,7 @@
         .auth-gate p  { color: var(--text-muted); font-size: 0.9rem; }
 
         .page-header {
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border);
+            background: var(--bg-surface); border-bottom: 1px solid var(--border);
             padding: 2rem 0 1.75rem;
         }
         .page-header-row {
@@ -55,6 +54,14 @@
 
         .content { padding: 2rem 0 5rem; }
 
+        .hint {
+            font-size: 0.82rem; color: var(--text-muted);
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 0.65rem 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .hint strong { color: var(--primary); }
+
         .mapping-layout {
             display: grid; grid-template-columns: 1fr 1fr;
             gap: 1.5rem; align-items: start;
@@ -66,8 +73,7 @@
             border-radius: 12px; overflow: hidden;
         }
         .panel-header {
-            padding: 1rem 1.25rem 0.85rem;
-            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.25rem 0.85rem; border-bottom: 1px solid var(--border);
             background: var(--bg-surface);
         }
         .panel-header h3 {
@@ -84,65 +90,71 @@
         .search-box:focus { outline: none; border-color: var(--primary); }
         .panel-list { max-height: 70vh; overflow-y: auto; padding: 0.5rem 0; }
 
-        .item-row {
+        /* Discord rows */
+        .discord-row {
+            display: flex; flex-direction: column;
+            padding: 0.6rem 1.25rem; cursor: pointer;
+            transition: background 0.15s; border-left: 3px solid transparent;
+            user-select: none; gap: 0.35rem;
+        }
+        .discord-row:hover { background: var(--bg-surface); }
+        .discord-row.selected {
+            background: rgba(238,187,85,0.07);
+            border-left-color: var(--primary);
+        }
+        .discord-name { font-size: 0.88rem; font-weight: 700; color: #7289DA; }
+        .discord-uid  { font-size: 0.68rem; color: var(--text-muted); }
+        .discord-chars {
+            display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.1rem;
+        }
+        .char-badge {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.15rem 0.5rem 0.15rem 0.6rem;
+            background: rgba(51,255,170,0.1); border: 1px solid rgba(51,255,170,0.2);
+            border-radius: 4px; font-size: 0.7rem; font-weight: 600; color: var(--accent);
+        }
+        .char-badge .remove-char {
+            cursor: pointer; opacity: 0.6; font-size: 0.75rem; line-height: 1;
+            padding: 0 0.1rem;
+        }
+        .char-badge .remove-char:hover { opacity: 1; color: #f87171; }
+
+        /* WoW rows */
+        .wow-row {
             display: flex; align-items: center; justify-content: space-between;
             gap: 0.75rem; padding: 0.55rem 1.25rem; cursor: pointer;
             transition: background 0.15s; border-left: 3px solid transparent;
             user-select: none;
         }
-        .item-row:hover   { background: var(--bg-surface); }
-        .item-row.selected {
-            background: rgba(238,187,85,0.07);
-            border-left-color: var(--primary);
+        .wow-row:hover { background: var(--bg-surface); }
+        .wow-row.mapped-here {
+            background: rgba(51,255,170,0.05);
+            border-left-color: var(--accent);
+        }
+        .wow-row.mapped-other {
+            opacity: 0.5;
         }
         .item-name { font-size: 0.88rem; font-weight: 600; }
         .item-sub  { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.05rem; }
-
-        .mapped-badge {
-            display: inline-flex; align-items: center; gap: 0.3rem;
-            padding: 0.15rem 0.5rem;
-            background: rgba(51,255,170,0.1); border: 1px solid rgba(51,255,170,0.25);
-            border-radius: 4px; font-size: 0.68rem; font-weight: 700;
-            color: var(--accent); white-space: nowrap; flex-shrink: 0;
-        }
-        .mapped-badge.removable {
-            background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.25);
-            color: #f87171; cursor: pointer;
-        }
-        .mapped-badge.removable:hover { background: rgba(248,113,113,0.2); }
         .class-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 
-        /* Selection panel */
-        .selection-panel {
-            background: var(--bg-card); border: 1px solid var(--primary);
-            border-radius: 12px; padding: 1.25rem 1.5rem;
-            display: none; align-items: center; gap: 1.5rem;
-            flex-wrap: wrap; margin-bottom: 1.25rem;
+        .check-icon {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: rgba(51,255,170,0.15); border: 1px solid var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; color: var(--accent); flex-shrink: 0;
         }
-        .selection-panel.visible { display: flex; }
-        .sel-names {
-            display: flex; align-items: center; gap: 0.75rem;
-            font-size: 0.95rem; font-weight: 700; flex: 1;
+        .other-badge {
+            font-size: 0.68rem; color: var(--text-muted);
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: 4px; padding: 0.1rem 0.4rem; flex-shrink: 0;
         }
-        .sel-arrow { color: var(--primary); font-size: 1.3rem; }
-        .sel-discord { color: #7289DA; }
-        .sel-actions { display: flex; gap: 0.5rem; }
 
-        .confirm-btn {
-            padding: 0.55rem 1.25rem; background: var(--primary);
-            color: var(--bg-deep); border: none; border-radius: 6px;
-            font-weight: 700; font-size: 0.82rem; cursor: pointer;
-            font-family: inherit; transition: opacity 0.2s;
+        /* No selection hint */
+        .no-selection {
+            padding: 2rem 1.25rem; text-align: center;
+            color: var(--text-muted); font-size: 0.82rem;
         }
-        .confirm-btn:hover { opacity: 0.85; }
-        .confirm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .cancel-btn {
-            padding: 0.4rem 0.9rem; background: transparent;
-            border: 1px solid var(--border); border-radius: 6px;
-            color: var(--text-muted); font-size: 0.78rem; cursor: pointer;
-            font-family: inherit;
-        }
-        .cancel-btn:hover { border-color: var(--primary); color: var(--primary); }
 
         /* Toast */
         .toast {
@@ -151,7 +163,7 @@
             border: 1px solid var(--accent); border-radius: 8px;
             color: var(--accent); font-size: 0.85rem; font-weight: 600;
             z-index: 9999; opacity: 0; transform: translateY(8px);
-            transition: all 0.25s; pointer-events: none; max-width: 300px;
+            transition: all 0.25s; pointer-events: none;
         }
         .toast.show { opacity: 1; transform: translateY(0); }
         .toast.error { border-color: #f87171; color: #f87171; }
@@ -161,7 +173,7 @@
             background: var(--bg-surface); animation: shimmer 1.4s ease infinite;
         }
         @keyframes shimmer { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        .empty-msg { padding: 2rem 1.25rem; color: var(--text-muted); font-size: 0.82rem; text-align: center; }
+        .empty-msg   { padding: 2rem 1.25rem; color: var(--text-muted); font-size: 0.82rem; text-align: center; }
         .loading-msg { padding: 1.5rem 1.25rem; color: var(--text-muted); font-size: 0.82rem; text-align: center; }
     </style>
 </head>
@@ -186,7 +198,7 @@
                     <div>
                         <div class="page-label">Admin</div>
                         <h1>Mapping Discord ↔ WoW</h1>
-                        <p>Associez les pseudos Discord (Raid-Helper) aux personnages WoW de la guilde.</p>
+                        <p>Associez les pseudos Discord aux personnages WoW (main + rerolls).</p>
                     </div>
                     <button class="signout-btn" id="signOutBtn">Déconnexion</button>
                 </div>
@@ -196,16 +208,8 @@
         <div class="content">
             <div class="container">
 
-                <div class="selection-panel" id="selPanel">
-                    <div class="sel-names">
-                        <span class="sel-discord" id="selDiscordName">—</span>
-                        <span class="sel-arrow">→</span>
-                        <span id="selWowName">—</span>
-                    </div>
-                    <div class="sel-actions">
-                        <button class="confirm-btn" id="confirmBtn">Confirmer</button>
-                        <button class="cancel-btn" id="cancelBtn">Annuler</button>
-                    </div>
+                <div class="hint">
+                    <strong>Comment ça marche :</strong> cliquez un joueur Discord à gauche, puis cliquez ses personnages WoW à droite pour les ajouter ou retirer. Les modifications sont sauvegardées automatiquement.
                 </div>
 
                 <div class="mapping-layout">
@@ -224,14 +228,11 @@
 
                     <div class="panel">
                         <div class="panel-header">
-                            <h3>Membres WoW</h3>
-                            <p>Collection guild-members (actifs)</p>
-                            <input class="search-box" id="wowSearch" type="text" placeholder="Rechercher...">
+                            <h3>Personnages WoW</h3>
+                            <p id="wowPanelSub">Sélectionnez un joueur Discord d'abord</p>
                         </div>
                         <div class="panel-list" id="wowList">
-                            <div class="skeleton-row"></div>
-                            <div class="skeleton-row"></div>
-                            <div class="skeleton-row"></div>
+                            <div class="no-selection">← Sélectionnez un joueur Discord pour associer ses personnages</div>
                         </div>
                     </div>
                 </div>
@@ -269,12 +270,10 @@
     function classColor(c) { return CLASS_COLORS[(c||'').toLowerCase()] || '#888'; }
 
     // ── State ─────────────────────────────────────────────────────────────────
-    let discordUsers = [];  // [{ userId, name }]
-    let wowMembers   = [];  // [{ id, name, realm, class }]
-    let mappings     = {};  // discordUserId → { discordName, wow, wowName, wowRealm }
-
-    let selectedDiscordId  = null;
-    let selectedWowId      = null;
+    let discordUsers   = [];  // [{ userId, name }]
+    let wowMembers     = [];  // [{ id, name, realm, class }]
+    let mappings       = {};  // discordUserId → { discordName, characters: [{wow, wowName, wowRealm}] }
+    let selectedUserId = null;
 
     // ── Auth ──────────────────────────────────────────────────────────────────
     document.getElementById('signInBtn').addEventListener('click', () => {
@@ -309,7 +308,18 @@
     async function loadMappings() {
         const snap = await db.collection('attendance-mapping').get();
         mappings = {};
-        snap.forEach(doc => { mappings[doc.id] = doc.data(); });
+        snap.forEach(doc => {
+            const d = doc.data();
+            // Compat: ancien format { wow, wowName, wowRealm } → nouveau { characters: [...] }
+            if (d.wow && !d.characters) {
+                mappings[doc.id] = {
+                    discordName: d.discordName,
+                    characters: [{ wow: d.wow, wowName: d.wowName || d.wow, wowRealm: d.wowRealm || '' }]
+                };
+            } else {
+                mappings[doc.id] = d;
+            }
+        });
     }
 
     async function loadWowMembers() {
@@ -320,7 +330,6 @@
             wowMembers.push({ id: doc.id, name: d.name, realm: d.realm, class: d.class });
         });
         wowMembers.sort((a, b) => a.name.localeCompare(b.name));
-        renderWow();
     }
 
     async function loadDiscordUsers() {
@@ -329,7 +338,6 @@
         try {
             const res = await fetch(`${EVENTS_API}?past=true`);
             const { events } = await res.json();
-
             const userMap = new Map();
             const BATCH = 5;
             for (let i = 0; i < events.length; i += BATCH) {
@@ -338,9 +346,8 @@
                         const r = await fetch(`${DETAILS_API}?eventId=${e.id}`);
                         const d = await r.json();
                         const all = [
-                            ...(d.signUps   || []), ...(d.absences  || []),
-                            ...(d.bench     || []), ...(d.late      || []),
-                            ...(d.tentative || [])
+                            ...(d.signUps||[]), ...(d.absences||[]),
+                            ...(d.bench||[]),   ...(d.late||[]), ...(d.tentative||[])
                         ];
                         all.forEach(p => {
                             if (p.userId && p.name && !userMap.has(p.userId)) {
@@ -350,7 +357,6 @@
                     } catch(err) {}
                 }));
             }
-
             discordUsers = [...userMap.entries()].map(([userId, name]) => ({ userId, name }));
             discordUsers.sort((a, b) => a.name.localeCompare(b.name));
         } catch(err) {
@@ -363,8 +369,8 @@
 
     // ── Render ────────────────────────────────────────────────────────────────
     function renderDiscord(filter = '') {
-        const list = document.getElementById('discordList');
-        const q    = filter.toLowerCase();
+        const list  = document.getElementById('discordList');
+        const q     = filter.toLowerCase();
         const items = discordUsers.filter(u => u.name.toLowerCase().includes(q));
 
         if (!items.length) {
@@ -374,181 +380,156 @@
 
         list.innerHTML = '';
         items.forEach(u => {
-            const m      = mappings[u.userId];
-            const isSel  = selectedDiscordId === u.userId;
+            const m     = mappings[u.userId];
+            const isSel = selectedUserId === u.userId;
+            const chars = m ? (m.characters || []) : [];
 
             const row = document.createElement('div');
-            row.className = 'item-row' + (isSel ? ' selected' : '');
-            row.dataset.type   = 'discord';
+            row.className    = 'discord-row' + (isSel ? ' selected' : '');
             row.dataset.userid = u.userId;
 
-            const info = document.createElement('div');
-            info.innerHTML = `<div class="item-name" style="color:#7289DA">${u.name}</div>
-                              <div class="item-sub">${u.userId}</div>`;
-            row.appendChild(info);
+            let inner = `<div class="discord-name">${u.name}</div>
+                         <div class="discord-uid">${u.userId}</div>`;
 
-            if (m) {
-                const badge = document.createElement('span');
-                badge.className   = 'mapped-badge removable';
-                badge.title       = 'Cliquer pour dissocier';
-                badge.textContent = m.wowName + ' ×';
-                badge.dataset.type   = 'remove';
-                badge.dataset.userid = u.userId;
-                row.appendChild(badge);
+            if (chars.length) {
+                inner += '<div class="discord-chars">';
+                chars.forEach(c => {
+                    inner += `<span class="char-badge">
+                        ${c.wowName}
+                        <span class="remove-char" data-userid="${u.userId}" data-wowid="${c.wow}" title="Retirer">×</span>
+                    </span>`;
+                });
+                inner += '</div>';
             }
 
+            row.innerHTML = inner;
             list.appendChild(row);
         });
     }
 
-    function renderWow(filter = '') {
+    function renderWow() {
         const list = document.getElementById('wowList');
-        const q    = filter.toLowerCase();
-        const items = wowMembers.filter(m =>
-            m.name.toLowerCase().includes(q) || (m.realm||'').toLowerCase().includes(q)
-        );
+        const sub  = document.getElementById('wowPanelSub');
 
-        if (!items.length) {
-            list.innerHTML = '<div class="empty-msg">Aucun membre WoW trouvé.</div>';
+        if (!selectedUserId) {
+            list.innerHTML = '<div class="no-selection">← Sélectionnez un joueur Discord pour associer ses personnages</div>';
+            sub.textContent = 'Sélectionnez un joueur Discord d\'abord';
             return;
         }
 
+        const discordUser = discordUsers.find(u => u.userId === selectedUserId);
+        const m           = mappings[selectedUserId];
+        const myChars     = m ? (m.characters || []).map(c => c.wow) : [];
+
+        sub.textContent = discordUser
+            ? 'Personnages de ' + discordUser.name
+            : 'Personnages associés';
+
+        // Build who-owns-what map (for "mapped by another" display)
+        const ownerOf = {};  // wowId → discordName
+        Object.entries(mappings).forEach(([uid, data]) => {
+            if (uid === selectedUserId) return;
+            (data.characters || []).forEach(c => {
+                ownerOf[c.wow] = data.discordName;
+            });
+        });
+
         list.innerHTML = '';
-        items.forEach(m => {
-            const color  = classColor(m.class);
-            const isSel  = selectedWowId === m.id;
-            const mapped = Object.values(mappings).find(mp => mp.wow === m.id);
+        wowMembers.forEach(m => {
+            const color       = classColor(m.class);
+            const isMappedHere  = myChars.includes(m.id);
+            const isMappedOther = !isMappedHere && ownerOf[m.id];
 
             const row = document.createElement('div');
-            row.className = 'item-row' + (isSel ? ' selected' : '');
-            row.dataset.type  = 'wow';
+            row.className    = 'wow-row' + (isMappedHere ? ' mapped-here' : isMappedOther ? ' mapped-other' : '');
             row.dataset.wowid = m.id;
 
-            const inner = document.createElement('div');
-            inner.style.cssText = 'display:flex;align-items:center;gap:0.6rem;flex:1;min-width:0;';
-            inner.innerHTML = `<span class="class-dot" style="background:${color}"></span>
-                               <div>
-                                   <div class="item-name">${m.name}</div>
-                                   <div class="item-sub">${m.realm||''} · ${m.class||''}</div>
-                               </div>`;
-            row.appendChild(inner);
-
-            if (mapped) {
-                const badge = document.createElement('span');
-                badge.className   = 'mapped-badge';
-                badge.textContent = mapped.discordName;
-                row.appendChild(badge);
+            let right = '';
+            if (isMappedHere) {
+                right = `<div class="check-icon">✓</div>`;
+            } else if (isMappedOther) {
+                right = `<span class="other-badge">${ownerOf[m.id]}</span>`;
             }
 
+            row.innerHTML = `
+                <div style="display:flex;align-items:center;gap:0.6rem;flex:1;min-width:0;">
+                    <span class="class-dot" style="background:${color}"></span>
+                    <div>
+                        <div class="item-name">${m.name}</div>
+                        <div class="item-sub">${m.realm||''} · ${m.class||''}</div>
+                    </div>
+                </div>
+                ${right}`;
             list.appendChild(row);
         });
     }
 
     // ── Event delegation ──────────────────────────────────────────────────────
     document.getElementById('discordList').addEventListener('click', e => {
-        const removeBtn = e.target.closest('[data-type="remove"]');
-        if (removeBtn) { removeMapping(removeBtn.dataset.userid); return; }
-        const row = e.target.closest('[data-type="discord"]');
-        if (row) selectDiscord(row.dataset.userid);
+        const removeBtn = e.target.closest('.remove-char');
+        if (removeBtn) {
+            e.stopPropagation();
+            removeChar(removeBtn.dataset.userid, removeBtn.dataset.wowid);
+            return;
+        }
+        const row = e.target.closest('.discord-row');
+        if (row) {
+            selectedUserId = row.dataset.userid === selectedUserId ? null : row.dataset.userid;
+            renderDiscord(document.getElementById('discordSearch').value);
+            renderWow();
+        }
     });
 
     document.getElementById('wowList').addEventListener('click', e => {
-        const row = e.target.closest('[data-type="wow"]');
-        if (row) selectWow(row.dataset.wowid);
+        const row = e.target.closest('.wow-row');
+        if (!row || !selectedUserId) return;
+        toggleChar(selectedUserId, row.dataset.wowid);
     });
-
-    document.getElementById('confirmBtn').addEventListener('click', confirmMapping);
-    document.getElementById('cancelBtn').addEventListener('click', clearSelection);
 
     document.getElementById('discordSearch').addEventListener('input', e => {
         renderDiscord(e.target.value);
     });
-    document.getElementById('wowSearch').addEventListener('input', e => {
-        renderWow(e.target.value);
-    });
 
-    // ── Selection ─────────────────────────────────────────────────────────────
-    function selectDiscord(userId) {
-        selectedDiscordId = userId;
-        updateSelectionPanel();
-        renderDiscord(document.getElementById('discordSearch').value);
-    }
+    // ── Toggle character ──────────────────────────────────────────────────────
+    async function toggleChar(userId, wowId) {
+        const discordUser = discordUsers.find(u => u.userId === userId);
+        if (!discordUser) return;
 
-    function selectWow(wowId) {
-        selectedWowId = wowId;
-        updateSelectionPanel();
-        renderWow(document.getElementById('wowSearch').value);
-    }
+        const wowMember = wowMembers.find(m => m.id === wowId);
+        if (!wowMember) return;
 
-    function clearSelection() {
-        selectedDiscordId = null;
-        selectedWowId     = null;
-        document.getElementById('selPanel').classList.remove('visible');
-        renderDiscord(document.getElementById('discordSearch').value);
-        renderWow(document.getElementById('wowSearch').value);
-    }
+        const current  = mappings[userId] || { discordName: discordUser.name, characters: [] };
+        const chars    = current.characters || [];
+        const exists   = chars.findIndex(c => c.wow === wowId);
 
-    function updateSelectionPanel() {
-        const panel = document.getElementById('selPanel');
-        const dUser = discordUsers.find(u => u.userId === selectedDiscordId);
-        const wUser = wowMembers.find(m => m.id === selectedWowId);
-
-        if (!selectedDiscordId && !selectedWowId) {
-            panel.classList.remove('visible');
-            return;
+        let newChars;
+        if (exists >= 0) {
+            // Remove
+            newChars = chars.filter(c => c.wow !== wowId);
+        } else {
+            // Add
+            newChars = [...chars, { wow: wowId, wowName: wowMember.name, wowRealm: wowMember.realm || '' }];
         }
-        panel.classList.add('visible');
-        document.getElementById('selDiscordName').textContent = dUser ? dUser.name : '—';
-        document.getElementById('selWowName').textContent     = wUser ? wUser.name : '—';
 
-        const btn = document.getElementById('confirmBtn');
-        btn.disabled = !(selectedDiscordId && selectedWowId);
-    }
-
-    // ── Mapping CRUD ──────────────────────────────────────────────────────────
-    async function confirmMapping() {
-        if (!selectedDiscordId || !selectedWowId) return;
-
-        const dUser = discordUsers.find(u => u.userId === selectedDiscordId);
-        const wUser = wowMembers.find(m => m.id === selectedWowId);
-        if (!dUser || !wUser) return;
-
-        const btn = document.getElementById('confirmBtn');
-        btn.disabled    = true;
-        btn.textContent = 'Sauvegarde…';
+        const data = { discordName: discordUser.name, characters: newChars };
 
         try {
-            const data = {
-                discordName: dUser.name,
-                wow:         wUser.id,
-                wowName:     wUser.name,
-                wowRealm:    wUser.realm || '',
-            };
-            await db.collection('attendance-mapping').doc(selectedDiscordId).set(data);
-            mappings[selectedDiscordId] = data;
-            showToast('✓ ' + dUser.name + ' → ' + wUser.name + ' sauvegardé');
-            clearSelection();
-        } catch(err) {
-            showToast('Erreur : ' + err.message, true);
-            btn.disabled    = false;
-            btn.textContent = 'Confirmer';
-        }
-    }
-
-    async function removeMapping(userId) {
-        const m = mappings[userId];
-        if (!m) return;
-        if (!confirm('Supprimer le mapping ' + m.discordName + ' → ' + m.wowName + ' ?')) return;
-
-        try {
-            await db.collection('attendance-mapping').doc(userId).delete();
-            delete mappings[userId];
+            await db.collection('attendance-mapping').doc(userId).set(data);
+            mappings[userId] = data;
             renderDiscord(document.getElementById('discordSearch').value);
-            renderWow(document.getElementById('wowSearch').value);
-            showToast('Mapping supprimé');
+            renderWow();
+            if (exists >= 0) {
+                showToast(wowMember.name + ' retiré');
+            } else {
+                showToast('✓ ' + wowMember.name + ' ajouté à ' + discordUser.name);
+            }
         } catch(err) {
             showToast('Erreur : ' + err.message, true);
         }
+    }
+
+    async function removeChar(userId, wowId) {
+        await toggleChar(userId, wowId);
     }
 
     // ── Toast ─────────────────────────────────────────────────────────────────
@@ -558,7 +539,7 @@
         t.textContent = msg;
         t.className   = 'toast show' + (isError ? ' error' : '');
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
     }
     </script>
 

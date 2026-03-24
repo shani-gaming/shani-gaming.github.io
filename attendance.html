@@ -159,12 +159,43 @@
         }
         .att-matrix tbody tr:last-child td { border-bottom: none; }
 
-        .player-name { font-size: 0.88rem; font-weight: 700; }
+        .player-name { font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 0.45rem; }
         .player-name .class-dot {
             display: inline-block; width: 7px; height: 7px;
-            border-radius: 50%; margin-right: 0.45rem; vertical-align: middle;
+            border-radius: 50%; flex-shrink: 0;
         }
         .player-discord { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.05rem; }
+
+        /* Alts badge with tooltip */
+        .alts-badge {
+            display: inline-flex; align-items: center;
+            font-size: 0.62rem; font-weight: 700; color: var(--text-muted);
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 0.1rem 0.4rem;
+            cursor: default; position: relative; flex-shrink: 0;
+        }
+        .alts-badge:hover .alts-tooltip { display: block; }
+        .alts-tooltip {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px); left: 0;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            min-width: 100px;
+        }
+        .alts-tooltip-title {
+            font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em;
+            color: var(--text-muted); margin-bottom: 0.35rem; font-weight: 700;
+        }
+        .alts-tooltip-item { padding: 0.1rem 0; }
 
         /* Cells */
         .cell {
@@ -359,8 +390,19 @@
             // 2. Fetch mappings from Firestore
             setProgress('Chargement du mapping Discord ↔ WoW…');
             const mapSnap = await db.collection('attendance-mapping').get();
-            const mapping = {};  // discordUserId → { wowName, wowRealm, discordName }
-            mapSnap.forEach(doc => { mapping[doc.id] = doc.data(); });
+            const mapping = {};  // discordUserId → { discordName, characters: [{wow, wowName, wowRealm}] }
+            mapSnap.forEach(doc => {
+                const d = doc.data();
+                // Compat: ancien format { wow, wowName } → nouveau { characters: [...] }
+                if (d.wow && !d.characters) {
+                    mapping[doc.id] = {
+                        discordName: d.discordName,
+                        characters: [{ wow: d.wow, wowName: d.wowName || d.wow, wowRealm: d.wowRealm || '' }]
+                    };
+                } else {
+                    mapping[doc.id] = d;
+                }
+            });
 
             // 3. Fetch guild members for class colors
             const memberSnap = await db.collection('guild-members').where('active', '==', true).get();
@@ -422,12 +464,15 @@
             playerEventMap.forEach((data, userId) => {
                 const m = mapping[userId];
                 if (m) {
-                    const member = memberByName[(m.wowName||'').toLowerCase()];
+                    const chars  = m.characters || [];
+                    const main   = chars[0] || {};
+                    const member = memberByName[(main.wowName||'').toLowerCase()];
                     mappedPlayers.push({
                         userId,
                         discordName: data.discordName,
-                        wowName:     m.wowName,
-                        wowRealm:    m.wowRealm || '',
+                        wowName:     main.wowName || '',
+                        wowRealm:    main.wowRealm || '',
+                        alts:        chars.slice(1).map(c => c.wowName),
                         class:       member ? member.class : '',
                         events:      data.events,
                     });
@@ -517,10 +562,21 @@
             const pct    = events.length > 0 ? Math.round(present / events.length * 100) : 0;
             const pctClass = pct >= 75 ? 'summary-pct' : pct >= 50 ? 'summary-pct mid' : 'summary-pct low';
 
+            const altsBadge = p.alts && p.alts.length
+                ? `<span class="alts-badge">+${p.alts.length}
+                       <span class="alts-tooltip">
+                           <div class="alts-tooltip-title">Rerolls</div>
+                           ${p.alts.map(a => `<div class="alts-tooltip-item">${escHtml(a)}</div>`).join('')}
+                       </span>
+                   </span>`
+                : '';
+
             html += `<tr>`;
             html += `<td class="col-name">
                 <div class="player-name">
-                    <span class="class-dot" style="background:${color}"></span>${escHtml(p.wowName)}
+                    <span class="class-dot" style="background:${color}"></span>
+                    ${escHtml(p.wowName)}
+                    ${altsBadge}
                 </div>
                 <div class="player-discord">${escHtml(p.discordName)}</div>
             </td>`;
