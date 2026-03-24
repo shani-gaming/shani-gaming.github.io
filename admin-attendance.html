@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Attendance — Les Sages de Pandarie</title>
+    <link rel="icon" type="image/png" href="img/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/common.css">
+
+    <!-- Firebase compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { padding-top: 70px; background: var(--bg-deep); }
+
+        /* ── Auth gate ── */
+        .auth-gate {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 70px);
+            gap: 1.25rem;
+            text-align: center;
+        }
+        .auth-gate h2 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+        .auth-gate p  { color: var(--text-muted); font-size: 0.9rem; }
+        .auth-gate .btn { margin-top: 0.5rem; }
+
+        /* ── Page Header ── */
+        .page-header {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            padding: 2rem 0 1.75rem;
+        }
+        .page-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .page-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            padding: 0.15rem 0.6rem;
+            margin-bottom: 0.5rem;
+        }
+        .page-header h1 { font-size: 2rem; margin-bottom: 0.2rem; }
+        .page-header p  { color: var(--text-muted); font-size: 0.85rem; }
+
+        .signout-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.9rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .signout-btn:hover { border-color: #f87171; color: #f87171; }
+
+        /* ── Main layout ── */
+        .content { padding: 2rem 0 5rem; }
+
+        .mapping-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+        @media (max-width: 768px) {
+            .mapping-layout { grid-template-columns: 1fr; }
+        }
+
+        /* ── Panel ── */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .panel-header {
+            padding: 1rem 1.25rem 0.85rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-surface);
+        }
+        .panel-header h3 {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.15rem;
+        }
+        .panel-header p { font-size: 0.78rem; color: var(--text-muted); opacity: 0.7; }
+
+        .search-box {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.82rem;
+            margin-top: 0.65rem;
+            box-sizing: border-box;
+        }
+        .search-box:focus { outline: none; border-color: var(--primary); }
+
+        .panel-list {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 0.5rem 0;
+        }
+
+        /* ── Item rows ── */
+        .item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.55rem 1.25rem;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-left: 3px solid transparent;
+        }
+        .item-row:hover { background: var(--bg-surface); }
+        .item-row.selected {
+            background: rgba(238,187,85,0.07);
+            border-left-color: var(--primary);
+        }
+
+        .item-name { font-size: 0.88rem; font-weight: 600; }
+        .item-sub  { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.05rem; }
+
+        .mapped-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.15rem 0.5rem;
+            background: rgba(51,255,170,0.1);
+            border: 1px solid rgba(51,255,170,0.25);
+            border-radius: 4px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--accent);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .mapped-badge.warn {
+            background: rgba(248,113,113,0.1);
+            border-color: rgba(248,113,113,0.25);
+            color: #f87171;
+            cursor: pointer;
+        }
+
+        .class-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+        /* ── Arrow panel ── */
+        .arrow-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            min-height: 120px;
+        }
+        .arrow-panel.hidden { display: none; }
+        .arrow-label { font-size: 0.78rem; color: var(--text-muted); text-align: center; }
+        .arrow-names {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+        .arrow-sep { color: var(--primary); font-size: 1.2rem; }
+        .arrow-discord { color: #5865F2; }
+        .arrow-wow { }
+
+        .confirm-btn {
+            padding: 0.55rem 1.25rem;
+            background: var(--primary);
+            color: var(--bg-deep);
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: opacity 0.2s;
+        }
+        .confirm-btn:hover { opacity: 0.85; }
+        .cancel-btn {
+            padding: 0.4rem 0.9rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .cancel-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            padding: 0.65rem 1.1rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            color: var(--accent);
+            font-size: 0.82rem;
+            font-weight: 600;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: all 0.25s;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        /* ── Empty / loading ── */
+        .skeleton-row {
+            height: 48px;
+            margin: 0.35rem 1.25rem;
+            border-radius: 6px;
+            background: var(--bg-surface);
+            animation: shimmer 1.4s ease infinite;
+        }
+        @keyframes shimmer { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .empty-msg { padding: 2rem 1.25rem; color: var(--text-muted); font-size: 0.82rem; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar"></nav>
+    <script src="scripts/navbar.js"></script>
+
+    <!-- Auth gate (shown until login confirmed) -->
+    <div id="authGate" class="auth-gate container" style="display:none;">
+        <div>
+            <div class="page-label">Admin requis</div>
+            <h2>Mapping Discord &harr; WoW</h2>
+            <p>Connectez-vous avec votre compte Google admin pour accéder à cette page.</p>
+            <button class="btn btn-primary" style="margin-top:1rem;" onclick="signIn()">Connexion Google</button>
+        </div>
+    </div>
+
+    <!-- Main content (hidden until admin confirmed) -->
+    <div id="mainContent" style="display:none;">
+        <div class="page-header">
+            <div class="container">
+                <div class="page-header-row">
+                    <div>
+                        <div class="page-label">Admin</div>
+                        <h1>Mapping Discord &harr; WoW</h1>
+                        <p>Associez les pseudos Discord (Raid-Helper) aux personnages WoW de la guilde.</p>
+                    </div>
+                    <button class="signout-btn" onclick="signOut()">Deconnexion</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="container">
+
+                <!-- Selection preview -->
+                <div class="arrow-panel hidden" id="selectionPanel">
+                    <div class="arrow-label">Associer :</div>
+                    <div class="arrow-names">
+                        <span class="arrow-discord" id="selDiscord">—</span>
+                        <span class="arrow-sep">&#8594;</span>
+                        <span id="selWow">—</span>
+                    </div>
+                    <div style="display:flex;gap:0.5rem;margin-top:0.25rem;">
+                        <button class="confirm-btn" onclick="confirmMapping()">Confirmer</button>
+                        <button class="cancel-btn" onclick="clearSelection()">Annuler</button>
+                    </div>
+                </div>
+
+                <div class="mapping-layout" style="margin-top:1.25rem;">
+                    <!-- Discord users panel -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>Joueurs Discord</h3>
+                            <p>Pseudos vus dans les events Raid-Helper</p>
+                            <input class="search-box" id="discordSearch" type="text" placeholder="Rechercher..." oninput="filterList('discord')">
+                        </div>
+                        <div class="panel-list" id="discordList">
+                            <div class="skeleton-row"></div>
+                            <div class="skeleton-row"></div>
+                            <div class="skeleton-row"></div>
+                        </div>
+                    </div>
+
+                    <!-- WoW members panel -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>Membres WoW</h3>
+                            <p>Collection guild-members (actifs)</p>
+                            <input class="search-box" id="wowSearch" type="text" placeholder="Rechercher..." oninput="filterList('wow')">
+                        </div>
+                        <div class="panel-list" id="wowList">
+                            <div class="skeleton-row"></div>
+                            <div class="skeleton-row"></div>
+                            <div class="skeleton-row"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    // ── Firebase ──────────────────────────────────────────────────────────────
+    const firebaseConfig = {
+        apiKey: "AIzaSyD0cmazoD42kD_H243Do5pIPGhwXFgOHYE",
+        authDomain: "guild-roster-67da7.firebaseapp.com",
+        projectId: "guild-roster-67da7",
+        storageBucket: "guild-roster-67da7.firebasestorage.app",
+        messagingSenderId: "971948767326",
+        appId: "1:971948767326:web:4377499f1ff23db1899ccf"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db       = firebase.firestore();
+    const auth     = firebase.auth();
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    const EVENTS_API  = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getRaidHelperEvents';
+    const DETAILS_API = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getEventDetails';
+
+    const CLASS_COLORS = {
+        warrior:'#C69B6D', paladin:'#F48CBA', hunter:'#AAD372', rogue:'#FFF468',
+        priest:'#FFFFFF',  shaman:'#0070DD',  mage:'#3FC7EB',   warlock:'#8788EE',
+        monk:'#00FF98',    druid:'#FF7C0A',   evoker:'#33937F',
+        dh:'#A330C9', 'demon hunter':'#A330C9',
+        dk:'#C41E3A', 'death knight':'#C41E3A',
+    };
+    function classColor(c) { return CLASS_COLORS[(c||'').toLowerCase()] || '#888'; }
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    let discordUsers = [];  // [{ userId, name }]
+    let wowMembers   = [];  // [{ id, name, realm, class, rank }]
+    let mappings     = {};  // { discordUserId → { discordName, wow } }
+
+    let selectedDiscord = null;  // { userId, name }
+    let selectedWow     = null;  // { id, name, realm, class }
+
+    // ── Auth ──────────────────────────────────────────────────────────────────
+    auth.onAuthStateChanged(async user => {
+        if (!user) {
+            document.getElementById('authGate').style.display = 'flex';
+            document.getElementById('mainContent').style.display = 'none';
+            return;
+        }
+        const doc = await db.collection('admins').doc(user.email).get();
+        if (!doc.exists) {
+            document.getElementById('authGate').style.display = 'flex';
+            document.getElementById('authGate').querySelector('p').textContent =
+                'Compte non autorisé (' + user.email + '). Contactez un administrateur.';
+            document.getElementById('mainContent').style.display = 'none';
+            return;
+        }
+        document.getElementById('authGate').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        loadAll();
+    });
+
+    function signIn()  { auth.signInWithPopup(provider).catch(e => console.error(e)); }
+    function signOut() { auth.signOut(); }
+
+    // ── Load all data ─────────────────────────────────────────────────────────
+    async function loadAll() {
+        await Promise.all([loadMappings(), loadWowMembers(), loadDiscordUsers()]);
+    }
+
+    async function loadMappings() {
+        const snap = await db.collection('attendance-mapping').get();
+        mappings = {};
+        snap.forEach(doc => { mappings[doc.id] = doc.data(); });
+    }
+
+    async function loadWowMembers() {
+        const snap = await db.collection('guild-members').where('active', '==', true).get();
+        wowMembers = [];
+        snap.forEach(doc => {
+            const d = doc.data();
+            wowMembers.push({ id: doc.id, name: d.name, realm: d.realm, class: d.class, rank: d.rank });
+        });
+        wowMembers.sort((a, b) => a.name.localeCompare(b.name));
+        renderWow();
+    }
+
+    async function loadDiscordUsers() {
+        // Fetch the first page of past events (up to ~50)
+        const res = await fetch(`${EVENTS_API}?past=true`);
+        const { events } = await res.json();
+
+        const userMap = new Map();  // userId → name
+
+        // Fetch details for each event in parallel (batched to avoid hammering)
+        const BATCH = 5;
+        for (let i = 0; i < events.length; i += BATCH) {
+            const batch = events.slice(i, i + BATCH);
+            await Promise.all(batch.map(async e => {
+                try {
+                    const r = await fetch(`${DETAILS_API}?eventId=${e.id}`);
+                    const d = await r.json();
+                    const all = [...(d.signUps||[]), ...(d.absences||[]), ...(d.bench||[]),
+                                 ...(d.late||[]), ...(d.tentative||[])];
+                    all.forEach(p => {
+                        if (p.userId && p.name && !userMap.has(p.userId)) {
+                            userMap.set(p.userId, p.name);
+                        }
+                    });
+                } catch(e) {}
+            }));
+        }
+
+        discordUsers = [...userMap.entries()].map(([userId, name]) => ({ userId, name }));
+        discordUsers.sort((a, b) => a.name.localeCompare(b.name));
+        renderDiscord();
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────────
+    function renderDiscord(filter = '') {
+        const list = document.getElementById('discordList');
+        const q = filter.toLowerCase();
+        const items = discordUsers.filter(u => u.name.toLowerCase().includes(q));
+
+        if (!items.length) {
+            list.innerHTML = '<div class="empty-msg">Aucun joueur Discord trouvé.</div>';
+            return;
+        }
+
+        list.innerHTML = items.map(u => {
+            const m = mappings[u.userId];
+            const isSel = selectedDiscord && selectedDiscord.userId === u.userId;
+            const badge = m
+                ? `<span class="mapped-badge warn" title="Cliquer pour dissocier" onclick="removeMapping('${u.userId}', event)">
+                       ${m.wow} &times;
+                   </span>`
+                : '';
+            return `<div class="item-row${isSel ? ' selected' : ''}" onclick="selectDiscord('${u.userId}', '${escHtml(u.name)}')">
+                        <div>
+                            <div class="item-name" style="color:#5865F2">${escHtml(u.name)}</div>
+                            <div class="item-sub">${u.userId}</div>
+                        </div>
+                        ${badge}
+                    </div>`;
+        }).join('');
+    }
+
+    function renderWow(filter = '') {
+        const list = document.getElementById('wowList');
+        const q = filter.toLowerCase();
+        const items = wowMembers.filter(m =>
+            m.name.toLowerCase().includes(q) || (m.realm||'').toLowerCase().includes(q)
+        );
+
+        if (!items.length) {
+            list.innerHTML = '<div class="empty-msg">Aucun membre WoW trouvé.</div>';
+            return;
+        }
+
+        list.innerHTML = items.map(m => {
+            const color = classColor(m.class);
+            const isSel = selectedWow && selectedWow.id === m.id;
+            // Find if this WoW char is already mapped
+            const mapped = Object.values(mappings).find(mp => mp.wow === m.id);
+            const badge = mapped
+                ? `<span class="mapped-badge">${escHtml(mapped.discordName)}</span>`
+                : '';
+            return `<div class="item-row${isSel ? ' selected' : ''}" onclick="selectWow('${m.id}', '${escHtml(m.name)}', '${escHtml(m.realm||'')}', '${escHtml(m.class||'')}')">
+                        <div style="display:flex;align-items:center;gap:0.6rem;flex:1;min-width:0;">
+                            <span class="class-dot" style="background:${color}"></span>
+                            <div>
+                                <div class="item-name">${escHtml(m.name)}</div>
+                                <div class="item-sub">${escHtml(m.realm||'')} · ${escHtml(m.class||'')}</div>
+                            </div>
+                        </div>
+                        ${badge}
+                    </div>`;
+        }).join('');
+    }
+
+    // ── Selection logic ───────────────────────────────────────────────────────
+    function selectDiscord(userId, name) {
+        selectedDiscord = { userId, name };
+        updateSelectionPanel();
+        renderDiscord(document.getElementById('discordSearch').value);
+    }
+
+    function selectWow(id, name, realm, cls) {
+        selectedWow = { id, name, realm, class: cls };
+        updateSelectionPanel();
+        renderWow(document.getElementById('wowSearch').value);
+    }
+
+    function clearSelection() {
+        selectedDiscord = null;
+        selectedWow = null;
+        document.getElementById('selectionPanel').classList.add('hidden');
+        renderDiscord(document.getElementById('discordSearch').value);
+        renderWow(document.getElementById('wowSearch').value);
+    }
+
+    function updateSelectionPanel() {
+        const panel = document.getElementById('selectionPanel');
+        if (!selectedDiscord && !selectedWow) {
+            panel.classList.add('hidden');
+            return;
+        }
+        panel.classList.remove('hidden');
+        document.getElementById('selDiscord').textContent = selectedDiscord ? selectedDiscord.name : '—';
+        document.getElementById('selWow').textContent     = selectedWow     ? selectedWow.name     : '—';
+    }
+
+    // ── Mapping CRUD ──────────────────────────────────────────────────────────
+    async function confirmMapping() {
+        if (!selectedDiscord || !selectedWow) {
+            showToast('Sélectionnez un joueur Discord ET un personnage WoW.');
+            return;
+        }
+
+        const data = {
+            discordName: selectedDiscord.name,
+            wow:         selectedWow.id,
+            wowName:     selectedWow.name,
+            wowRealm:    selectedWow.realm,
+        };
+
+        await db.collection('attendance-mapping').doc(selectedDiscord.userId).set(data);
+        mappings[selectedDiscord.userId] = data;
+
+        showToast(selectedDiscord.name + ' → ' + selectedWow.name + ' sauvegardé.');
+        clearSelection();
+    }
+
+    async function removeMapping(userId, e) {
+        e.stopPropagation();
+        const m = mappings[userId];
+        if (!m) return;
+        if (!confirm(`Supprimer le mapping ${m.discordName} → ${m.wowName} ?`)) return;
+
+        await db.collection('attendance-mapping').doc(userId).delete();
+        delete mappings[userId];
+
+        renderDiscord(document.getElementById('discordSearch').value);
+        renderWow(document.getElementById('wowSearch').value);
+        showToast('Mapping supprimé.');
+    }
+
+    // ── Filter ────────────────────────────────────────────────────────────────
+    function filterList(which) {
+        if (which === 'discord') {
+            renderDiscord(document.getElementById('discordSearch').value);
+        } else {
+            renderWow(document.getElementById('wowSearch').value);
+        }
+    }
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    // ── Utils ─────────────────────────────────────────────────────────────────
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    </script>
+
+</body>
+</html>

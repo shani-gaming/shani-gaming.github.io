@@ -29,6 +29,7 @@ const navConfig = {
         {
             text: 'Outils',
             items: [
+                { text: 'Attendance', href: '/attendance.html' },
                 { text: 'Composition de Raid', href: '/composition/index.html' },
                 { text: 'Métiers de la Guilde', href: '/professions.html' },
                 { text: 'Statistiques', href: '/stats.html' }

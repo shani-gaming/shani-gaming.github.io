@@ -1381,13 +1381,20 @@ exports.getRaidHelperEvents = onRequest(
         );
 
         const data = response.data;
+        const past = req.query.past === 'true';
         // L'API retourne { postedEvents: [], scheduledEvents: [] }
         const events = [
           ...(data.postedEvents    || []),
           ...(data.scheduledEvents || [])
         ]
-          .filter(e => e.startTime * 1000 >= Date.now()) // à venir uniquement
-          .sort((a, b) => a.startTime - b.startTime)
+          .filter(e => past
+            ? e.startTime * 1000 < Date.now()
+            : e.startTime * 1000 >= Date.now()
+          )
+          .sort((a, b) => past
+            ? b.startTime - a.startTime  // récent en premier pour l'attendance
+            : a.startTime - b.startTime
+          )
           .map(e => ({
             id:          e.id,
             title:       e.title,
@@ -1448,11 +1455,12 @@ exports.getEventDetails = onRequest(
         });
 
         const mapPlayer = s => ({
-          name:  s.name,
-          class: s.className,
-          spec:  s.specName,
-          role:  s.roleName,
-          note:  s.note || null,
+          name:   s.name,
+          userId: s.userId || null,
+          class:  s.className,
+          spec:   s.specName,
+          role:   s.roleName,
+          note:   s.note || null,
         });
 
         res.json({
