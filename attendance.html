@@ -10,7 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/common.css">
 
-    <!-- Firebase compat -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -25,201 +24,215 @@
             padding: 2.5rem 0 2rem;
         }
         .page-header-row {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
+            display: flex; align-items: flex-start;
+            justify-content: space-between; gap: 1rem; flex-wrap: wrap;
         }
         .page-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.72rem;
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--primary);
-            border: 1px solid var(--primary);
-            border-radius: 4px;
-            padding: 0.15rem 0.6rem;
-            margin-bottom: 0.6rem;
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--primary);
+            border: 1px solid var(--primary); border-radius: 4px;
+            padding: 0.15rem 0.6rem; margin-bottom: 0.6rem;
         }
         .page-header h1 { font-size: 2.4rem; margin-bottom: 0.3rem; }
         .page-header p  { color: var(--text-muted); font-size: 0.92rem; }
 
-        /* ── Admin button ── */
         .admin-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text-muted);
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem; background: transparent;
+            border: 1px solid var(--border); border-radius: 6px;
+            color: var(--text-muted); font-size: 0.82rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; font-family: inherit;
             text-decoration: none;
         }
         .admin-btn:hover { border-color: var(--primary); color: var(--primary); }
         .admin-btn.connected { border-color: var(--accent); color: var(--accent); }
 
         .admin-bar {
-            display: none;
-            align-items: center;
-            gap: 0.75rem;
-            margin-top: 0.75rem;
-            padding: 0.6rem 1rem;
-            background: rgba(51,255,170,0.06);
-            border: 1px solid rgba(51,255,170,0.2);
-            border-radius: 8px;
-            font-size: 0.82rem;
-            color: var(--accent);
+            display: none; align-items: center; gap: 0.75rem;
+            margin-top: 0.75rem; padding: 0.6rem 1rem;
+            background: rgba(51,255,170,0.06); border: 1px solid rgba(51,255,170,0.2);
+            border-radius: 8px; font-size: 0.82rem; color: var(--accent);
         }
         .admin-bar a {
-            color: var(--primary);
-            font-weight: 700;
-            text-decoration: none;
+            color: var(--primary); font-weight: 700; text-decoration: none;
         }
         .admin-bar a:hover { text-decoration: underline; }
 
         /* ── Content ── */
         .content { padding: 2.5rem 0 5rem; }
 
-        /* ── Event attendance card ── */
-        .event-att-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
+        /* ── Matrix table ── */
+        .matrix-wrap {
+            overflow-x: auto;
             border-radius: 12px;
-            margin-bottom: 0.75rem;
-            overflow: hidden;
-            transition: border-color 0.2s;
-        }
-        .event-att-card:hover { border-color: rgba(238,187,85,0.3); }
-
-        .event-att-header {
-            display: grid;
-            grid-template-columns: 80px 1fr auto;
-            align-items: center;
-            gap: 1.25rem;
-            padding: 1rem 1.5rem;
-            cursor: pointer;
-            position: relative;
-        }
-        .event-att-header::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; bottom: 0;
-            width: 3px;
-            background: var(--primary);
-            border-radius: 3px 0 0 3px;
-        }
-
-        .event-date-block {
-            text-align: center;
-            background: var(--bg-surface);
-            border-radius: 8px;
-            padding: 0.5rem 0.4rem;
             border: 1px solid var(--border);
+            background: var(--bg-card);
         }
-        .event-day-name  { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
-        .event-day-num   { font-size: 1.6rem; font-weight: 800; line-height: 1; color: var(--primary); margin: 0.1rem 0; }
-        .event-month-lbl { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); }
 
-        .event-att-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; }
-        .event-att-sub   { font-size: 0.78rem; color: var(--text-muted); }
+        table.att-matrix {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 600px;
+            table-layout: auto;
+        }
 
-        .event-att-stats {
+        /* Header row */
+        .att-matrix thead th {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0;
+            font-weight: 600;
+            font-size: 0.72rem;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .att-matrix thead th.col-name {
+            text-align: left;
+            padding: 0.75rem 1.25rem;
+            min-width: 140px;
+            position: sticky;
+            left: 0;
+            z-index: 3;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border);
+        }
+        .att-matrix thead th.col-summary {
+            padding: 0.75rem 1rem;
+            text-align: center;
+            min-width: 80px;
+            position: sticky;
+            right: 0;
+            background: var(--bg-surface);
+            border-left: 1px solid var(--border);
+            z-index: 3;
+        }
+        .th-event {
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
-            gap: 0.35rem;
-        }
-        .att-badge {
-            display: inline-flex;
             align-items: center;
-            gap: 0.3rem;
-            padding: 0.2rem 0.65rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
+            padding: 0.5rem 0.6rem;
+            gap: 0.15rem;
+            min-width: 52px;
+            text-align: center;
+        }
+        .th-event-date { font-size: 0.68rem; color: var(--text-muted); font-weight: 500; }
+        .th-event-title {
+            font-size: 0.7rem; font-weight: 700; color: var(--text);
+            max-width: 50px; overflow: hidden; text-overflow: ellipsis;
             white-space: nowrap;
         }
-        .att-badge.total    { background: var(--primary-dim); color: var(--primary); }
-        .att-badge.tanks    { background: rgba(248,113,113,0.12); color: #f87171; }
-        .att-badge.melee    { background: rgba(198,155,109,0.12); color: #C69B6D; }
-        .att-badge.ranged   { background: rgba(63,199,235,0.12);  color: #3FC7EB; }
-        .att-badge.healers  { background: rgba(51,255,170,0.12);  color: var(--accent); }
-        .expand-icon { font-size: 0.75rem; color: var(--text-muted); margin-left: 0.5rem; transition: transform 0.2s; }
-        .event-att-card.open .expand-icon { transform: rotate(180deg); }
 
-        /* ── Signup detail panel ── */
-        .event-att-detail {
-            display: none;
-            padding: 0 1.5rem 1.25rem;
-            border-top: 1px solid var(--border);
-        }
-        .event-att-card.open .event-att-detail { display: block; }
-
-        .role-group { margin-top: 1rem; }
-        .role-group-title {
-            font-size: 0.68rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-        }
-        .player-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-        }
-        .player-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            padding: 0.25rem 0.7rem;
-            border-radius: 6px;
+        /* Body rows */
+        .att-matrix tbody tr:hover td { background: rgba(255,255,255,0.02); }
+        .att-matrix tbody tr:hover td.col-name,
+        .att-matrix tbody tr:hover td.col-summary {
             background: var(--bg-surface);
-            border: 1px solid var(--border);
+        }
+
+        .att-matrix tbody td {
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            padding: 0;
+            text-align: center;
+        }
+        .att-matrix tbody td.col-name {
+            text-align: left;
+            padding: 0.6rem 1.25rem;
+            position: sticky;
+            left: 0;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            z-index: 1;
+        }
+        .att-matrix tbody td.col-summary {
+            padding: 0.6rem 1rem;
+            position: sticky;
+            right: 0;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border);
             font-size: 0.78rem;
-            font-weight: 600;
+            font-weight: 700;
+            white-space: nowrap;
+            z-index: 1;
         }
-        .class-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-        .player-spec { font-size: 0.68rem; color: var(--text-muted); font-weight: 400; }
+        .att-matrix tbody tr:last-child td { border-bottom: none; }
 
-        .absence-row {
-            margin-top: 0.75rem;
-            font-size: 0.75rem;
-            color: #f87171;
+        .player-name { font-size: 0.88rem; font-weight: 700; }
+        .player-name .class-dot {
+            display: inline-block; width: 7px; height: 7px;
+            border-radius: 50%; margin-right: 0.45rem; vertical-align: middle;
+        }
+        .player-discord { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.05rem; }
+
+        /* Cells */
+        .cell {
             display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
             align-items: center;
+            justify-content: center;
+            height: 44px;
+            font-size: 0.9rem;
+            transition: background 0.1s;
         }
-        .absence-label { font-weight: 700; margin-right: 0.25rem; }
+        .cell.present  { color: var(--accent); }
+        .cell.absent   { color: #f87171; }
+        .cell.bench    { color: #facc15; }
+        .cell.tentative{ color: #94a3b8; }
+        .cell.late     { color: #fb923c; }
+        .cell.none     { color: rgba(255,255,255,0.1); }
 
-        /* ── Loading ── */
-        .skeleton-card {
+        .summary-pct   { color: var(--accent); }
+        .summary-pct.mid { color: #facc15; }
+        .summary-pct.low { color: #f87171; }
+        .summary-frac  { display: block; font-size: 0.65rem; color: var(--text-muted); font-weight: 400; margin-top: 0.05rem; }
+
+        /* Unmapped section */
+        .unmapped-section {
+            margin-top: 1.5rem;
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 12px;
-            height: 80px;
-            margin-bottom: 0.75rem;
-            animation: shimmer 1.4s ease infinite;
+            overflow: hidden;
         }
-        @keyframes shimmer { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .unmapped-header {
+            padding: 0.85rem 1.25rem;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.78rem; font-weight: 700;
+            letter-spacing: 0.06em; text-transform: uppercase;
+            color: var(--text-muted);
+            cursor: pointer; user-select: none;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .unmapped-body { padding: 0.75rem 1.25rem 1rem; display: none; }
+        .unmapped-section.open .unmapped-body { display: block; }
+        .unmapped-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+        .unmapped-chip {
+            padding: 0.2rem 0.65rem; background: var(--bg-surface);
+            border: 1px solid var(--border); border-radius: 4px;
+            font-size: 0.75rem; color: var(--text-muted);
+        }
+
+        /* Legend */
+        .legend {
+            display: flex; flex-wrap: wrap; gap: 1rem;
+            margin-bottom: 1.25rem; font-size: 0.78rem; color: var(--text-muted);
+        }
+        .legend-item { display: flex; align-items: center; gap: 0.35rem; }
+        .legend-dot { font-size: 1rem; line-height: 1; }
+
+        /* Loading */
+        .loading-state {
+            text-align: center; padding: 4rem; color: var(--text-muted);
+        }
+        .loading-state .progress {
+            margin-top: 1rem; font-size: 0.8rem; color: var(--primary);
+        }
         .empty-state { text-align: center; padding: 4rem; color: var(--text-muted); }
 
-        @media (max-width: 640px) {
-            .event-att-header { grid-template-columns: 60px 1fr; }
-            .event-att-stats { display: none; }
-        }
+        /* Tooltip */
+        [title] { cursor: default; }
     </style>
 </head>
 <body>
@@ -235,7 +248,7 @@
                     <h1>Attendance</h1>
                     <p>Historique de présence aux événements · Les Sages de Pandarie</p>
                 </div>
-                <button class="admin-btn" id="adminBtn" onclick="toggleAdmin()">🔐 Admin</button>
+                <button class="admin-btn" id="adminBtn">🔐 Admin</button>
             </div>
             <div class="admin-bar" id="adminBar">
                 <span>✓ Connecté en tant qu'admin</span>
@@ -247,15 +260,15 @@
     <div class="content">
         <div class="container">
             <div id="att-container">
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
+                <div class="loading-state">
+                    <div>Chargement des données…</div>
+                    <div class="progress" id="loadProgress"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-    // ── Firebase ──────────────────────────────────────────────────────────────
     const firebaseConfig = {
         apiKey: "AIzaSyD0cmazoD42kD_H243Do5pIPGhwXFgOHYE",
         authDomain: "guild-roster-67da7.firebaseapp.com",
@@ -269,13 +282,11 @@
     const auth     = firebase.auth();
     const provider = new firebase.auth.GoogleAuthProvider();
 
-    let isAdmin    = false;
-    let currentUser= null;
+    let isAdmin = false;
 
     const EVENTS_API  = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getRaidHelperEvents';
     const DETAILS_API = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getEventDetails';
 
-    const DAYS_SHORT   = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
     const MONTHS_SHORT = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
     const CLASS_COLORS = {
         warrior:'#C69B6D', paladin:'#F48CBA', hunter:'#AAD372', rogue:'#FFF468',
@@ -284,161 +295,278 @@
         dh:'#A330C9', 'demon hunter':'#A330C9',
         dk:'#C41E3A', 'death knight':'#C41E3A',
     };
-    function classColor(c) {
-        return CLASS_COLORS[(c||'').toLowerCase()] || '#888';
-    }
+    function classColor(c) { return CLASS_COLORS[(c||'').toLowerCase()] || '#888'; }
 
-    // ── Auth ──────────────────────────────────────────────────────────────────
+    // ── Admin auth ────────────────────────────────────────────────────────────
     auth.onAuthStateChanged(async user => {
-        currentUser = user;
         if (user) {
             const doc = await db.collection('admins').doc(user.email).get();
             isAdmin = doc.exists;
         } else {
             isAdmin = false;
         }
-        updateAdminUI();
-    });
-
-    function updateAdminUI() {
         const btn = document.getElementById('adminBtn');
         const bar = document.getElementById('adminBar');
-        if (currentUser && isAdmin) {
+        if (isAdmin) {
             btn.textContent = '✓ Admin';
             btn.classList.add('connected');
             bar.style.display = 'flex';
-        } else if (currentUser && !isAdmin) {
+        } else if (user) {
             btn.textContent = 'Non autorisé';
-            btn.classList.remove('connected');
-            bar.style.display = 'none';
         } else {
             btn.textContent = '🔐 Admin';
             btn.classList.remove('connected');
             bar.style.display = 'none';
         }
-    }
+    });
 
-    async function toggleAdmin() {
-        if (currentUser) {
+    document.getElementById('adminBtn').addEventListener('click', async () => {
+        if (auth.currentUser) {
             await auth.signOut();
         } else {
             try { await auth.signInWithPopup(provider); } catch(e) {}
         }
+    });
+
+    // ── Main data load ────────────────────────────────────────────────────────
+    function setProgress(msg) {
+        const el = document.getElementById('loadProgress');
+        if (el) el.textContent = msg;
     }
 
-    // ── Events ────────────────────────────────────────────────────────────────
     function extractTitle(e) {
         if (e.title && e.title !== 'unnamed') return e.title;
         const line = (e.description||'').split('\n')[0].trim();
-        return line.replace(/^[\p{Emoji}\s\[\]]+/u,'').replace(/\s*[—–-]\s*.*/,'').trim() || 'Événement';
-    }
-
-    function fmtTime(ts) {
-        const d = new Date(ts * 1000);
-        return `${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0')}`;
-    }
-
-    function renderEventCard(e) {
-        const d     = new Date(e.startTime * 1000);
-        const title = extractTitle(e);
-        return `
-            <div class="event-att-card" id="card-${e.id}">
-                <div class="event-att-header" onclick="toggleCard('${e.id}')">
-                    <div class="event-date-block">
-                        <div class="event-day-name">${DAYS_SHORT[d.getDay()]}</div>
-                        <div class="event-day-num">${d.getDate()}</div>
-                        <div class="event-month-lbl">${MONTHS_SHORT[d.getMonth()]}</div>
-                    </div>
-                    <div>
-                        <div class="event-att-title">${title}</div>
-                        <div class="event-att-sub">${fmtTime(e.startTime)}${e.leader ? ' · RL : '+e.leader : ''}</div>
-                    </div>
-                    <div class="event-att-stats">
-                        <span class="att-badge total">⚔ ${e.signUps} inscrits</span>
-                        <span class="expand-icon">▼</span>
-                    </div>
-                </div>
-                <div class="event-att-detail" id="detail-${e.id}">
-                    <div style="color:var(--text-muted);font-size:0.82rem;padding:0.75rem 0;">Chargement…</div>
-                </div>
-            </div>`;
-    }
-
-    const loadedDetails = {};
-
-    async function toggleCard(eventId) {
-        const card   = document.getElementById(`card-${eventId}`);
-        const detail = document.getElementById(`detail-${eventId}`);
-        const isOpen = card.classList.contains('open');
-
-        if (isOpen) {
-            card.classList.remove('open');
-            return;
-        }
-
-        card.classList.add('open');
-
-        if (loadedDetails[eventId]) return;
-        loadedDetails[eventId] = true;
-
-        try {
-            const res  = await fetch(`${DETAILS_API}?eventId=${eventId}`);
-            const data = await res.json();
-            detail.innerHTML = renderDetail(data);
-        } catch(err) {
-            detail.innerHTML = '<div style="color:var(--text-muted);font-size:0.82rem;padding:0.5rem 0;">Erreur de chargement.</div>';
-        }
-    }
-
-    function renderDetail(d) {
-        const signUps  = d.signUps || [];
-        const absences = d.absences || [];
-        const roles    = ['Tanks','Melee','Ranged','Healers'];
-        const roleLabels = { Tanks:'🛡 Tanks', Melee:'⚔ Mêlée', Ranged:'🏹 Distance', Healers:'✚ Soins' };
-
-        let html = '';
-        roles.forEach(role => {
-            const players = signUps.filter(p => p.role === role);
-            if (!players.length) return;
-            const chips = players.map(p => {
-                const color = classColor(p.class);
-                return `<span class="player-chip">
-                    <span class="class-dot" style="background:${color}"></span>
-                    <span style="color:${color}">${p.name}</span>
-                    <span class="player-spec">${p.spec||''}</span>
-                </span>`;
-            }).join('');
-            html += `<div class="role-group">
-                <div class="role-group-title">${roleLabels[role]} (${players.length})</div>
-                <div class="player-chips">${chips}</div>
-            </div>`;
-        });
-
-        if (absences.length) {
-            html += `<div class="absence-row">
-                <span class="absence-label">Absences :</span>
-                ${absences.map(p => `<span>${p.name}</span>`).join(', ')}
-            </div>`;
-        }
-
-        return html || '<div style="color:var(--text-muted);font-size:0.82rem;padding:0.5rem 0;">Aucun inscrit.</div>';
+        return line.replace(/^[\p{Emoji}\s\[\]]+/u,'').replace(/\s*[—–-]\s*.*/,'').trim() || 'Event';
     }
 
     async function loadAttendance() {
         const container = document.getElementById('att-container');
         try {
-            const res = await fetch(`${EVENTS_API}?past=true`);
-            const { events } = await res.json();
+            // 1. Fetch past events
+            setProgress('Récupération des events…');
+            const evRes = await fetch(`${EVENTS_API}?past=true`);
+            const { events } = await evRes.json();
 
             if (!events.length) {
                 container.innerHTML = '<div class="empty-state">Aucun événement passé trouvé.</div>';
                 return;
             }
 
-            container.innerHTML = events.map(renderEventCard).join('');
+            // Limit to last 20 events
+            const recentEvents = events.slice(0, 20);
+
+            // 2. Fetch mappings from Firestore
+            setProgress('Chargement du mapping Discord ↔ WoW…');
+            const mapSnap = await db.collection('attendance-mapping').get();
+            const mapping = {};  // discordUserId → { wowName, wowRealm, discordName }
+            mapSnap.forEach(doc => { mapping[doc.id] = doc.data(); });
+
+            // 3. Fetch guild members for class colors
+            const memberSnap = await db.collection('guild-members').where('active', '==', true).get();
+            const memberByName = {};  // lowercase name → { class }
+            memberSnap.forEach(doc => {
+                const d = doc.data();
+                memberByName[(d.name||'').toLowerCase()] = d;
+            });
+
+            // 4. Fetch details for all events
+            setProgress(`Chargement des détails (0/${recentEvents.length})…`);
+            const eventDetails = new Array(recentEvents.length).fill(null);
+            const BATCH = 5;
+            let done = 0;
+            for (let i = 0; i < recentEvents.length; i += BATCH) {
+                await Promise.all(recentEvents.slice(i, i + BATCH).map(async (e, j) => {
+                    const idx = i + j;
+                    try {
+                        const r = await fetch(`${DETAILS_API}?eventId=${e.id}`);
+                        eventDetails[idx] = await r.json();
+                    } catch(err) {
+                        eventDetails[idx] = { signUps: [], absences: [], bench: [], late: [], tentative: [] };
+                    }
+                    done++;
+                    setProgress(`Chargement des détails (${done}/${recentEvents.length})…`);
+                }));
+            }
+
+            // 5. Build player attendance map
+            // For each event: userId → status
+            const playerEventMap = new Map();
+            // playerEventMap: userId → { name, statusByEventIdx }
+            // status: 'present' | 'absent' | 'bench' | 'late' | 'tentative'
+
+            eventDetails.forEach((det, idx) => {
+                if (!det) return;
+                const add = (arr, status) => arr.forEach(p => {
+                    if (!p.userId) return;
+                    if (!playerEventMap.has(p.userId)) {
+                        playerEventMap.set(p.userId, { discordName: p.name, events: {} });
+                    }
+                    playerEventMap.get(p.userId).events[idx] = status;
+                    // Update name if empty
+                    if (!playerEventMap.get(p.userId).discordName) {
+                        playerEventMap.get(p.userId).discordName = p.name;
+                    }
+                });
+                add(det.signUps    || [], 'present');
+                add(det.absences   || [], 'absent');
+                add(det.bench      || [], 'bench');
+                add(det.late       || [], 'late');
+                add(det.tentative  || [], 'tentative');
+            });
+
+            // 6. Separate mapped vs unmapped players
+            const mappedPlayers  = [];
+            const unmappedPlayers = [];
+
+            playerEventMap.forEach((data, userId) => {
+                const m = mapping[userId];
+                if (m) {
+                    const member = memberByName[(m.wowName||'').toLowerCase()];
+                    mappedPlayers.push({
+                        userId,
+                        discordName: data.discordName,
+                        wowName:     m.wowName,
+                        wowRealm:    m.wowRealm || '',
+                        class:       member ? member.class : '',
+                        events:      data.events,
+                    });
+                } else {
+                    unmappedPlayers.push({
+                        userId,
+                        discordName: data.discordName,
+                        events:      data.events,
+                    });
+                }
+            });
+
+            // Sort mapped players by attendance % desc, then name
+            mappedPlayers.sort((a, b) => {
+                const pctA = attendancePct(a.events, recentEvents.length);
+                const pctB = attendancePct(b.events, recentEvents.length);
+                return pctB - pctA || a.wowName.localeCompare(b.wowName);
+            });
+
+            // 7. Render
+            container.innerHTML = renderMatrix(recentEvents, mappedPlayers, unmappedPlayers);
+
+            // Unmapped toggle
+            const unmapHeader = document.getElementById('unmapHeader');
+            if (unmapHeader) {
+                unmapHeader.addEventListener('click', () => {
+                    document.getElementById('unmapSection').classList.toggle('open');
+                });
+            }
+
         } catch(err) {
-            container.innerHTML = '<div class="empty-state">Erreur de chargement.</div>';
+            console.error(err);
+            container.innerHTML = '<div class="empty-state">Erreur de chargement : ' + err.message + '</div>';
         }
+    }
+
+    function attendancePct(events, total) {
+        const present = Object.values(events).filter(s => s === 'present' || s === 'late').length;
+        return total > 0 ? Math.round(present / total * 100) : 0;
+    }
+
+    const CELL_ICONS = {
+        present:   { icon: '✓', label: 'Présent' },
+        absent:    { icon: '✗', label: 'Absent' },
+        bench:     { icon: '⏸', label: 'Bench' },
+        late:      { icon: '⌚', label: 'En retard' },
+        tentative: { icon: '?', label: 'Incertain' },
+        none:      { icon: '·', label: '' },
+    };
+
+    function renderMatrix(events, players, unmapped) {
+        // Legend
+        let html = `<div class="legend">
+            <span class="legend-item"><span class="legend-dot" style="color:var(--accent)">✓</span> Présent</span>
+            <span class="legend-item"><span class="legend-dot" style="color:#f87171">✗</span> Absent</span>
+            <span class="legend-item"><span class="legend-dot" style="color:#facc15">⏸</span> Bench</span>
+            <span class="legend-item"><span class="legend-dot" style="color:#fb923c">⌚</span> En retard</span>
+            <span class="legend-item"><span class="legend-dot" style="color:#94a3b8">?</span> Incertain</span>
+            <span class="legend-item"><span class="legend-dot" style="color:rgba(255,255,255,0.15)">·</span> Pas inscrit</span>
+        </div>`;
+
+        // Table
+        html += `<div class="matrix-wrap"><table class="att-matrix"><thead><tr>`;
+        html += `<th class="col-name">Joueur</th>`;
+
+        events.forEach(e => {
+            const d     = new Date(e.startTime * 1000);
+            const label = `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
+            const title = extractTitle(e).substring(0, 12);
+            html += `<th><div class="th-event">
+                <div class="th-event-title" title="${escHtml(extractTitle(e))}">${escHtml(title)}</div>
+                <div class="th-event-date">${label}</div>
+            </div></th>`;
+        });
+
+        html += `<th class="col-summary">Présence</th></tr></thead><tbody>`;
+
+        if (!players.length) {
+            html += `<tr><td class="col-name" colspan="${events.length + 2}" style="padding:2rem;text-align:center;color:var(--text-muted);">
+                Aucun joueur mappé. <a href="admin-attendance.html" style="color:var(--primary)">Configurer le mapping →</a>
+            </td></tr>`;
+        }
+
+        players.forEach(p => {
+            const color  = classColor(p.class);
+            const present = Object.values(p.events).filter(s => s === 'present' || s === 'late').length;
+            const pct    = events.length > 0 ? Math.round(present / events.length * 100) : 0;
+            const pctClass = pct >= 75 ? 'summary-pct' : pct >= 50 ? 'summary-pct mid' : 'summary-pct low';
+
+            html += `<tr>`;
+            html += `<td class="col-name">
+                <div class="player-name">
+                    <span class="class-dot" style="background:${color}"></span>${escHtml(p.wowName)}
+                </div>
+                <div class="player-discord">${escHtml(p.discordName)}</div>
+            </td>`;
+
+            events.forEach((e, idx) => {
+                const status = p.events[idx] || 'none';
+                const info   = CELL_ICONS[status];
+                html += `<td title="${escHtml(extractTitle(e))} — ${info.label}">
+                    <div class="cell ${status}">${info.icon}</div>
+                </td>`;
+            });
+
+            html += `<td class="col-summary">
+                <span class="${pctClass}">${pct}%</span>
+                <span class="summary-frac">${present}/${events.length}</span>
+            </td></tr>`;
+        });
+
+        html += `</tbody></table></div>`;
+
+        // Unmapped section
+        if (unmapped.length) {
+            html += `<div class="unmapped-section" id="unmapSection">
+                <div class="unmapped-header" id="unmapHeader">
+                    <span>Joueurs non mappés (${unmapped.length})</span>
+                    <span>▼</span>
+                </div>
+                <div class="unmapped-body">
+                    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem;">
+                        Ces joueurs Discord n'ont pas encore de correspondance WoW.
+                        <a href="admin-attendance.html" style="color:var(--primary)">Configurer →</a>
+                    </p>
+                    <div class="unmapped-chips">
+                        ${unmapped.map(u => `<span class="unmapped-chip">${escHtml(u.discordName)}</span>`).join('')}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        return html;
+    }
+
+    function escHtml(s) {
+        return String(s)
+            .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
+            .replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
     loadAttendance();
