@@ -15,8 +15,7 @@ const navConfig = {
     // Liens principaux (affichés directement dans la navbar) — ordre alphabétique
     mainLinks: [
         { text: 'Accueil', href: '/index.html' },
-        { text: 'Actualités', href: '/news.html' },
-        { text: 'Sondage Midnight', href: '/roster/index.html' }
+        { text: 'Actualités', href: '/news.html' }
     ],
 
     // Menus déroulants — ordre alphabétique (dropdown et items)
@@ -40,6 +39,12 @@ const navConfig = {
             items: [
                 { text: 'Mythic+', href: '/mythicplus.html' },
                 { text: 'Progression Raid', href: '/progression.html' }
+            ]
+        },
+        {
+            text: 'Sondage Midnight',
+            items: [
+                { text: 'Roster Midnight', href: '/roster/index.html' }
             ]
         }
     ],
