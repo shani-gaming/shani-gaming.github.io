@@ -76,6 +76,71 @@
         }
 
 
+        /* Hero Event Encart */
+        .hero-event-encart {
+            margin-top: 2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(13, 17, 23, 0.7);
+            border: 1px solid rgba(238,187,85,0.25);
+            border-radius: 10px;
+            padding: 0.75rem 1.25rem;
+            backdrop-filter: blur(8px);
+            text-decoration: none;
+            transition: border-color 0.2s;
+            max-width: 480px;
+        }
+        .hero-event-encart:hover { border-color: rgba(238,187,85,0.6); }
+        .hero-event-pulse {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+            animation: pulse-dot 2s ease infinite;
+        }
+        .hero-event-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--primary);
+            white-space: nowrap;
+        }
+        .hero-event-sep {
+            width: 1px; height: 28px;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+        .hero-event-info { min-width: 0; }
+        .hero-event-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 220px;
+        }
+        .hero-event-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 0.6rem;
+            margin-top: 0.15rem;
+        }
+        .hero-event-count {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .hero-event-arrow {
+            color: var(--primary);
+            font-size: 1rem;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
         /* Recruitment List (Detailed) */
         .recruitment-list {
             display: grid;
@@ -597,71 +662,24 @@
                         <a href="#join" class="btn btn-primary">Devenir un Sage</a>
                         <a href="#about" class="btn btn-outline">Découvrir la guilde</a>
                     </div>
+                    <a href="events.html" class="hero-event-encart" id="heroEventEncart" style="display:none">
+                        <span class="hero-event-pulse"></span>
+                        <span class="hero-event-label">Prochain événement</span>
+                        <span class="hero-event-sep"></span>
+                        <div class="hero-event-info">
+                            <div class="hero-event-title" id="heroEventTitle">—</div>
+                            <div class="hero-event-meta">
+                                <span id="heroEventDate">—</span>
+                                <span class="hero-event-count" id="heroEventCount"></span>
+                            </div>
+                        </div>
+                        <span class="hero-event-arrow">→</span>
+                    </a>
                 </div>
                 <div class="hero-visual">
                     <!-- LOGO SANS CERCLE, JUSTE L'IMAGE DÉTOURÉE -->
                     <img src="img/logo.png" alt="Logo Les Sages" class="hero-logo" style="visibility:hidden">
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="about-section" id="about">
-        <div class="container">
-            <div class="about-content">
-                <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">L'Esprit des Sages</h2>
-                <p style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 1rem;">
-                    Nous sommes un collectif de <strong>joueurs vétérans</strong> aux parcours variés : anciens hardcore gamers ou casuals assumés. 
-                    Notre point commun ? L'envie de jouer ensemble, sans prise de tête.
-                </p>
-                <p style="font-size: 1.1rem; color: var(--text-muted);">
-                    Ici, <strong>pas de drama</strong>. Nous avons assez de stress au travail, le jeu doit rester une détente absolue. 
-                    Bienveillance, bonne humeur et légèreté sont nos maîtres-mots.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <section class="activities-section" id="activities">
-        <div class="container">
-            <h2 style="font-size: 2.5rem; margin-bottom: 2rem; text-align: center;">Nos Activités</h2>
-            <div class="activities-list">
-                <!-- Card 1 -->
-                <div class="activity-wide-card activity-mm">
-                    <div class="activity-content">
-                        <h3>Mythique+ & Gouffres</h3>
-                        <p>Des clés pour tous les niveaux, de l'exploration de Gouffres et des Raids (NM/HM), sans la pression du progress Mythique.</p>
-                    </div>
-                </div>
-                <!-- Card 2 -->
-                <div class="activity-wide-card activity-hf">
-                    <div class="activity-content">
-                        <h3>Collection & HF</h3>
-                        <p>Pour les complétionnistes : farm de montures, vieux raids et hauts-faits en groupe.</p>
-                    </div>
-                </div>
-                <!-- Card 3 -->
-                <div class="activity-wide-card activity-social">
-                    <div class="activity-content">
-                        <h3>Détente & Housing</h3>
-                        <p>Parce que WoW, c'est aussi se poser, discuter et profiter de l'univers du jeu tranquillement.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ── Events Widget ── -->
-    <section class="events-widget-section">
-        <div class="container">
-            <div class="section-header-row">
-                <h2 style="font-size:2rem;">Prochains Événements</h2>
-                <a href="events.html" class="btn btn-outline" style="font-size:0.85rem; padding:0.5rem 1rem;">Voir le calendrier →</a>
-            </div>
-            <div class="events-widget-grid" id="eventsWidgetGrid">
-                <div class="event-widget-card skeleton-card"></div>
-                <div class="event-widget-card skeleton-card"></div>
-                <div class="event-widget-card skeleton-card"></div>
             </div>
         </div>
     </section>
@@ -857,6 +875,48 @@
                                 <img src="https://wow.zamimg.com/images/wow/icons/medium/ability_warrior_defensivestance.jpg" class="spec-icon" title="Protection (Tank)">
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="about-section" id="about">
+        <div class="container">
+            <div class="about-content">
+                <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">L'Esprit des Sages</h2>
+                <p style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    Nous sommes un collectif de <strong>joueurs vétérans</strong> aux parcours variés : anciens hardcore gamers ou casuals assumés.
+                    Notre point commun ? L'envie de jouer ensemble, sans prise de tête.
+                </p>
+                <p style="font-size: 1.1rem; color: var(--text-muted);">
+                    Ici, <strong>pas de drama</strong>. Nous avons assez de stress au travail, le jeu doit rester une détente absolue.
+                    Bienveillance, bonne humeur et légèreté sont nos maîtres-mots.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="activities-section" id="activities">
+        <div class="container">
+            <h2 style="font-size: 2.5rem; margin-bottom: 2rem; text-align: center;">Nos Activités</h2>
+            <div class="activities-list">
+                <div class="activity-wide-card activity-mm">
+                    <div class="activity-content">
+                        <h3>Mythique+ & Gouffres</h3>
+                        <p>Des clés pour tous les niveaux, de l'exploration de Gouffres et des Raids (NM/HM), sans la pression du progress Mythique.</p>
+                    </div>
+                </div>
+                <div class="activity-wide-card activity-hf">
+                    <div class="activity-content">
+                        <h3>Collection & HF</h3>
+                        <p>Pour les complétionnistes : farm de montures, vieux raids et hauts-faits en groupe.</p>
+                    </div>
+                </div>
+                <div class="activity-wide-card activity-social">
+                    <div class="activity-content">
+                        <h3>Détente & Housing</h3>
+                        <p>Parce que WoW, c'est aussi se poser, discuter et profiter de l'univers du jeu tranquillement.</p>
                     </div>
                 </div>
             </div>
@@ -1400,7 +1460,30 @@
         }
     }
 
-    loadEventsWidget();
+    // ── Hero Event Encart ─────────────────────────────────────────────────────
+    async function loadHeroEvent() {
+        try {
+            const res = await fetch(EVENTS_API);
+            const { events } = await res.json();
+            if (!events.length) return;
+            const e     = events[0];
+            const d     = new Date(e.startTime * 1000);
+            const days  = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+            const months= ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+            const time  = `${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0')}`;
+            const dateStr = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} · ${time}`;
+            const title = e.title && e.title !== 'unnamed'
+                ? e.title
+                : (e.description || '').split('\n')[0].replace(/^[\p{Emoji}\s\[\]]+/u,'').replace(/\s*[—–-]\s*.*/,'').trim() || 'Événement';
+
+            document.getElementById('heroEventTitle').textContent  = title;
+            document.getElementById('heroEventDate').textContent   = dateStr;
+            document.getElementById('heroEventCount').textContent  = `⚔ ${e.signUps} inscrits`;
+            document.getElementById('heroEventEncart').style.display = 'inline-flex';
+        } catch (e) { /* silencieux */ }
+    }
+
+    loadHeroEvent();
     </script>
 </body>
 </html>

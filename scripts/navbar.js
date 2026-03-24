@@ -12,20 +12,19 @@ const navConfig = {
         href: '/index.html'
     },
 
-    // Liens principaux (affichés directement dans la navbar)
+    // Liens principaux (affichés directement dans la navbar) — ordre alphabétique
     mainLinks: [
         { text: 'Accueil', href: '/index.html' },
         { text: 'Actualités', href: '/news.html' },
         { text: 'Sondage Midnight', href: '/roster/index.html' }
     ],
 
-    // Menus déroulants
+    // Menus déroulants — ordre alphabétique (dropdown et items)
     dropdowns: [
         {
-            text: 'PVE',
+            text: 'Événements',
             items: [
-                { text: 'Progression Raid', href: '/progression.html' },
-                { text: 'Mythic+', href: '/mythicplus.html' }
+                { text: 'Calendrier', href: '/events.html' }
             ]
         },
         {
@@ -37,9 +36,10 @@ const navConfig = {
             ]
         },
         {
-            text: 'Événements',
+            text: 'PVE',
             items: [
-                { text: 'Calendrier', href: '/events.html' }
+                { text: 'Mythic+', href: '/mythicplus.html' },
+                { text: 'Progression Raid', href: '/progression.html' }
             ]
         }
     ],
