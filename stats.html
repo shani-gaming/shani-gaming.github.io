@@ -369,15 +369,17 @@
         warrior: '#C69B6D', paladin: '#F48CBA', hunter: '#AAD372',
         rogue:   '#FFF468', priest:  '#FFFFFF', shaman: '#0070DD',
         mage:    '#3FC7EB', warlock: '#8788EE', monk:   '#00FF98',
-        druid:   '#FF7C0A', dh:      '#A330C9', dk:     '#C41E3A',
-        evoker:  '#33937F'
+        druid:   '#FF7C0A', evoker:  '#33937F',
+        dh:             '#A330C9', 'demon hunter':  '#A330C9',
+        dk:             '#C41E3A', 'death knight':  '#C41E3A',
     };
     const CLASS_NAMES = {
-        warrior: 'Guerrier',    paladin: 'Paladin',     hunter: 'Chasseur',
-        rogue:   'Voleur',      priest:  'Prêtre',      shaman: 'Chaman',
-        mage:    'Mage',        warlock: 'Démoniste',   monk:   'Moine',
-        druid:   'Druide',      dh:      'Chasseur de démons',
-        dk:      'Chevalier de la mort',                evoker: 'Évocateur'
+        warrior:        'Guerrier',     paladin: 'Paladin',   hunter: 'Chasseur',
+        rogue:          'Voleur',       priest:  'Prêtre',    shaman: 'Chaman',
+        mage:           'Mage',         warlock: 'Démoniste', monk:   'Moine',
+        druid:          'Druide',       evoker:  'Évocateur',
+        dh:             'Chasseur de démons',  'demon hunter': 'Chasseur de démons',
+        dk:             'Chevalier de la mort', 'death knight': 'Chevalier de la mort',
     };
     const RANK_NAMES = {
         0: 'Grand Sage', 1: 'Gardien de jade', 2: 'Moine du val', 3: 'Novice lotus'
@@ -546,7 +548,7 @@
                     barHeight: '72%',
                     distributed: true,
                     borderRadius: 3,
-                    dataLabels: { position: 'right' }
+                    dataLabels: { position: 'center' }
                 }
             },
             series: [{ name: 'Membres', data: values }],
@@ -566,9 +568,9 @@
             },
             dataLabels: {
                 enabled: true,
-                textAnchor: 'start',
-                offsetX: 6,
-                style: { fontSize: '11px', fontWeight: 700, colors: ['#0d1117'] },
+                textAnchor: 'middle',
+                style: { fontSize: '11px', fontWeight: 700, colors: ['#ffffff'] },
+                dropShadow: { enabled: true, blur: 2, opacity: 0.6 },
                 formatter: v => v
             },
             tooltip: { theme: 'dark', y: { formatter: v => `${v} membres` } }
