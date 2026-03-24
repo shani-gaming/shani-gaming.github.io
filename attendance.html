@@ -489,7 +489,7 @@
             mappedPlayers.sort((a, b) => {
                 const pctA = attendancePct(a.events, recentEvents.length);
                 const pctB = attendancePct(b.events, recentEvents.length);
-                return pctB - pctA || a.wowName.localeCompare(b.wowName);
+                return pctB - pctA || (a.wowName || '').localeCompare(b.wowName || '');
             });
 
             // 7. Render
