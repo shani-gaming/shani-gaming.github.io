@@ -12,6 +12,13 @@
 
 const NEWS = [
     {
+        date: "2026-03-26",
+        label: "Progression",
+        title: "4 boss Normal — les Sages sont en mode tueur",
+        content: "Chimaerus, Imperator Averzian, Vorasius, Roi-Déchu Salhadaar — quatre cadavres, une soirée, zéro remords. Les Sages de Pandarie prouvent que la sagesse, c'est bien, mais une bonne hache dans la gueule d'un boss, c'est mieux. La suite au prochain épisode.",
+        link: { text: "Voir la progression", url: "/progression.html" }
+    },
+    {
         date: "2026-03-20",
         label: "Progression",
         title: "Chimaerus à 19% !",
