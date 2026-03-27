@@ -364,11 +364,11 @@
 
         // ─── Firestore ─────────────────────────────────────────────────────────
         async function loadMembers() {
-            const snap = await db.collection('guild-members').get();
+            const snap = await db.collection('guild-members').where('active', '==', true).get();
             members = [];
             snap.forEach(doc => {
                 const d = doc.data();
-                if (d.name) members.push({ name: d.name, realm: d.realmSlug || d.realm || 'hyjal' });
+                if (d.name && d.realm) members.push({ name: d.name, realm: d.realm });
             });
             members.sort((a, b) => a.name.localeCompare(b.name));
         }
