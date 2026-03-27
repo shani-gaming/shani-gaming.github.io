@@ -3,43 +3,51 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Allow public read access to guild members (for homepage widget)
+    // Helper : vérifie que l'utilisateur est dans la collection admins
+    function isAdmin() {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+    }
+
+    // Guild members — lecture publique, écriture Cloud Functions uniquement (Admin SDK)
     match /guild-members/{memberId} {
       allow read: if true;
-      allow write: if false; // Only Cloud Functions can write
+      allow write: if false;
     }
 
-    // Allow public read access to guild roster snapshots
+    // Snapshots — lecture publique, écriture Cloud Functions uniquement (Admin SDK)
     match /guild-roster-snapshots/{snapshotId} {
       allow read: if true;
-      allow write: if false; // Only Cloud Functions can write
+      allow write: if false;
     }
 
-    // Roster survey responses - public read, auth write
+    // Roster sondage — lecture publique, écriture via submitRosterEntry Cloud Function (Admin SDK)
+    // Les clients Discord ne passent pas par Firebase Auth → write: false est sûr
     match /roster/{responseId} {
-      allow read: if true; // Public read pour afficher le roster
-      allow write: if request.auth != null; // Seulement les utilisateurs Discord authentifiés peuvent écrire
+      allow read: if true;
+      allow write: if false;
     }
 
-    // Admin verification - allow authenticated users to check if they're admin
+    // Admins — self-read uniquement (un utilisateur ne peut lire que son propre doc)
+    // Empêche l'énumération de tous les emails admin
     match /admins/{email} {
-      allow read: if request.auth != null; // Les utilisateurs authentifiés peuvent vérifier leur statut admin
-      allow write: if false; // Only manual configuration
+      allow read: if request.auth != null && request.auth.token.email == email;
+      allow write: if false;
     }
 
-    // Progression de guilde - lecture publique, écriture admin authentifié
+    // Progression raid — lecture publique, écriture admin uniquement
     match /progression/{raidId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
-    // Attendance mapping Discord↔WoW - lecture publique, écriture admin authentifié
+    // Attendance mapping Discord↔WoW — lecture publique, écriture admin uniquement
     match /attendance-mapping/{userId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
-    // Default: deny all other access
+    // Default : tout refuser
     match /{document=**} {
       allow read, write: if false;
     }
