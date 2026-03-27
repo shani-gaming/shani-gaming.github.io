@@ -224,13 +224,14 @@
             border: 1px solid rgba(238,187,85,0.2);
             margin-bottom: 3px; cursor: pointer;
             transition: background 0.15s;
+            overflow: hidden; min-width: 0;
         }
         .cal-event-pill:hover { background: rgba(238,187,85,0.18); }
         .cal-event-pill-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
         .cal-event-pill-title {
             font-size: 0.65rem; font-weight: 600; color: var(--primary);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            max-width: 100%;
+            flex: 1; min-width: 0;
         }
         .cal-event-pill-time {
             font-size: 0.6rem; color: var(--text-muted); margin-left: auto;
