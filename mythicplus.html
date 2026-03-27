@@ -412,10 +412,12 @@
                     if (res.status === 'fulfilled' && res.value) {
                         const d = res.value;
                         const seasons = [...(d.mythic_plus_scores_by_season || [])].sort((a, b) => b.season.localeCompare(a.season));
-                        const scoreCurrent  = seasons[0]?.scores?.all || 0;
-                        const scorePrevious = seasons[1]?.scores?.all || 0;
+                        const bestRuns = d.mythic_plus_best_runs || [];
+                        // scoreCurrent = 0 si aucun run dans la saison active (vieux score TWW conservé sous le même slug)
+                        const scoreCurrent  = bestRuns.length > 0 ? (seasons[0]?.scores?.all || 0) : 0;
+                        const scorePrevious = seasons[0]?.scores?.all || 0;
                         const runs = {};
-                        (d.mythic_plus_best_runs || []).forEach(run => {
+                        bestRuns.forEach(run => {
                             runs[run.dungeon] = {
                                 level: run.mythic_level,
                                 timed: run.num_keystone_upgrades >= 1
