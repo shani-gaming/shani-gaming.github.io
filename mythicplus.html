@@ -411,7 +411,7 @@
                     const key = batch[idx].name.toLowerCase();
                     if (res.status === 'fulfilled' && res.value) {
                         const d = res.value;
-                        const seasons = d.mythic_plus_scores_by_season || [];
+                        const seasons = [...(d.mythic_plus_scores_by_season || [])].sort((a, b) => b.season.localeCompare(a.season));
                         const scoreCurrent  = seasons[0]?.scores?.all || 0;
                         const scorePrevious = seasons[1]?.scores?.all || 0;
                         const runs = {};
