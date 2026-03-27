@@ -163,7 +163,7 @@
 
         /* Day-of-week header */
         .cal-days-header {
-            display: grid; grid-template-columns: repeat(7, 1fr);
+            display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
             gap: 4px; margin-bottom: 4px;
         }
         .cal-day-hdr {
@@ -175,7 +175,7 @@
 
         /* Calendar grid */
         .cal-grid {
-            display: grid; grid-template-columns: repeat(7, 1fr);
+            display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
             gap: 4px;
         }
 
@@ -189,6 +189,8 @@
             position: relative;
             transition: border-color 0.15s;
             cursor: default;
+            overflow: hidden;
+            min-width: 0;
         }
         .cal-cell.other-month {
             opacity: 0.3;
