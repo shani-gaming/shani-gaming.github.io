@@ -1402,7 +1402,7 @@ exports.getRaidHelperEvents = onRequest(
             startTime:   e.startTime,
             endTime:     e.endTime || null,
             type:        e.templateId || null,
-            signUps:     e.signUpsAmount || 0,
+            signUps:     parseInt(e.signUpCount) || 0,
             leader:      e.leaderName || null,
             color:       e.color || null,
             imageUrl:    e.imageUrl || null,
