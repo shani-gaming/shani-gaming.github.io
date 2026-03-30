@@ -208,24 +208,22 @@
         const savedPlaying = localStorage.getItem(STORAGE_KEY_PLAYING) === 'true';
 
         if (savedPlaying && !isNaN(savedPos)) {
-            audioEl.currentTime = savedPos;
-            audioEl.play().then(() => {
-                initAudioContext();
-                setPlayingUI(true);
-            }).catch(() => {
-                // Autoplay bloqué — on attend le premier clic sur la page pour reprendre
-                setPlayingUI(false);
-                document.getElementById('audioPlayer').title = 'Cliquer pour reprendre la lecture';
-                const resume = () => {
-                    audioEl.play().then(() => {
-                        initAudioContext();
-                        setPlayingUI(true);
-                        document.getElementById('audioPlayer').title = '';
-                    }).catch(() => {});
-                    document.removeEventListener('click', resume);
-                };
-                document.addEventListener('click', resume);
-            });
+            const tryResume = () => {
+                audioEl.currentTime = savedPos;
+                audioEl.play().then(() => {
+                    initAudioContext();
+                    setPlayingUI(true);
+                }).catch(() => {
+                    // Autoplay bloqué — cliquer sur le bouton play suffira
+                    setPlayingUI(false);
+                });
+            };
+
+            if (audioEl.readyState >= 1) {
+                tryResume();
+            } else {
+                audioEl.addEventListener('loadedmetadata', tryResume, { once: true });
+            }
         }
     }
 
