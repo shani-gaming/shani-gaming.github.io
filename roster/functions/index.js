@@ -1374,7 +1374,7 @@ exports.getRaidHelperEvents = onRequest(
         const apiKey   = raidHelperApiKey.value();
 
         const response = await axios.get(
-          `https://raid-helper.xyz/api/v2/servers/${serverId}/events`,
+          `https://raid-helper.xyz/api/v4/servers/${serverId}/events`,
           {
             headers: { Authorization: apiKey }
           }
@@ -1434,7 +1434,7 @@ exports.getEventDetails = onRequest(
 
         const apiKey   = raidHelperApiKey.value();
         const response = await axios.get(
-          `https://raid-helper.xyz/api/v2/events/${eventId}`,
+          `https://raid-helper.xyz/api/v4/events/${eventId}`,
           { headers: { Authorization: apiKey } }
         );
 
