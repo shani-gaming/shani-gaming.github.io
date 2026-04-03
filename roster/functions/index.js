@@ -1716,17 +1716,23 @@ exports.getWclData = onRequest(
           // Ordre des boss : basé sur le premier report (ordre de l'instance)
           const bossOrder  = [];
           const bossSet    = new Set();
+          // Récupère les noms des membres de la guilde pour filtrer les PUGs
+          const guildSnap = await db.collection('guild-members').get();
+          const guildNames = new Set(
+            guildSnap.docs.map(d => d.data().name?.toLowerCase()).filter(Boolean)
+          );
+
           // playerMap : { name → { class, encounters: { bossName → meilleur parse } } }
           const playerMap  = {};
 
           snapshot.docs.forEach(doc => {
             const d        = doc.data();
             const rankings = d.rankings;
-            // rankings est le JSON brut de WCL : { data: [ { fightID, encounter, kill, rankings: [...] } ] }
+            // Structure WCL : { data: [ { fightID, encounter, kill, roles: { tanks, healers, dps } } ] }
             if (!rankings?.data) return;
 
             rankings.data.forEach(fight => {
-              if (!fight.kill) return; // On n'affiche que les kills
+              if (!fight.kill) return; // kill peut être 1 (number) ou true
 
               const bossName = fight.encounter?.name;
               if (!bossName) return;
@@ -1737,14 +1743,23 @@ exports.getWclData = onRequest(
                 bossOrder.push({ name: bossName, encounterID: fight.encounter?.id });
               }
 
-              (fight.rankings || []).forEach(player => {
+              // Collecte tous les personnages (tanks + healers + dps)
+              const allChars = [
+                ...(fight.roles?.tanks?.characters   || []),
+                ...(fight.roles?.healers?.characters || []),
+                ...(fight.roles?.dps?.characters     || [])
+              ];
+
+              allChars.forEach(player => {
                 if (!player.name) return;
+                // Filtre : membres de la guilde uniquement
+                if (guildNames.size > 0 && !guildNames.has(player.name.toLowerCase())) return;
 
                 if (!playerMap[player.name]) {
                   playerMap[player.name] = {
-                    name:      player.name,
-                    class:     player.class  || null,
-                    spec:      player.spec   || null,
+                    name:       player.name,
+                    class:      player.class || null,
+                    spec:       player.spec  || null,
                     encounters: {}
                   };
                 }
@@ -1756,9 +1771,8 @@ exports.getWclData = onRequest(
                 if (pct !== null && (!existing || pct > existing.rankPercent)) {
                   playerMap[player.name].encounters[bossName] = {
                     rankPercent: Math.round(pct),
-                    spec:        player.spec      || null,
-                    amount:      Math.round(player.amount || 0),
-                    ilvl:        Math.round(player.itemLevel || 0)
+                    spec:        player.spec || null,
+                    ilvl:        Math.round(player.bracketData || 0)
                   };
                 }
               });
