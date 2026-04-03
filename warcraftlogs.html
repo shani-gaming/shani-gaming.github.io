@@ -295,7 +295,14 @@
             <div class="status-box" id="emptyBox">
                 <div class="status-box-icon">📋</div>
                 <h3>Aucun report trouvé</h3>
-                <p>La synchronisation avec WarcraftLogs n'a pas encore été effectuée. Un administrateur doit déclencher la première sync.</p>
+                <p>La synchronisation avec WarcraftLogs n'a pas encore été effectuée.</p>
+                <button class="btn-sync admin-visible" id="syncBtnEmpty" onclick="triggerSync()" style="margin-top:0.5rem; display:none">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                    </svg>
+                    Déclencher la première sync
+                </button>
             </div>
 
             <!-- Contenu principal -->
@@ -587,6 +594,7 @@
                 document.getElementById('adminBtn').textContent = 'Admin';
                 document.getElementById('adminBtn').classList.remove('active');
                 document.getElementById('syncBtn').classList.remove('admin-visible');
+                document.getElementById('syncBtnEmpty').style.display = 'none';
                 return;
             }
             const provider = new firebase.auth.GoogleAuthProvider();
@@ -598,6 +606,7 @@
                     document.getElementById('adminBtn').textContent = 'Quitter admin';
                     document.getElementById('adminBtn').classList.add('active');
                     document.getElementById('syncBtn').classList.add('admin-visible');
+                    document.getElementById('syncBtnEmpty').style.display = 'inline-flex';
                 } else {
                     auth.signOut();
                     alert("Vous n'êtes pas administrateur.");
