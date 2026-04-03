@@ -12,6 +12,13 @@
 
 const NEWS = [
     {
+        date: "2026-04-02",
+        label: "Progression",
+        title: "5/8 Voidspire Normal — les Sages taillent dans le Vide",
+        content: "Chimaerus, Imperator Averzian, Vorasius, Roi-Déchu Salhadaar, et le duo Vaelgor & Ezzorak. Cinq boss. Une soirée. Les Sages de Pandarie entrent dans le Voidspire et font le ménage. La première soirée enregistrée sur WarcraftLogs, et déjà cinq cadavres à notre actif.",
+        link: { text: "Voir le report WarcraftLogs", url: "https://www.warcraftlogs.com/reports/axTCgJjzVtMKBP4h" }
+    },
+    {
         date: "2026-03-26",
         label: "Progression",
         title: "4 boss Normal — les Sages sont en mode tueur",

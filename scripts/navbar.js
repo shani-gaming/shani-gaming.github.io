@@ -39,7 +39,8 @@ const navConfig = {
             text: 'PVE',
             items: [
                 { text: 'Mythic+', href: '/mythicplus.html' },
-                { text: 'Progression Raid', href: '/progression.html' }
+                { text: 'Progression Raid', href: '/progression.html' },
+                { text: 'WarcraftLogs', href: '/warcraftlogs.html' }
             ]
         },
         {
