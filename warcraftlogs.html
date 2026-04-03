@@ -17,6 +17,13 @@
         }
         .page-header h1 { font-size: 3rem; margin-bottom: 0.5rem; }
         .page-header p { color: var(--text-muted); font-size: 1.1rem; }
+        .page-header-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
 
         .tier-label {
             display: inline-block;
@@ -42,21 +49,10 @@
             font-size: 0.85rem;
             color: var(--text-muted);
         }
-        .load-bar-wrap {
-            flex: 1;
-            height: 4px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 2px;
-        }
-        .load-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            border-radius: 2px;
-            transition: width 0.3s ease;
-        }
+        .load-bar-wrap { flex: 1; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; }
+        .load-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 2px; transition: width 0.3s ease; }
 
-        /* ── Error / Empty ── */
+        /* ── Status boxes ── */
         .status-box {
             display: none;
             align-items: center;
@@ -73,30 +69,33 @@
         .status-box p { font-size: 0.9rem; max-width: 400px; line-height: 1.6; margin: 0; }
 
         /* ── Section titles ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
         .section-title {
             font-size: 1.4rem;
             font-weight: 700;
-            margin-bottom: 1.25rem;
-            margin-top: 2.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            margin: 0;
         }
-        .section-title:first-child { margin-top: 0; }
-        .section-title::after {
-            content: '';
+        .section-divider {
             flex: 1;
             height: 1px;
             background: var(--border);
+            min-width: 40px;
         }
 
         /* ── Reports grid ── */
         .reports-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 1.25rem;
+            margin-bottom: 3rem;
         }
-
         .report-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -107,142 +106,136 @@
             gap: 1rem;
             transition: border-color 0.2s, transform 0.15s;
         }
-        .report-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
-
-        .report-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 0.75rem;
-        }
-        .report-date {
-            font-size: 0.78rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--primary);
-        }
-        .report-duration {
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            white-space: nowrap;
-        }
-        .report-owner {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 0.15rem;
-        }
-        .kill-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-        }
+        .report-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .report-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+        .report-date { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary); }
+        .report-duration { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+        .report-owner { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem; }
+        .kill-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
         .kill-tag {
-            font-size: 0.72rem;
-            font-weight: 600;
-            padding: 0.2rem 0.55rem;
-            border-radius: 4px;
-            background: rgba(255,209,0,0.08);
-            border: 1px solid rgba(255,209,0,0.2);
-            color: #ffd100;
+            font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 4px;
+            background: rgba(255,209,0,0.08); border: 1px solid rgba(255,209,0,0.2); color: #ffd100;
         }
-        .kill-tag.heroic {
-            background: rgba(0,163,255,0.08);
-            border-color: rgba(0,163,255,0.2);
-            color: #00a3ff;
-        }
-        .kill-tag.mythic {
-            background: rgba(163,53,238,0.1);
-            border-color: rgba(163,53,238,0.25);
-            color: #a335ee;
-        }
-        .no-kills {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-style: italic;
-        }
-        .report-footer {
-            margin-top: auto;
-            padding-top: 0.5rem;
-            border-top: 1px solid var(--border);
-        }
+        .kill-tag.heroic { background: rgba(0,163,255,0.08); border-color: rgba(0,163,255,0.2); color: #00a3ff; }
+        .kill-tag.mythic { background: rgba(163,53,238,0.1); border-color: rgba(163,53,238,0.25); color: #a335ee; }
+        .no-kills { font-size: 0.8rem; color: var(--text-muted); font-style: italic; }
+        .report-footer { margin-top: auto; padding-top: 0.5rem; border-top: 1px solid var(--border); }
         .report-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: var(--primary);
-            text-decoration: none;
-            transition: color 0.15s;
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            font-size: 0.82rem; font-weight: 600; color: var(--primary); text-decoration: none; transition: color 0.15s;
         }
         .report-link:hover { color: #fff; }
         .kill-count-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 0.15rem 0.6rem;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            white-space: nowrap;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+            border-radius: 20px; padding: 0.15rem 0.6rem;
+            font-size: 0.75rem; font-weight: 700; color: var(--text-muted); white-space: nowrap;
         }
 
-        /* ── Rankings cards ── */
-        .rankings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.25rem;
+        /* ── Sync banner ── */
+        .sync-banner {
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(255,209,0,0.06);
+            border: 1px solid rgba(255,209,0,0.2);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            color: #ffd100;
+            margin-bottom: 1.5rem;
         }
-        .ranking-card {
+        .sync-banner.visible { display: flex; }
+        .sync-spinner {
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,209,0,0.3);
+            border-top-color: #ffd100;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Admin sync button ── */
+        .btn-sync {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.4rem 1.5rem;
+            border-radius: 6px;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s;
         }
-        .ranking-card-title {
-            font-size: 0.72rem;
+        .btn-sync:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-sync.admin-visible { display: inline-flex; }
+        .btn-sync:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ── Rankings table ── */
+        .rankings-wrap {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+        .rankings-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            white-space: nowrap;
+        }
+        .rankings-table thead th {
+            background: var(--bg-surface);
+            padding: 0.65rem 0.75rem;
+            font-size: 0.68rem;
             font-weight: 700;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.06em;
             text-transform: uppercase;
             color: var(--text-muted);
-            margin-bottom: 1.1rem;
+            border-bottom: 2px solid var(--border);
+            text-align: center;
         }
-        .rank-rows { display: flex; flex-direction: column; gap: 0.65rem; }
-        .rank-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.5rem;
+        .rankings-table thead th:first-child { text-align: left; padding-left: 1rem; min-width: 130px; }
+        .rankings-table thead th.boss-th { min-width: 90px; }
+
+        .rankings-table tbody tr {
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            transition: background 0.1s;
         }
-        .rank-scope {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            min-width: 60px;
+        .rankings-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+        .rankings-table tbody tr:last-child { border-bottom: none; }
+        .rankings-table td {
+            padding: 0.55rem 0.75rem;
+            background: var(--bg-card);
+            vertical-align: middle;
+            text-align: center;
         }
-        .rank-number {
-            font-size: 1.3rem;
-            font-weight: 800;
-            font-variant-numeric: tabular-nums;
-            line-height: 1;
-        }
-        .rank-pct-pill {
-            font-size: 0.7rem;
+        .rankings-table td:first-child { text-align: left; padding-left: 1rem; }
+
+        /* Player name with class color */
+        .player-name { font-weight: 600; }
+
+        /* Parse cell */
+        .parse-cell {
             font-weight: 700;
-            padding: 0.15rem 0.5rem;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.06);
+            font-size: 0.85rem;
+            border-radius: 4px;
+            padding: 0.2rem 0.4rem;
+            display: inline-block;
+            min-width: 42px;
         }
+        .parse-none { color: rgba(255,255,255,0.15); font-weight: 400; font-size: 0.8rem; }
+
+        /* Average column */
+        .avg-cell { font-weight: 700; font-size: 0.82rem; }
+
         .rankings-note {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
-            margin-top: 0.75rem;
+            margin-top: 0.6rem;
             font-style: italic;
         }
 
@@ -257,51 +250,84 @@
 
     <header class="page-header">
         <div class="container">
-            <span class="tier-label">Saison 1</span>
-            <h1>WarcraftLogs</h1>
-            <p>Rapports de raid et performances de la guilde</p>
+            <div class="page-header-row">
+                <div>
+                    <span class="tier-label">Saison 1</span>
+                    <h1>WarcraftLogs</h1>
+                    <p>Rapports de raid et performances de la guilde</p>
+                </div>
+            </div>
         </div>
     </header>
 
     <main class="content-section">
         <div class="container">
 
-            <!-- Chargement -->
+            <!-- Chargement initial -->
             <div class="load-progress" id="loadProgress">
-                <span id="loadText">Chargement des reports…</span>
-                <div class="load-bar-wrap">
-                    <div class="load-bar" id="loadBar"></div>
-                </div>
+                <span id="loadText">Chargement…</span>
+                <div class="load-bar-wrap"><div class="load-bar" id="loadBar"></div></div>
             </div>
 
-            <!-- Erreur -->
+            <!-- Erreur globale -->
             <div class="status-box" id="errorBox">
                 <div class="status-box-icon">⚠</div>
                 <h3>Impossible de charger les données</h3>
-                <p id="errorMsg">Une erreur est survenue lors de la récupération des reports.</p>
+                <p id="errorMsg"></p>
             </div>
 
-            <!-- Aucun report -->
+            <!-- Aucune donnée / première sync -->
             <div class="status-box" id="emptyBox">
                 <div class="status-box-icon">📋</div>
                 <h3>Aucun report trouvé</h3>
-                <p>Aucun log de raid n'a encore été enregistré pour la guilde.</p>
+                <p>La synchronisation avec WarcraftLogs n'a pas encore été effectuée. Un administrateur doit déclencher la première sync.</p>
             </div>
 
             <!-- Contenu principal -->
             <div id="mainContent" style="display:none">
 
-                <!-- Reports -->
-                <h2 class="section-title">Reports récents</h2>
+                <!-- Banner sync en cours -->
+                <div class="sync-banner" id="syncBanner">
+                    <span class="sync-spinner"></span>
+                    <span id="syncBannerText">Synchronisation en cours…</span>
+                </div>
+
+                <!-- ── Reports ── -->
+                <div class="section-header">
+                    <h2 class="section-title">Reports récents</h2>
+                    <div class="section-divider"></div>
+                    <button class="btn-sync" id="syncBtn" onclick="triggerSync()">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                        </svg>
+                        Forcer la sync
+                    </button>
+                </div>
                 <div class="reports-grid" id="reportsGrid"></div>
 
-                <!-- Rankings -->
-                <h2 class="section-title" id="rankingsTitle">Classement de la guilde</h2>
-                <div id="rankingsWrap">
-                    <div class="rankings-grid" id="rankingsGrid"></div>
-                    <p class="rankings-note" id="rankingsNote" style="display:none">Source : WarcraftLogs — classement mondial de la guilde pour ce tier.</p>
-                    <div class="status-box" id="rankingsError" style="display:none; padding:2rem 0">
-                        <h3 id="rankingsErrorMsg" style="font-size:0.95rem; color:var(--text-muted)">Classement non disponible</h3>
+                <!-- ── Rankings ── -->
+                <div class="section-header" style="margin-top:1rem">
+                    <h2 class="section-title" id="rankingsTitle">Rankings</h2>
+                    <div class="section-divider"></div>
+                </div>
+
+                <div id="rankingsArea">
+                    <div class="load-progress" id="rankingsProgress" style="display:none">
+                        <span>Chargement des rankings…</span>
+                        <div class="load-bar-wrap"><div class="load-bar" style="width:40%;animation:none"></div></div>
+                    </div>
+                    <div class="rankings-wrap" id="rankingsWrap" style="display:none">
+                        <table class="rankings-table">
+                            <thead id="rankingsHead"></thead>
+                            <tbody id="rankingsBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="rankings-note" id="rankingsNote" style="display:none">
+                        Meilleur parse sur les 3 derniers reports · Source : WarcraftLogs
+                    </p>
+                    <div class="status-box" id="rankingsEmpty" style="padding:3rem 0; display:none">
+                        <h3 style="font-size:0.95rem;color:var(--text-muted)">Aucun ranking disponible</h3>
                     </div>
                 </div>
 
@@ -311,10 +337,33 @@
     </main>
 
     <script>
-        const WCL_API = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getWclData';
+        const WCL_API   = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getWclData';
+        const SYNC_API  = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/triggerWclSync';
+        const DIFF_CLASS = { 'Normal': '', 'Héroïque': 'heroic', 'Mythique': 'mythic' };
 
-        const DIFF_CLASS  = { 'Normal': '', 'Héroïque': 'heroic', 'Mythique': 'mythic' };
-        const DIFF_LABELS = { 3: 'Normal', 4: 'Héroïque', 5: 'Mythique' };
+        // ── Couleurs classes WoW ──────────────────────────────────────────────
+        const CLASS_COLORS = {
+            'DeathKnight': '#C41E3A', 'DemonHunter': '#A330C9', 'Druid': '#FF7C0A',
+            'Evoker': '#33937F', 'Hunter': '#AAD372', 'Mage': '#3FC7EB',
+            'Monk': '#00FF98', 'Paladin': '#F48CBA', 'Priest': '#FFFFFF',
+            'Rogue': '#FFF468', 'Shaman': '#0070DD', 'Warlock': '#8788EE',
+            'Warrior': '#C69B3A'
+        };
+
+        // ── Parse colors (WoW standard) ───────────────────────────────────────
+        function parseColor(pct) {
+            if (pct >= 100) return '#e6cc80';
+            if (pct >= 99)  return '#ff8000';
+            if (pct >= 95)  return '#a335ee';
+            if (pct >= 75)  return '#0070dd';
+            if (pct >= 50)  return '#1eff00';
+            if (pct >= 25)  return '#ffffff';
+            return '#9d9d9d';
+        }
+
+        // ── Firebase admin check ──────────────────────────────────────────────
+        // Réutilise le même système que progression.html (Google sign-in)
+        let isAdmin = false;
 
         function escHtml(str) {
             return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -331,27 +380,9 @@
             return h > 0 ? `${h}h${String(m).padStart(2,'0')}` : `${m} min`;
         }
 
-        function formatMs(ms) {
-            if (!ms) return '—';
-            const total = Math.round(ms / 1000);
-            const m = Math.floor(total / 60), s = total % 60;
-            return `${m}:${String(s).padStart(2,'0')}`;
-        }
-
-        function rankColor(pct) {
-            if (pct >= 99) return 'legendary';
-            if (pct >= 95) return 'epic';
-            if (pct >= 75) return 'rare';
-            if (pct >= 50) return 'uncommon';
-            return 'common';
-        }
-
-        function rankBarColor(pct) {
-            if (pct >= 99) return '#ff8000';
-            if (pct >= 95) return '#a335ee';
-            if (pct >= 75) return '#0070dd';
-            if (pct >= 50) return '#1eff00';
-            return '#9d9d9d';
+        function setProgress(pct, text) {
+            document.getElementById('loadBar').style.width = pct + '%';
+            if (text) document.getElementById('loadText').textContent = text;
         }
 
         // ── Reports ──────────────────────────────────────────────────────────
@@ -384,8 +415,7 @@
                         <a href="${r.url}" target="_blank" rel="noopener noreferrer" class="report-link">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-                                <polyline points="15 3 21 3 21 9"/>
-                                <line x1="10" y1="14" x2="21" y2="3"/>
+                                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
                             </svg>
                             Voir sur WarcraftLogs
                         </a>
@@ -395,72 +425,113 @@
             });
         }
 
-        // ── Rankings ─────────────────────────────────────────────────────────
+        // ── Rankings matrix ───────────────────────────────────────────────────
 
-        function rankCard(title, data) {
-            if (!data) return '';
-            const row = (label, rank) => {
-                if (!rank) return '';
-                const color = rank.color || 'var(--text-muted)';
-                const pct   = rank.percentile != null ? `<span class="rank-pct-pill" style="color:${color}">${rank.percentile}%</span>` : '';
-                return `<div class="rank-row">
-                    <span class="rank-scope">${label}</span>
-                    <span class="rank-number" style="color:${color}">#${rank.number.toLocaleString('fr-FR')}</span>
-                    ${pct}
-                </div>`;
-            };
-            return `<div class="ranking-card">
-                <div class="ranking-card-title">${title}</div>
-                <div class="rank-rows">
-                    ${row('Monde',   data.worldRank)}
-                    ${row('EU',      data.regionRank)}
-                    ${row('Hyjal',   data.serverRank)}
-                </div>
-            </div>`;
-        }
-
-        function renderRankings(zoneName, rankings) {
+        function renderRankings(zoneName, bosses, players) {
             if (zoneName) {
-                document.getElementById('rankingsTitle').textContent = `Classement de la guilde — ${zoneName}`;
+                document.getElementById('rankingsTitle').textContent = `Rankings — ${zoneName}`;
             }
 
-            if (!rankings) {
-                document.getElementById('rankingsError').style.display = 'flex';
+            if (!players || players.length === 0 || !bosses || bosses.length === 0) {
+                document.getElementById('rankingsEmpty').style.display = 'flex';
                 return;
             }
 
-            const grid = document.getElementById('rankingsGrid');
-            grid.innerHTML = [
-                rankCard('Progression', rankings.progress),
-                rankCard('Vitesse',     rankings.speed),
-                rankCard('Clear complet', rankings.completeRaidSpeed)
-            ].join('');
+            // En-têtes : joueur | boss1 | boss2 | ... | moy.
+            const thead = document.getElementById('rankingsHead');
+            thead.innerHTML = `<tr>
+                <th>Joueur</th>
+                ${bosses.map(b => `<th class="boss-th">${escHtml(b.name)}</th>`).join('')}
+                <th>Moy.</th>
+            </tr>`;
 
+            // Corps
+            const tbody = document.getElementById('rankingsBody');
+            tbody.innerHTML = '';
+
+            players.forEach(player => {
+                const classColor = CLASS_COLORS[player.class?.replace(/\s/g, '')] || 'var(--text-main)';
+                let total = 0, count = 0;
+
+                const cells = bosses.map(boss => {
+                    const enc = player.encounters[boss.name];
+                    if (!enc) return `<td><span class="parse-none">—</span></td>`;
+                    total += enc.rankPercent;
+                    count++;
+                    const color = parseColor(enc.rankPercent);
+                    const tooltip = enc.spec ? `title="${escHtml(enc.spec)}${enc.ilvl ? ' · ' + enc.ilvl + ' ilvl' : ''}"` : '';
+                    return `<td><span class="parse-cell" style="color:${color}" ${tooltip}>${enc.rankPercent}</span></td>`;
+                }).join('');
+
+                const avg     = count > 0 ? Math.round(total / count) : null;
+                const avgHtml = avg !== null
+                    ? `<span class="avg-cell" style="color:${parseColor(avg)}">${avg}</span>`
+                    : `<span class="parse-none">—</span>`;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="player-name" style="color:${classColor}">${escHtml(player.name)}</span></td>
+                    ${cells}
+                    <td>${avgHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('rankingsWrap').style.display = 'block';
             document.getElementById('rankingsNote').style.display = 'block';
+        }
+
+        // ── Sync manuelle (admin) ─────────────────────────────────────────────
+
+        async function triggerSync() {
+            const btn = document.getElementById('syncBtn');
+            const banner = document.getElementById('syncBanner');
+            btn.disabled = true;
+            banner.classList.add('visible');
+            document.getElementById('syncBannerText').textContent = 'Synchronisation en cours…';
+
+            try {
+                const resp = await fetch(SYNC_API, { method: 'POST' });
+                const result = await resp.json();
+                document.getElementById('syncBannerText').textContent =
+                    result.synced > 0
+                        ? `${result.synced} nouveau(x) report(s) synchronisé(s). Rechargement…`
+                        : 'Déjà à jour — aucun nouveau report.';
+
+                if (result.synced > 0) {
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    setTimeout(() => {
+                        banner.classList.remove('visible');
+                        btn.disabled = false;
+                    }, 2500);
+                }
+            } catch (e) {
+                document.getElementById('syncBannerText').textContent = 'Erreur lors de la sync.';
+                btn.disabled = false;
+            }
         }
 
         // ── Init ─────────────────────────────────────────────────────────────
 
         async function init() {
-            document.getElementById('loadBar').style.width = '20%';
-            document.getElementById('loadText').textContent = 'Connexion à WarcraftLogs…';
+            setProgress(20, 'Chargement des reports…');
 
             try {
-                // Charge reports et rankings en parallèle
+                // Reports et rankings en parallèle
                 const [reportsResp, rankingsResp] = await Promise.all([
                     fetch(`${WCL_API}?type=reports`),
                     fetch(`${WCL_API}?type=rankings`)
                 ]);
 
-                document.getElementById('loadBar').style.width = '80%';
-                document.getElementById('loadText').textContent = 'Traitement…';
+                setProgress(80, 'Traitement…');
 
                 if (!reportsResp.ok) {
                     const err = await reportsResp.json().catch(() => ({}));
                     throw new Error(err.error || `HTTP ${reportsResp.status}`);
                 }
 
-                const { reports } = await reportsResp.json();
+                const { reports, syncing } = await reportsResp.json();
 
                 document.getElementById('loadProgress').style.display = 'none';
 
@@ -473,12 +544,14 @@
                 renderReports(reports);
 
                 // Rankings
+                document.getElementById('rankingsProgress').style.display = 'flex';
                 if (rankingsResp.ok) {
-                    const rankData = await rankingsResp.json();
-                    renderRankings(rankData.zoneName, rankData.rankings);
+                    const { zoneName, bosses, players } = await rankingsResp.json();
+                    document.getElementById('rankingsProgress').style.display = 'none';
+                    renderRankings(zoneName, bosses, players);
                 } else {
-                    document.getElementById('rankingsError').classList.add('visible');
-                    document.getElementById('rankingsErrorMsg').textContent = 'Impossible de charger les rankings.';
+                    document.getElementById('rankingsProgress').style.display = 'none';
+                    document.getElementById('rankingsEmpty').style.display = 'flex';
                 }
 
             } catch (err) {
@@ -489,7 +562,41 @@
             }
         }
 
+        // ── Firebase Auth (admin check) ───────────────────────────────────────
+        // Chargé en async, n'empêche pas l'affichage des données
+        function initFirebaseAuth() {
+            if (typeof firebase === 'undefined') return;
+            firebase.auth().onAuthStateChanged(async user => {
+                if (!user) return;
+                try {
+                    const doc = await firebase.firestore()
+                        .collection('admins').doc(user.email).get();
+                    if (doc.exists) {
+                        isAdmin = true;
+                        document.getElementById('syncBtn').classList.add('admin-visible');
+                    }
+                } catch (e) { /* pas admin */ }
+            });
+        }
+
         init();
+        initFirebaseAuth();
+    </script>
+
+    <!-- Firebase SDK (pour admin check uniquement) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD0cmazoD42kD_H243Do5pIPGhwXFgOHYE",
+            authDomain: "guild-roster-67da7.firebaseapp.com",
+            projectId: "guild-roster-67da7",
+            storageBucket: "guild-roster-67da7.firebasestorage.app",
+            messagingSenderId: "971948767326",
+            appId: "1:971948767326:web:4377499f1ff23db1899ccf"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     </script>
 </body>
 </html>

@@ -1487,7 +1487,10 @@ exports.getEventDetails = onRequest(
 
 // ─── WarcraftLogs ─────────────────────────────────────────────────────────────
 
-// Cache token en mémoire (réutilisé entre invocations "chaudes")
+const DIFFICULTY_LABEL = { 1: 'LFR', 3: 'Normal', 4: 'Héroïque', 5: 'Mythique' };
+const WCL_GUILD = { name: 'Les Sages de Pandarie', serverSlug: 'hyjal', serverRegion: 'eu' };
+
+// Cache token en mémoire entre invocations "chaudes"
 let _wclTokenCache = { token: null, expiresAt: 0 };
 
 async function getWclToken(clientId, clientSecret) {
@@ -1520,137 +1523,262 @@ async function wclQuery(token, query, variables = {}) {
   return resp.data.data;
 }
 
-const DIFFICULTY_LABEL = { 1: 'LFR', 3: 'Normal', 4: 'Héroïque', 5: 'Mythique' };
+/**
+ * Logique de sync WCL → Firestore.
+ * - Récupère les 10 derniers reports de la guilde sur WCL
+ * - Pour chaque report absent de Firestore : fetch rankings + stocke
+ * - Retourne le nombre de nouveaux reports syncés
+ */
+async function runWclSync(token) {
+  // 1. Récupère les reports WCL
+  const data = await wclQuery(token, `{
+    reportData {
+      reports(
+        guildName: "${WCL_GUILD.name}"
+        guildServerSlug: "${WCL_GUILD.serverSlug}"
+        guildServerRegion: "${WCL_GUILD.serverRegion}"
+        limit: 10
+      ) {
+        data {
+          code startTime endTime title
+          owner { name }
+          zone { id name }
+          fights(killType: Kills) { id name difficulty encounterID }
+        }
+      }
+    }
+  }`);
+
+  const wclReports = data.reportData.reports.data || [];
+  if (wclReports.length === 0) return 0;
+
+  // 2. Vérifie lesquels sont déjà en cache Firestore
+  const col = db.collection('wcl-reports');
+  const existing = new Set(
+    (await col.select().get()).docs.map(d => d.id)
+  );
+
+  // 3. Sync les nouveaux uniquement
+  let synced = 0;
+  for (const report of wclReports) {
+    if (existing.has(report.code)) continue;
+
+    // Fetch rankings pour ce report (encounterID: 0 = tous les boss)
+    let rankings = null;
+    try {
+      const rData = await wclQuery(token, `{
+        reportData {
+          report(code: "${report.code}") {
+            rankings(encounterID: 0)
+          }
+        }
+      }`);
+      rankings = rData.reportData.report.rankings ?? null;
+    } catch (e) {
+      console.warn(`Rankings fetch failed for ${report.code}:`, e.message);
+    }
+
+    // Déduplique les kills par boss+difficulté
+    const killsMap = {};
+    (report.fights || []).forEach(f => {
+      const key = `${f.encounterID}|${f.difficulty}`;
+      if (!killsMap[key]) {
+        killsMap[key] = {
+          encounterID: f.encounterID,
+          name:        f.name,
+          difficulty:  f.difficulty,
+          label:       DIFFICULTY_LABEL[f.difficulty] || 'Normal'
+        };
+      }
+    });
+
+    await col.doc(report.code).set({
+      code:      report.code,
+      startTime: report.startTime,
+      endTime:   report.endTime,
+      title:     report.title || null,
+      owner:     report.owner?.name || null,
+      zoneId:    report.zone?.id    || null,
+      zoneName:  report.zone?.name  || null,
+      kills:     Object.values(killsMap),
+      rankings:  rankings,           // JSON brut WCL — null si fetch échoué
+      syncedAt:  new Date()
+    });
+
+    console.log(`WCL sync: stored report ${report.code}`);
+    synced++;
+  }
+
+  return synced;
+}
 
 /**
- * Récupère les données WarcraftLogs de la guilde
- * GET ?type=reports                  → liste des reports récents
- * GET ?type=rankings[&zoneId=XX]     → rankings par boss
+ * Sync automatique quotidienne (06:00 Europe/Paris).
+ * Ne fait des appels WCL que si de nouveaux reports existent.
  */
-exports.getWclData = onRequest(
+exports.syncWclData = onSchedule(
   {
-    region: 'europe-west1',
-    maxInstances: 10,
-    secrets: [wclCredentials]
+    schedule: '0 6 * * *',
+    timeZone: 'Europe/Paris',
+    region:   'europe-west1',
+    secrets:  [wclCredentials]
+  },
+  async () => {
+    const creds = JSON.parse(wclCredentials.value().trim());
+    const token = await getWclToken(creds.client_id, creds.client_secret);
+    const synced = await runWclSync(token);
+    console.log(`WCL daily sync complete: ${synced} new report(s)`);
+  }
+);
+
+/**
+ * Déclencheur manuel (POST) — accessible depuis le panneau admin de la page.
+ * CORS restreint à nos domaines, pas d'autres secrets exposés.
+ */
+exports.triggerWclSync = onRequest(
+  {
+    region:      'europe-west1',
+    maxInstances: 2,
+    secrets:     [wclCredentials]
   },
   (req, res) => {
     corsMiddleware(req, res, async () => {
       try {
-        if (req.method !== 'GET') {
-          return res.status(405).json({ error: 'Method not allowed' });
-        }
-
-        const type = req.query.type;
-        if (!['reports', 'rankings', 'schema'].includes(type)) {
-          return res.status(400).json({ error: 'Invalid type. Use reports or rankings.' });
-        }
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
         const creds = JSON.parse(wclCredentials.value().trim());
         const token = await getWclToken(creds.client_id, creds.client_secret);
+        const synced = await runWclSync(token);
+
+        res.json({ ok: true, synced });
+      } catch (error) {
+        console.error('WCL manual sync error:', error.message);
+        res.status(500).json({ error: 'Sync failed', details: error.message });
+      }
+    });
+  }
+);
+
+/**
+ * Lecture des données WCL depuis Firestore (aucun appel WCL API côté client).
+ * GET ?type=reports   → 3 derniers reports (metadata + kills)
+ * GET ?type=rankings  → matrice joueur × boss (meilleur parse sur 3 derniers reports)
+ */
+exports.getWclData = onRequest(
+  {
+    region:      'europe-west1',
+    maxInstances: 10
+    // Pas de secret : lit uniquement Firestore
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+        const type = req.query.type;
+        if (!['reports', 'rankings'].includes(type)) {
+          return res.status(400).json({ error: 'Invalid type. Use reports or rankings.' });
+        }
+
+        // Récupère les 3 derniers reports depuis Firestore
+        const snapshot = await db.collection('wcl-reports')
+          .orderBy('startTime', 'desc')
+          .limit(3)
+          .get();
+
+        if (snapshot.empty) {
+          return res.json(type === 'reports'
+            ? { reports: [], syncing: true }
+            : { players: [], bosses: [], syncing: true }
+          );
+        }
 
         // ── Reports ──────────────────────────────────────────────────────────
         if (type === 'reports') {
-          const data = await wclQuery(token, `{
-            reportData {
-              reports(
-                guildName: "Les Sages de Pandarie"
-                guildServerSlug: "hyjal"
-                guildServerRegion: "eu"
-                limit: 3
-              ) {
-                data {
-                  code
-                  startTime
-                  endTime
-                  title
-                  owner { name }
-                  zone { id name }
-                  fights(killType: Kills) {
-                    name
-                    difficulty
-                  }
-                }
-              }
-            }
-          }`);
-
-          const reports = (data.reportData.reports.data || []).map(r => {
-            // Déduplique les boss kills et groupe par difficulté
-            const killsMap = {};
-            (r.fights || []).forEach(f => {
-              const key = `${f.name}|${f.difficulty}`;
-              if (!killsMap[key]) killsMap[key] = { name: f.name, difficulty: DIFFICULTY_LABEL[f.difficulty] || 'Normal' };
-            });
+          const reports = snapshot.docs.map(doc => {
+            const d = doc.data();
             return {
-              code:       r.code,
-              url:        `https://www.warcraftlogs.com/reports/${r.code}`,
-              startTime:  r.startTime,
-              endTime:    r.endTime,
-              title:      r.title || null,
-              owner:      r.owner?.name || null,
-              kills:      Object.values(killsMap)
+              code:      d.code,
+              url:       `https://www.warcraftlogs.com/reports/${d.code}`,
+              startTime: d.startTime,
+              endTime:   d.endTime,
+              title:     d.title,
+              owner:     d.owner,
+              kills:     (d.kills || []).map(k => ({ name: k.name, difficulty: k.label }))
             };
           });
-
           return res.json({ reports });
         }
 
-        // ── Schema introspection (debug temporaire) ──────────────────────────
-        // ── Rankings ─────────────────────────────────────────────────────────
+        // ── Rankings : matrice joueur × boss ─────────────────────────────────
         if (type === 'rankings') {
-          // Auto-détecte la zone depuis le report le plus récent
-          const reportData = await wclQuery(token, `{
-            reportData {
-              reports(
-                guildName: "Les Sages de Pandarie"
-                guildServerSlug: "hyjal"
-                guildServerRegion: "eu"
-                limit: 1
-              ) {
-                data { zone { id name } }
+          const zoneName   = snapshot.docs[0].data().zoneName || null;
+          // Ordre des boss : basé sur le premier report (ordre de l'instance)
+          const bossOrder  = [];
+          const bossSet    = new Set();
+          // playerMap : { name → { class, encounters: { bossName → meilleur parse } } }
+          const playerMap  = {};
+
+          snapshot.docs.forEach(doc => {
+            const d        = doc.data();
+            const rankings = d.rankings;
+            // rankings est le JSON brut de WCL : { data: [ { fightID, encounter, kill, rankings: [...] } ] }
+            if (!rankings?.data) return;
+
+            rankings.data.forEach(fight => {
+              if (!fight.kill) return; // On n'affiche que les kills
+
+              const bossName = fight.encounter?.name;
+              if (!bossName) return;
+
+              // Maintient l'ordre d'apparition des boss
+              if (!bossSet.has(bossName)) {
+                bossSet.add(bossName);
+                bossOrder.push({ name: bossName, encounterID: fight.encounter?.id });
               }
-            }
-          }`);
 
-          const latestReports = reportData.reportData.reports.data;
-          if (!latestReports || latestReports.length === 0 || !latestReports[0].zone) {
-            return res.status(404).json({ error: 'No reports found to determine current zone.' });
-          }
+              (fight.rankings || []).forEach(player => {
+                if (!player.name) return;
 
-          const zoneId   = latestReports[0].zone.id;
-          const zoneName = latestReports[0].zone.name;
-
-          const data = await wclQuery(token, `
-            query GuildRankings($zoneId: Int!) {
-              guildData {
-                guild(name: "Les Sages de Pandarie", serverSlug: "hyjal", serverRegion: "eu") {
-                  zoneRanking(zoneID: $zoneId) {
-                    progress {
-                      worldRank  { number percentile color }
-                      regionRank { number percentile color }
-                      serverRank { number percentile color }
-                    }
-                    speed {
-                      worldRank  { number percentile color }
-                      regionRank { number percentile color }
-                      serverRank { number percentile color }
-                    }
-                    completeRaidSpeed {
-                      worldRank  { number percentile color }
-                      regionRank { number percentile color }
-                      serverRank { number percentile color }
-                    }
-                  }
+                if (!playerMap[player.name]) {
+                  playerMap[player.name] = {
+                    name:      player.name,
+                    class:     player.class  || null,
+                    spec:      player.spec   || null,
+                    encounters: {}
+                  };
                 }
-              }
-            }
-          `, { zoneId });
 
-          return res.json({ zoneName, rankings: data.guildData.guild.zoneRanking });
+                const existing = playerMap[player.name].encounters[bossName];
+                const pct = typeof player.rankPercent === 'number' ? player.rankPercent : null;
+
+                // Garde le meilleur parse sur les N derniers reports
+                if (pct !== null && (!existing || pct > existing.rankPercent)) {
+                  playerMap[player.name].encounters[bossName] = {
+                    rankPercent: Math.round(pct),
+                    spec:        player.spec      || null,
+                    amount:      Math.round(player.amount || 0),
+                    ilvl:        Math.round(player.itemLevel || 0)
+                  };
+                }
+              });
+            });
+          });
+
+          // Trie les joueurs par moyenne de parse décroissante
+          const players = Object.values(playerMap).sort((a, b) => {
+            const avg = p => {
+              const vals = Object.values(p.encounters).map(e => e.rankPercent);
+              return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
+            };
+            return avg(b) - avg(a);
+          });
+
+          return res.json({ zoneName, bosses: bossOrder, players });
         }
 
       } catch (error) {
-        console.error('WCL error:', error.message);
+        console.error('getWclData error:', error.message);
         res.status(500).json({ error: 'Failed to fetch WCL data', details: error.message });
       }
     });
