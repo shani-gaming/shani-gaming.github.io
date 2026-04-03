@@ -1592,11 +1592,12 @@ async function runWclSync(token) {
       console.warn(`Rankings fetch failed for ${report.code}:`, e.message);
     }
 
-    // Fetch HPS rankings pour les healers (métrique par défaut = DPS, incorrect pour healers)
+    // Fetch HPS rankings pour TOUS les joueurs (pas seulement healers)
+    // On filtre au parse de CE REPORT uniquement (pas le meilleur ever)
     // hpsRankings: { "PlayerName|encounterId": rankPercent }
     const hpsRankings = {};
     if (rankings?.data) {
-      const healerCombos = new Map(); // alias → { name, serverSlug, serverRegion, encounterId, difficulty }
+      const combos = new Map(); // key → { alias, name, serverSlug, serverRegion, encounterId, difficulty }
       rankings.data.forEach(fight => {
         if (!fight.kill) return;
         const encId = fight.encounter?.id;
@@ -1604,22 +1605,27 @@ async function runWclSync(token) {
         const difficulty = killsMap[`${encId}|3`]?.difficulty
                         || killsMap[`${encId}|4`]?.difficulty
                         || 3;
-        (fight.roles?.healers?.characters || []).forEach(healer => {
-          const key = `${healer.name}|${encId}`;
-          if (healerCombos.has(key)) return;
-          const server = healer.server || {};
+        const allChars = [
+          ...(fight.roles?.tanks?.characters   || []),
+          ...(fight.roles?.healers?.characters || []),
+          ...(fight.roles?.dps?.characters     || [])
+        ];
+        allChars.forEach(char => {
+          const key = `${char.name}|${encId}`;
+          if (combos.has(key)) return;
+          const server = char.server || {};
           const slug = server.name
             ? server.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
             : null;
           if (!slug) return;
-          const alias = `h_${healer.name.replace(/[^a-zA-Z0-9]/g, '_')}_${encId}`;
-          healerCombos.set(key, { alias, name: healer.name, serverSlug: slug, serverRegion: (server.region || 'eu').toLowerCase(), encounterId: encId, difficulty });
+          const alias = `p_${char.name.replace(/[^a-zA-Z0-9]/g, '_')}_${encId}`;
+          combos.set(key, { alias, name: char.name, serverSlug: slug, serverRegion: (server.region || 'eu').toLowerCase(), encounterId: encId, difficulty });
         });
       });
 
-      if (healerCombos.size > 0) {
+      if (combos.size > 0) {
         let q = '{ characterData {';
-        for (const combo of healerCombos.values()) {
+        for (const combo of combos.values()) {
           q += ` ${combo.alias}: character(name: "${combo.name}", serverSlug: "${combo.serverSlug}", serverRegion: "${combo.serverRegion}") {`;
           q += ` encounterRankings(encounterID: ${combo.encounterId}, difficulty: ${combo.difficulty}, metric: hps)`;
           q += ' }';
@@ -1628,11 +1634,12 @@ async function runWclSync(token) {
         try {
           const hpsData = await wclQuery(token, q);
           const charData = hpsData?.characterData || {};
-          for (const [key, combo] of healerCombos) {
+          for (const [key, combo] of combos) {
             const ranks = charData[combo.alias]?.encounterRankings?.ranks;
             if (ranks && ranks.length > 0) {
-              const best = Math.max(...ranks.map(r => r.rankPercent || 0));
-              hpsRankings[key] = Math.round(best);
+              // Parse de CE report uniquement — pas le meilleur ever
+              const thisReport = ranks.find(r => r.report?.code === report.code);
+              if (thisReport) hpsRankings[key] = Math.round(thisReport.rankPercent);
             }
           }
         } catch (e) {
@@ -1772,66 +1779,63 @@ exports.getWclData = onRequest(
             guildSnap.docs.map(d => d.data().name?.toLowerCase()).filter(Boolean)
           );
 
-          // playerMap : { name → { class, encounters: { bossName → meilleur parse } } }
-          const playerMap  = {};
+          // playerMap : { name → { class, roleCounts, encounters: { bossName → { damage, healing, role, spec, ilvl } } } }
+          const playerMap = {};
 
           snapshot.docs.forEach(doc => {
             const d        = doc.data();
             const rankings = d.rankings;
-            // Structure WCL : { data: [ { fightID, encounter, kill, roles: { tanks, healers, dps } } ] }
             if (!rankings?.data) return;
 
             const hpsRankings = d.hpsRankings || {};
 
             rankings.data.forEach(fight => {
-              if (!fight.kill) return; // kill peut être 1 (number) ou true
+              if (!fight.kill) return;
 
-              const bossName  = fight.encounter?.name;
+              const bossName    = fight.encounter?.name;
               const encounterId = fight.encounter?.id;
               if (!bossName) return;
 
-              // Maintient l'ordre d'apparition des boss
               if (!bossSet.has(bossName)) {
                 bossSet.add(bossName);
                 bossOrder.push({ name: bossName, encounterID: encounterId });
               }
 
-              // Processus par rôle : healers utilisent HPS, tanks/dps utilisent DPS (default)
               const roleGroups = [
-                { chars: fight.roles?.tanks?.characters   || [], isHealer: false },
-                { chars: fight.roles?.healers?.characters || [], isHealer: true  },
-                { chars: fight.roles?.dps?.characters     || [], isHealer: false }
+                { chars: fight.roles?.tanks?.characters   || [], role: 'tank'   },
+                { chars: fight.roles?.healers?.characters || [], role: 'healer' },
+                { chars: fight.roles?.dps?.characters     || [], role: 'dps'    }
               ];
 
-              roleGroups.forEach(({ chars, isHealer }) => {
+              roleGroups.forEach(({ chars, role }) => {
                 chars.forEach(player => {
                   if (!player.name) return;
-                  // Filtre : membres de la guilde uniquement
                   if (guildNames.size > 0 && !guildNames.has(player.name.toLowerCase())) return;
 
                   if (!playerMap[player.name]) {
                     playerMap[player.name] = {
                       name:       player.name,
                       class:      player.class || null,
-                      spec:       player.spec  || null,
+                      roleCounts: { healer: 0, tank: 0, dps: 0 },
                       encounters: {}
                     };
                   }
 
-                  // Pour les healers, utilise HPS si disponible ; sinon fallback DPS
-                  const hpsKey = `${player.name}|${encounterId}`;
-                  const rawPct = isHealer && hpsRankings[hpsKey] != null
-                    ? hpsRankings[hpsKey]
-                    : (typeof player.rankPercent === 'number' ? player.rankPercent : null);
-                  const pct = rawPct !== null ? Math.round(rawPct) : null;
+                  playerMap[player.name].roleCounts[role]++;
+
+                  const damagePct  = typeof player.rankPercent === 'number' ? Math.round(player.rankPercent) : null;
+                  const hpsKey     = `${player.name}|${encounterId}`;
+                  const healingPct = hpsRankings[hpsKey] ?? null;
 
                   const existing = playerMap[player.name].encounters[bossName];
-                  // Garde le meilleur parse sur les N derniers reports
-                  if (pct !== null && (!existing || pct > existing.rankPercent)) {
+                  // Garde le meilleur parse damage sur les N derniers reports pour ce boss
+                  if (damagePct !== null && (!existing || damagePct > (existing.damage || 0))) {
                     playerMap[player.name].encounters[bossName] = {
-                      rankPercent: pct,
-                      spec:        player.spec || null,
-                      ilvl:        Math.round(player.bracketData || 0)
+                      damage:  damagePct,
+                      healing: healingPct,
+                      role:    role,
+                      spec:    player.spec  || null,
+                      ilvl:    Math.round(player.bracketData || 0)
                     };
                   }
                 });
@@ -1839,14 +1843,19 @@ exports.getWclData = onRequest(
             });
           });
 
-          // Trie les joueurs par moyenne de parse décroissante
-          const players = Object.values(playerMap).sort((a, b) => {
-            const avg = p => {
-              const vals = Object.values(p.encounters).map(e => e.rankPercent);
-              return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
-            };
-            return avg(b) - avg(a);
+          // Détermine le rôle principal (le plus fréquent) de chaque joueur
+          const players = Object.values(playerMap).map(p => {
+            const primaryRole = Object.entries(p.roleCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'dps';
+            return { name: p.name, class: p.class, primaryRole, encounters: p.encounters };
           });
+
+          // Trie par rôle puis par moyenne de parse (damage) décroissante
+          const roleOrder = { tank: 1, healer: 2, dps: 0 };
+          const avgDamage = p => {
+            const vals = Object.values(p.encounters).map(e => e.damage || 0);
+            return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
+          };
+          players.sort((a, b) => avgDamage(b) - avgDamage(a));
 
           return res.json({ zoneName, bosses: bossOrder, players });
         }

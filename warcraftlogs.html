@@ -257,6 +257,42 @@
         /* Average column */
         .avg-cell { font-weight: 700; font-size: 0.82rem; }
 
+        /* Onglets Dégâts / Soins */
+        .rankings-tabs {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding-bottom: 0;
+        }
+        .rankings-tab {
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: -1px;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .rankings-tab:hover { color: var(--text-main); }
+        .rankings-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        /* Titre de section rôle dans la table */
+        .role-section-header td {
+            padding: 0.6rem 0.5rem 0.3rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
         .rankings-note {
             font-size: 0.75rem;
             color: var(--text-muted);
@@ -350,15 +386,20 @@
                         <span>Chargement des rankings…</span>
                         <div class="load-bar-wrap"><div class="load-bar" style="width:40%;animation:none"></div></div>
                     </div>
-                    <div class="rankings-wrap" id="rankingsWrap" style="display:none">
-                        <table class="rankings-table">
-                            <thead id="rankingsHead"></thead>
-                            <tbody id="rankingsBody"></tbody>
-                        </table>
+
+                    <!-- Onglets Dégâts / Soins -->
+                    <div id="rankingsTabs" style="display:none">
+                        <div class="rankings-tabs">
+                            <button class="rankings-tab active" onclick="switchTab('damage', this)">Dégâts</button>
+                            <button class="rankings-tab" onclick="switchTab('healing', this)">Soins</button>
+                        </div>
+                        <div id="tabDamage" class="rankings-tab-content"></div>
+                        <div id="tabHealing" class="rankings-tab-content" style="display:none"></div>
+                        <p class="rankings-note">
+                            Meilleur parse sur les 3 derniers reports · Source : WarcraftLogs
+                        </p>
                     </div>
-                    <p class="rankings-note" id="rankingsNote" style="display:none">
-                        Meilleur parse sur les 3 derniers reports · Source : WarcraftLogs
-                    </p>
+
                     <div class="status-box" id="rankingsEmpty" style="padding:3rem 0; display:none">
                         <h3 style="font-size:0.95rem;color:var(--text-muted)">Aucun ranking disponible</h3>
                     </div>
@@ -477,6 +518,93 @@
 
         // ── Rankings matrix ───────────────────────────────────────────────────
 
+        let _rankingsData = null; // cache pour switchTab
+
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.rankings-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tabDamage').style.display  = tab === 'damage'  ? 'block' : 'none';
+            document.getElementById('tabHealing').style.display = tab === 'healing' ? 'block' : 'none';
+        }
+
+        // Génère une table pour un onglet donné (metric: 'damage' ou 'healing')
+        function buildRankingsTable(bosses, players, metric) {
+            const ROLE_LABEL = { dps: 'Damage Dealers', tank: 'Tanks', healer: 'Healers' };
+            // Ordre des sections : DPS d'abord, puis Tanks, puis Healers
+            const ROLE_ORDER = metric === 'healing'
+                ? ['healer', 'tank', 'dps']   // Soins : healers en premier
+                : ['dps', 'tank', 'healer'];   // Dégâts : DPS en premier
+
+            const header = `<thead><tr>
+                <th>Joueur</th>
+                ${bosses.map(b => `<th class="boss-th">${escHtml(b.name)}</th>`).join('')}
+                <th>Moy.</th>
+            </tr></thead>`;
+
+            let tbody = '<tbody>';
+
+            ROLE_ORDER.forEach(role => {
+                // Joueurs avec ce rôle principal, triés par moyenne décroissante
+                const group = players
+                    .filter(p => p.primaryRole === role)
+                    .map(p => {
+                        const vals = bosses.map(b => {
+                            const enc = p.encounters[b.name];
+                            if (!enc || enc.role !== role) return null;
+                            return metric === 'healing' ? enc.healing : enc.damage;
+                        }).filter(v => v !== null && v !== undefined);
+                        const avg = vals.length ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : null;
+                        return { ...p, avg };
+                    })
+                    .filter(p => p.avg !== null)
+                    .sort((a, b) => (b.avg || 0) - (a.avg || 0));
+
+                if (group.length === 0) return;
+
+                const colSpan = bosses.length + 2;
+                tbody += `<tr class="role-section-header"><td colspan="${colSpan}">${ROLE_LABEL[role]}</td></tr>`;
+
+                group.forEach(player => {
+                    const classColor = CLASS_COLORS[player.class?.replace(/\s/g, '')] || 'var(--text-main)';
+
+                    // Spec principale pour le badge
+                    const specCount = {};
+                    Object.values(player.encounters).forEach(e => {
+                        if (e.spec) specCount[e.spec] = (specCount[e.spec] || 0) + 1;
+                    });
+                    const primarySpec = Object.entries(specCount).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
+                    const cells = bosses.map(boss => {
+                        const enc = player.encounters[boss.name];
+                        // Dans cette section, ne montrer que les boss joués dans ce rôle
+                        if (!enc || enc.role !== role) return `<td><span class="parse-none">—</span></td>`;
+
+                        const pct = metric === 'healing' ? enc.healing : enc.damage;
+                        if (pct == null) return `<td><span class="parse-none">—</span></td>`;
+
+                        const color = parseColor(pct);
+                        const spec  = enc.spec || '';
+                        const tooltip = spec ? `title="${escHtml(spec)}${enc.ilvl ? ' · ' + enc.ilvl + ' ilvl' : ''}"` : '';
+                        return `<td><span class="parse-cell" style="color:${color}" ${tooltip}>${pct}</span></td>`;
+                    }).join('');
+
+                    const avgColor = player.avg !== null ? parseColor(player.avg) : '';
+                    const avgHtml  = player.avg !== null
+                        ? `<span class="avg-cell" style="color:${avgColor}">${player.avg}</span>`
+                        : `<span class="parse-none">—</span>`;
+
+                    tbody += `<tr>
+                        <td><span class="player-name" style="color:${classColor}">${escHtml(player.name)}</span></td>
+                        ${cells}
+                        <td>${avgHtml}</td>
+                    </tr>`;
+                });
+            });
+
+            tbody += '</tbody>';
+            return `<div class="rankings-wrap"><table class="rankings-table">${header}${tbody}</table></div>`;
+        }
+
         function renderRankings(zoneName, bosses, players) {
             if (zoneName) {
                 document.getElementById('rankingsTitle').textContent = `Rankings — ${zoneName}`;
@@ -487,63 +615,11 @@
                 return;
             }
 
-            // En-têtes : joueur | boss1 | boss2 | ... | moy.
-            const thead = document.getElementById('rankingsHead');
-            thead.innerHTML = `<tr>
-                <th>Joueur</th>
-                ${bosses.map(b => `<th class="boss-th">${escHtml(b.name)}</th>`).join('')}
-                <th>Moy.</th>
-            </tr>`;
+            _rankingsData = { bosses, players };
 
-            // Corps
-            const tbody = document.getElementById('rankingsBody');
-            tbody.innerHTML = '';
-
-            players.forEach(player => {
-                const classColor = CLASS_COLORS[player.class?.replace(/\s/g, '')] || 'var(--text-main)';
-
-                // Spec principale = spec la plus fréquente parmi les encounters
-                const specCount = {};
-                Object.values(player.encounters).forEach(e => {
-                    if (e.spec) specCount[e.spec] = (specCount[e.spec] || 0) + 1;
-                });
-                const primarySpec = Object.entries(specCount).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
-
-                let total = 0, count = 0;
-
-                const cells = bosses.map(boss => {
-                    const enc = player.encounters[boss.name];
-                    if (!enc) return `<td><span class="parse-none">—</span></td>`;
-
-                    // N'inclut dans la moyenne que les boss joués dans la spec principale
-                    const isMainSpec = !primarySpec || enc.spec === primarySpec;
-                    if (isMainSpec) { total += enc.rankPercent; count++; }
-
-                    const color = parseColor(enc.rankPercent);
-                    const tooltip = enc.spec ? `title="${escHtml(enc.spec)}${enc.ilvl ? ' · ' + enc.ilvl + ' ilvl' : ''}"` : '';
-                    // Badge spec uniquement si spec différente de la spec principale
-                    const specBadge = (enc.spec && enc.spec !== primarySpec)
-                        ? `<span class="spec-badge">${escHtml(SPEC_SHORT[enc.spec] || enc.spec)}</span>`
-                        : '';
-                    return `<td><span class="parse-cell" style="color:${color}" ${tooltip}>${enc.rankPercent}${specBadge}</span></td>`;
-                }).join('');
-
-                const avg     = count > 0 ? Math.round(total / count) : null;
-                const avgHtml = avg !== null
-                    ? `<span class="avg-cell" style="color:${parseColor(avg)}">${avg}</span>`
-                    : `<span class="parse-none">—</span>`;
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><span class="player-name" style="color:${classColor}">${escHtml(player.name)}</span></td>
-                    ${cells}
-                    <td>${avgHtml}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            document.getElementById('rankingsWrap').style.display = 'block';
-            document.getElementById('rankingsNote').style.display = 'block';
+            document.getElementById('tabDamage').innerHTML  = buildRankingsTable(bosses, players, 'damage');
+            document.getElementById('tabHealing').innerHTML = buildRankingsTable(bosses, players, 'healing');
+            document.getElementById('rankingsTabs').style.display = 'block';
         }
 
         // ── Sync manuelle (admin) ─────────────────────────────────────────────
