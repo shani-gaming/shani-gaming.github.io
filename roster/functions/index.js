@@ -1623,13 +1623,13 @@ exports.getWclData = onRequest(
             query GuildRankings($zoneId: Int!) {
               guildData {
                 guild(name: "Les Sages de Pandarie", serverSlug: "hyjal", serverRegion: "eu") {
-                  zoneRankings(zoneID: $zoneId)
+                  zoneRanking(zoneID: $zoneId)
                 }
               }
             }
           `, { zoneId });
 
-          return res.json({ zoneName, rankings: data.guildData.guild.zoneRankings });
+          return res.json({ zoneName, rankings: data.guildData.guild.zoneRanking });
         }
 
       } catch (error) {
