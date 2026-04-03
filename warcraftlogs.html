@@ -156,7 +156,21 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── Admin sync button ── */
+        /* ── Admin buttons ── */
+        .admin-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .admin-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .admin-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(212,175,55,0.1); }
+
         .btn-sync {
             display: none;
             align-items: center;
@@ -256,6 +270,7 @@
                     <h1>WarcraftLogs</h1>
                     <p>Rapports de raid et performances de la guilde</p>
                 </div>
+                <button id="adminBtn" class="admin-btn" onclick="toggleAdmin()">Admin</button>
             </div>
         </div>
     </header>
@@ -562,25 +577,35 @@
             }
         }
 
-        // ── Firebase Auth (admin check) ───────────────────────────────────────
-        // Chargé en async, n'empêche pas l'affichage des données
-        function initFirebaseAuth() {
+        // ── Admin auth ────────────────────────────────────────────────────────
+        function toggleAdmin() {
             if (typeof firebase === 'undefined') return;
-            firebase.auth().onAuthStateChanged(async user => {
-                if (!user) return;
-                try {
-                    const doc = await firebase.firestore()
-                        .collection('admins').doc(user.email).get();
-                    if (doc.exists) {
-                        isAdmin = true;
-                        document.getElementById('syncBtn').classList.add('admin-visible');
-                    }
-                } catch (e) { /* pas admin */ }
-            });
+            const auth = firebase.auth();
+            if (isAdmin) {
+                auth.signOut();
+                isAdmin = false;
+                document.getElementById('adminBtn').textContent = 'Admin';
+                document.getElementById('adminBtn').classList.remove('active');
+                document.getElementById('syncBtn').classList.remove('admin-visible');
+                return;
+            }
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).then(async result => {
+                const email = result.user.email;
+                const doc = await firebase.firestore().collection('admins').doc(email).get();
+                if (doc.exists) {
+                    isAdmin = true;
+                    document.getElementById('adminBtn').textContent = 'Quitter admin';
+                    document.getElementById('adminBtn').classList.add('active');
+                    document.getElementById('syncBtn').classList.add('admin-visible');
+                } else {
+                    auth.signOut();
+                    alert("Vous n'êtes pas administrateur.");
+                }
+            }).catch(err => console.error('Auth error:', err));
         }
 
         init();
-        initFirebaseAuth();
     </script>
 
     <!-- Firebase SDK (pour admin check uniquement) -->
