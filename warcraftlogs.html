@@ -443,13 +443,13 @@
 
         // ── Parse colors (WoW standard) ───────────────────────────────────────
         function parseColor(pct) {
-            if (pct >= 100) return '#e6cc80';
-            if (pct >= 99)  return '#ff8000';
-            if (pct >= 95)  return '#a335ee';
-            if (pct >= 75)  return '#0070dd';
-            if (pct >= 50)  return '#1eff00';
-            if (pct >= 25)  return '#ffffff';
-            return '#9d9d9d';
+            if (pct >= 100) return '#e6cc80'; // or
+            if (pct >= 99)  return '#ff69b4'; // rose
+            if (pct >= 95)  return '#ff8000'; // orange
+            if (pct >= 75)  return '#a335ee'; // violet
+            if (pct >= 50)  return '#0070dd'; // bleu
+            if (pct >= 25)  return '#ffffff'; // blanc
+            return '#9d9d9d';                 // gris
         }
 
         // ── Firebase admin check ──────────────────────────────────────────────
