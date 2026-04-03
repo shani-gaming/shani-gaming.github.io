@@ -72,6 +72,24 @@
         .status-box h3 { font-size: 1.2rem; color: var(--text-main); margin: 0; }
         .status-box p { font-size: 0.9rem; max-width: 400px; line-height: 1.6; margin: 0; }
 
+        /* ── Section titles ── */
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            margin-top: 2.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .section-title:first-child { margin-top: 0; }
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
         /* ── Reports grid ── */
         .reports-grid {
             display: grid;
@@ -100,7 +118,6 @@
             justify-content: space-between;
             gap: 0.75rem;
         }
-
         .report-date {
             font-size: 0.78rem;
             font-weight: 700;
@@ -113,19 +130,11 @@
             color: var(--text-muted);
             white-space: nowrap;
         }
-
-        .report-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--text-main);
-            line-height: 1.3;
-        }
         .report-owner {
             font-size: 0.8rem;
             color: var(--text-muted);
             margin-top: 0.15rem;
         }
-
         .kill-list {
             display: flex;
             flex-wrap: wrap;
@@ -155,7 +164,6 @@
             color: var(--text-muted);
             font-style: italic;
         }
-
         .report-footer {
             margin-top: auto;
             padding-top: 0.5rem;
@@ -172,8 +180,6 @@
             transition: color 0.15s;
         }
         .report-link:hover { color: #fff; }
-        .report-link svg { flex-shrink: 0; }
-
         .kill-count-badge {
             display: inline-flex;
             align-items: center;
@@ -188,20 +194,89 @@
             white-space: nowrap;
         }
 
-        /* ── Section titles ── */
-        .section-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin-bottom: 1.25rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+        /* ── Rankings ── */
+        .rankings-table-wrap {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border);
         }
-        .section-title::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border);
+        .rankings-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .rankings-table thead th {
+            background: var(--bg-surface);
+            padding: 0.75rem 1rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+            text-align: left;
+        }
+        .rankings-table thead th:not(:first-child) { text-align: center; }
+        .rankings-table tbody tr {
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            transition: background 0.1s;
+        }
+        .rankings-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+        .rankings-table tbody tr:last-child { border-bottom: none; }
+        .rankings-table td {
+            padding: 0.65rem 1rem;
+            background: var(--bg-card);
+            vertical-align: middle;
+        }
+        .rankings-table td:not(:first-child) { text-align: center; }
+
+        .boss-name { font-weight: 600; color: var(--text-main); }
+        .diff-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            margin-left: 0.4rem;
+            vertical-align: middle;
+        }
+        .diff-badge.normal  { background: rgba(255,209,0,0.1);  color: #ffd100; border: 1px solid rgba(255,209,0,0.2); }
+        .diff-badge.heroic  { background: rgba(0,163,255,0.1);  color: #00a3ff; border: 1px solid rgba(0,163,255,0.2); }
+        .diff-badge.mythic  { background: rgba(163,53,238,0.12); color: #a335ee; border: 1px solid rgba(163,53,238,0.25); }
+
+        /* Rank % color coding (WoW parse colors) */
+        .rank-pct {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .rank-pct.legendary { color: #ff8000; }  /* 99 */
+        .rank-pct.epic      { color: #a335ee; }  /* 95-98 */
+        .rank-pct.rare      { color: #0070dd; }  /* 75-94 */
+        .rank-pct.uncommon  { color: #1eff00; }  /* 50-74 */
+        .rank-pct.common    { color: var(--text-muted); }  /* <50 */
+
+        .rank-bar-wrap {
+            width: 80px;
+            height: 5px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 3px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 0.4rem;
+        }
+        .rank-bar {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .kills-cell { color: var(--text-muted); font-size: 0.82rem; }
+        .fastest-cell { color: var(--text-muted); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+
+        .rankings-note {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.75rem;
+            font-style: italic;
         }
 
         @media (max-width: 640px) {
@@ -215,7 +290,7 @@
 
     <header class="page-header">
         <div class="container">
-            <span class="tier-label">Voidspire</span>
+            <span class="tier-label">Saison 1</span>
             <h1>WarcraftLogs</h1>
             <p>Rapports de raid et performances de la guilde</p>
         </div>
@@ -246,10 +321,40 @@
                 <p>Aucun log de raid n'a encore été enregistré pour la guilde.</p>
             </div>
 
-            <!-- Reports -->
-            <div id="reportsSection" style="display:none">
+            <!-- Contenu principal -->
+            <div id="mainContent" style="display:none">
+
+                <!-- Reports -->
                 <h2 class="section-title">Reports récents</h2>
                 <div class="reports-grid" id="reportsGrid"></div>
+
+                <!-- Rankings -->
+                <h2 class="section-title" id="rankingsTitle">Rankings</h2>
+                <div id="rankingsWrap">
+                    <div class="load-progress" id="rankingsProgress" style="display:none">
+                        <span>Chargement des rankings…</span>
+                        <div class="load-bar-wrap"><div class="load-bar" id="rankingsBar" style="width:30%"></div></div>
+                    </div>
+                    <div class="rankings-table-wrap" id="rankingsTableWrap" style="display:none">
+                        <table class="rankings-table">
+                            <thead>
+                                <tr>
+                                    <th>Boss</th>
+                                    <th>Meilleur %</th>
+                                    <th>Kills</th>
+                                    <th>Fastest kill</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rankingsBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="rankings-note" id="rankingsNote" style="display:none"></p>
+                    <div class="status-box" id="rankingsError" style="padding:2rem">
+                        <div class="status-box-icon" style="font-size:2rem">—</div>
+                        <h3 id="rankingsErrorMsg" style="font-size:1rem">Impossible de charger les rankings</h3>
+                    </div>
+                </div>
+
             </div>
 
         </div>
@@ -258,40 +363,57 @@
     <script>
         const WCL_API = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getWclData';
 
-        const DIFF_CLASS = { 'Normal': '', 'Héroïque': 'heroic', 'Mythique': 'mythic' };
+        const DIFF_CLASS  = { 'Normal': '', 'Héroïque': 'heroic', 'Mythique': 'mythic' };
+        const DIFF_LABELS = { 3: 'Normal', 4: 'Héroïque', 5: 'Mythique' };
 
-        function setProgress(pct, text) {
-            document.getElementById('loadBar').style.width = pct + '%';
-            if (text) document.getElementById('loadText').textContent = text;
+        function escHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
         function formatDate(ms) {
-            return new Date(ms).toLocaleDateString('fr-FR', {
-                day: '2-digit', month: 'long', year: 'numeric'
-            });
+            return new Date(ms).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
         }
 
         function formatDuration(startMs, endMs) {
             if (!endMs) return '';
             const diff = Math.round((endMs - startMs) / 60000);
-            const h = Math.floor(diff / 60);
-            const m = diff % 60;
+            const h = Math.floor(diff / 60), m = diff % 60;
             return h > 0 ? `${h}h${String(m).padStart(2,'0')}` : `${m} min`;
         }
+
+        function formatMs(ms) {
+            if (!ms) return '—';
+            const total = Math.round(ms / 1000);
+            const m = Math.floor(total / 60), s = total % 60;
+            return `${m}:${String(s).padStart(2,'0')}`;
+        }
+
+        function rankColor(pct) {
+            if (pct >= 99) return 'legendary';
+            if (pct >= 95) return 'epic';
+            if (pct >= 75) return 'rare';
+            if (pct >= 50) return 'uncommon';
+            return 'common';
+        }
+
+        function rankBarColor(pct) {
+            if (pct >= 99) return '#ff8000';
+            if (pct >= 95) return '#a335ee';
+            if (pct >= 75) return '#0070dd';
+            if (pct >= 50) return '#1eff00';
+            return '#9d9d9d';
+        }
+
+        // ── Reports ──────────────────────────────────────────────────────────
 
         function renderReports(reports) {
             const grid = document.getElementById('reportsGrid');
             grid.innerHTML = '';
-
             reports.forEach(r => {
-                const duration = formatDuration(r.startTime, r.endTime);
+                const duration  = formatDuration(r.startTime, r.endTime);
                 const killCount = r.kills.length;
-
                 const killsHtml = killCount > 0
-                    ? r.kills.map(k => {
-                        const cls = DIFF_CLASS[k.difficulty] || '';
-                        return `<span class="kill-tag ${cls}">${k.name}</span>`;
-                      }).join('')
+                    ? r.kills.map(k => `<span class="kill-tag ${DIFF_CLASS[k.difficulty] || ''}">${escHtml(k.name)}</span>`).join('')
                     : `<span class="no-kills">Aucun boss tué</span>`;
 
                 const card = document.createElement('div');
@@ -300,7 +422,6 @@
                     <div class="report-header">
                         <div>
                             <div class="report-date">${formatDate(r.startTime)}</div>
-                            ${r.title ? `<div class="report-title">${escHtml(r.title)}</div>` : ''}
                             ${r.owner ? `<div class="report-owner">par ${escHtml(r.owner)}</div>` : ''}
                         </div>
                         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.3rem">
@@ -324,23 +445,83 @@
             });
         }
 
-        function escHtml(str) {
-            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        // ── Rankings ─────────────────────────────────────────────────────────
+
+        function renderRankings(zoneName, rankings) {
+            if (zoneName) {
+                document.getElementById('rankingsTitle').textContent = `Rankings — ${zoneName}`;
+            }
+
+            // rankings peut être un objet { rankings: [...], difficulty: X }
+            const rows = Array.isArray(rankings)
+                ? rankings
+                : (rankings?.rankings || []);
+
+            if (!rows.length) {
+                document.getElementById('rankingsError').classList.add('visible');
+                document.getElementById('rankingsErrorMsg').textContent = 'Aucun ranking disponible pour cette zone.';
+                return;
+            }
+
+            const difficulty = rankings?.difficulty;
+            const diffLabel  = DIFF_LABELS[difficulty] || '';
+            const diffClass  = difficulty === 4 ? 'heroic' : difficulty === 5 ? 'mythic' : 'normal';
+
+            const tbody = document.getElementById('rankingsBody');
+            tbody.innerHTML = '';
+
+            rows.forEach(row => {
+                const bossName  = row.encounter?.name || row.name || '—';
+                const bestPct   = typeof row.rankPercent === 'number' ? Math.round(row.rankPercent) : null;
+                const totalKills = row.totalKills ?? row.kills ?? '—';
+                const fastest   = row.fastestKill || row.fastest || null;
+
+                const pctHtml = bestPct !== null
+                    ? `<span class="rank-pct ${rankColor(bestPct)}">${bestPct}%</span>
+                       <span class="rank-bar-wrap"><span class="rank-bar" style="width:${bestPct}%;background:${rankBarColor(bestPct)}"></span></span>`
+                    : '<span class="rank-pct common">—</span>';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <span class="boss-name">${escHtml(bossName)}</span>
+                        ${diffLabel ? `<span class="diff-badge ${diffClass}">${diffLabel}</span>` : ''}
+                    </td>
+                    <td>${pctHtml}</td>
+                    <td class="kills-cell">${totalKills}</td>
+                    <td class="fastest-cell">${formatMs(fastest)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('rankingsTableWrap').style.display = 'block';
+            document.getElementById('rankingsNote').textContent = 'Source : WarcraftLogs — mis à jour à chaque chargement de la page.';
+            document.getElementById('rankingsNote').style.display = 'block';
         }
 
-        async function loadReports() {
-            setProgress(20, 'Connexion à WarcraftLogs…');
-            try {
-                const resp = await fetch(`${WCL_API}?type=reports`);
-                setProgress(70, 'Traitement des données…');
+        // ── Init ─────────────────────────────────────────────────────────────
 
-                if (!resp.ok) {
-                    const err = await resp.json().catch(() => ({}));
-                    throw new Error(err.error || `HTTP ${resp.status}`);
+        async function init() {
+            document.getElementById('loadBar').style.width = '20%';
+            document.getElementById('loadText').textContent = 'Connexion à WarcraftLogs…';
+
+            try {
+                // Charge reports et rankings en parallèle
+                const [reportsResp, rankingsResp] = await Promise.all([
+                    fetch(`${WCL_API}?type=reports`),
+                    fetch(`${WCL_API}?type=rankings`)
+                ]);
+
+                document.getElementById('loadBar').style.width = '80%';
+                document.getElementById('loadText').textContent = 'Traitement…';
+
+                if (!reportsResp.ok) {
+                    const err = await reportsResp.json().catch(() => ({}));
+                    throw new Error(err.error || `HTTP ${reportsResp.status}`);
                 }
 
-                const { reports } = await resp.json();
-                setProgress(100);
+                const { reports } = await reportsResp.json();
+
                 document.getElementById('loadProgress').style.display = 'none';
 
                 if (!reports || reports.length === 0) {
@@ -348,18 +529,27 @@
                     return;
                 }
 
-                document.getElementById('reportsSection').style.display = 'block';
+                document.getElementById('mainContent').style.display = 'block';
                 renderReports(reports);
+
+                // Rankings
+                if (rankingsResp.ok) {
+                    const rankData = await rankingsResp.json();
+                    renderRankings(rankData.zoneName, rankData.rankings);
+                } else {
+                    document.getElementById('rankingsError').classList.add('visible');
+                    document.getElementById('rankingsErrorMsg').textContent = 'Impossible de charger les rankings.';
+                }
 
             } catch (err) {
                 document.getElementById('loadProgress').style.display = 'none';
                 document.getElementById('errorMsg').textContent = err.message;
                 document.getElementById('errorBox').classList.add('visible');
-                console.error('WCL fetch error:', err);
+                console.error('WCL error:', err);
             }
         }
 
-        loadReports();
+        init();
     </script>
 </body>
 </html>

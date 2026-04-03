@@ -18,6 +18,7 @@ const discordClientSecret = defineSecret('DISCORD_CLIENT_SECRET');
 const discordGuildId = defineSecret('DISCORD_GUILD_ID');
 const discordWebhookUrl = defineSecret('DISCORD_WEBHOOK_URL');
 const raidHelperApiKey = defineSecret('RAIDHELPER_API_KEY');
+const wclCredentials = defineSecret('WCL_CREDENTIALS');
 // CORS configuration - Allow GitHub Pages and custom domain
 const corsOptions = {
   origin: [
@@ -1479,6 +1480,161 @@ exports.getEventDetails = onRequest(
       } catch (error) {
         console.error('Error fetching event details:', error.message);
         res.status(500).json({ error: 'Failed to fetch event details', details: error.message });
+      }
+    });
+  }
+);
+
+// ─── WarcraftLogs ─────────────────────────────────────────────────────────────
+
+// Cache token en mémoire (réutilisé entre invocations "chaudes")
+let _wclTokenCache = { token: null, expiresAt: 0 };
+
+async function getWclToken(clientId, clientSecret) {
+  const now = Date.now();
+  if (_wclTokenCache.token && _wclTokenCache.expiresAt > now + 60_000) {
+    return _wclTokenCache.token;
+  }
+  const resp = await axios.post(
+    'https://www.warcraftlogs.com/oauth/token',
+    new URLSearchParams({ grant_type: 'client_credentials' }),
+    {
+      auth: { username: clientId, password: clientSecret },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    }
+  );
+  _wclTokenCache = {
+    token: resp.data.access_token,
+    expiresAt: now + resp.data.expires_in * 1000
+  };
+  return _wclTokenCache.token;
+}
+
+async function wclQuery(token, query, variables = {}) {
+  const resp = await axios.post(
+    'https://www.warcraftlogs.com/api/v2/client',
+    { query, variables },
+    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+  );
+  if (resp.data.errors) throw new Error(resp.data.errors[0].message);
+  return resp.data.data;
+}
+
+const DIFFICULTY_LABEL = { 1: 'LFR', 3: 'Normal', 4: 'Héroïque', 5: 'Mythique' };
+
+/**
+ * Récupère les données WarcraftLogs de la guilde
+ * GET ?type=reports                  → liste des reports récents
+ * GET ?type=rankings[&zoneId=XX]     → rankings par boss
+ */
+exports.getWclData = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10,
+    secrets: [wclCredentials]
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        if (req.method !== 'GET') {
+          return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        const type = req.query.type;
+        if (!['reports', 'rankings'].includes(type)) {
+          return res.status(400).json({ error: 'Invalid type. Use reports or rankings.' });
+        }
+
+        const creds = JSON.parse(wclCredentials.value().trim());
+        const token = await getWclToken(creds.client_id, creds.client_secret);
+
+        // ── Reports ──────────────────────────────────────────────────────────
+        if (type === 'reports') {
+          const data = await wclQuery(token, `{
+            reportData {
+              reports(
+                guildName: "Les Sages de Pandarie"
+                guildServerSlug: "hyjal"
+                guildServerRegion: "eu"
+                limit: 3
+              ) {
+                data {
+                  code
+                  startTime
+                  endTime
+                  title
+                  owner { name }
+                  zone { id name }
+                  fights(killType: Kills) {
+                    name
+                    difficulty
+                  }
+                }
+              }
+            }
+          }`);
+
+          const reports = (data.reportData.reports.data || []).map(r => {
+            // Déduplique les boss kills et groupe par difficulté
+            const killsMap = {};
+            (r.fights || []).forEach(f => {
+              const key = `${f.name}|${f.difficulty}`;
+              if (!killsMap[key]) killsMap[key] = { name: f.name, difficulty: DIFFICULTY_LABEL[f.difficulty] || 'Normal' };
+            });
+            return {
+              code:       r.code,
+              url:        `https://www.warcraftlogs.com/reports/${r.code}`,
+              startTime:  r.startTime,
+              endTime:    r.endTime,
+              title:      r.title || null,
+              owner:      r.owner?.name || null,
+              kills:      Object.values(killsMap)
+            };
+          });
+
+          return res.json({ reports });
+        }
+
+        // ── Rankings ─────────────────────────────────────────────────────────
+        if (type === 'rankings') {
+          // Auto-détecte la zone depuis le report le plus récent
+          const reportData = await wclQuery(token, `{
+            reportData {
+              reports(
+                guildName: "Les Sages de Pandarie"
+                guildServerSlug: "hyjal"
+                guildServerRegion: "eu"
+                limit: 1
+              ) {
+                data { zone { id name } }
+              }
+            }
+          }`);
+
+          const latestReports = reportData.reportData.reports.data;
+          if (!latestReports || latestReports.length === 0 || !latestReports[0].zone) {
+            return res.status(404).json({ error: 'No reports found to determine current zone.' });
+          }
+
+          const zoneId   = latestReports[0].zone.id;
+          const zoneName = latestReports[0].zone.name;
+
+          const data = await wclQuery(token, `
+            query GuildRankings($zoneId: Int!) {
+              guildData {
+                guild(name: "Les Sages de Pandarie", serverSlug: "hyjal", serverRegion: "eu") {
+                  zoneRankings(zoneID: $zoneId)
+                }
+              }
+            }
+          `, { zoneId });
+
+          return res.json({ zoneName, rankings: data.guildData.guild.zoneRankings });
+        }
+
+      } catch (error) {
+        console.error('WCL error:', error.message);
+        res.status(500).json({ error: 'Failed to fetch WCL data', details: error.message });
       }
     });
   }
