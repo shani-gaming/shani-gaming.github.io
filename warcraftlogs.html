@@ -194,84 +194,51 @@
             white-space: nowrap;
         }
 
-        /* ── Rankings ── */
-        .rankings-table-wrap {
-            overflow-x: auto;
-            border-radius: 10px;
+        /* ── Rankings cards ── */
+        .rankings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+        .ranking-card {
+            background: var(--bg-card);
             border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.4rem 1.5rem;
         }
-        .rankings-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-        .rankings-table thead th {
-            background: var(--bg-surface);
-            padding: 0.75rem 1rem;
-            font-size: 0.7rem;
+        .ranking-card-title {
+            font-size: 0.72rem;
             font-weight: 700;
-            letter-spacing: 0.07em;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
             color: var(--text-muted);
-            border-bottom: 2px solid var(--border);
-            white-space: nowrap;
-            text-align: left;
+            margin-bottom: 1.1rem;
         }
-        .rankings-table thead th:not(:first-child) { text-align: center; }
-        .rankings-table tbody tr {
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            transition: background 0.1s;
+        .rank-rows { display: flex; flex-direction: column; gap: 0.65rem; }
+        .rank-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
         }
-        .rankings-table tbody tr:hover { background: rgba(255,255,255,0.03); }
-        .rankings-table tbody tr:last-child { border-bottom: none; }
-        .rankings-table td {
-            padding: 0.65rem 1rem;
-            background: var(--bg-card);
-            vertical-align: middle;
+        .rank-scope {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            min-width: 60px;
         }
-        .rankings-table td:not(:first-child) { text-align: center; }
-
-        .boss-name { font-weight: 600; color: var(--text-main); }
-        .diff-badge {
-            font-size: 0.65rem;
+        .rank-number {
+            font-size: 1.3rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+        .rank-pct-pill {
+            font-size: 0.7rem;
             font-weight: 700;
-            padding: 0.1rem 0.4rem;
-            border-radius: 3px;
-            margin-left: 0.4rem;
-            vertical-align: middle;
+            padding: 0.15rem 0.5rem;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.06);
         }
-        .diff-badge.normal  { background: rgba(255,209,0,0.1);  color: #ffd100; border: 1px solid rgba(255,209,0,0.2); }
-        .diff-badge.heroic  { background: rgba(0,163,255,0.1);  color: #00a3ff; border: 1px solid rgba(0,163,255,0.2); }
-        .diff-badge.mythic  { background: rgba(163,53,238,0.12); color: #a335ee; border: 1px solid rgba(163,53,238,0.25); }
-
-        /* Rank % color coding (WoW parse colors) */
-        .rank-pct {
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-        .rank-pct.legendary { color: #ff8000; }  /* 99 */
-        .rank-pct.epic      { color: #a335ee; }  /* 95-98 */
-        .rank-pct.rare      { color: #0070dd; }  /* 75-94 */
-        .rank-pct.uncommon  { color: #1eff00; }  /* 50-74 */
-        .rank-pct.common    { color: var(--text-muted); }  /* <50 */
-
-        .rank-bar-wrap {
-            width: 80px;
-            height: 5px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 3px;
-            display: inline-block;
-            vertical-align: middle;
-            margin-left: 0.4rem;
-        }
-        .rank-bar {
-            height: 100%;
-            border-radius: 3px;
-        }
-
-        .kills-cell { color: var(--text-muted); font-size: 0.82rem; }
-        .fastest-cell { color: var(--text-muted); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
-
         .rankings-note {
             font-size: 0.78rem;
             color: var(--text-muted);
@@ -329,29 +296,12 @@
                 <div class="reports-grid" id="reportsGrid"></div>
 
                 <!-- Rankings -->
-                <h2 class="section-title" id="rankingsTitle">Rankings</h2>
+                <h2 class="section-title" id="rankingsTitle">Classement de la guilde</h2>
                 <div id="rankingsWrap">
-                    <div class="load-progress" id="rankingsProgress" style="display:none">
-                        <span>Chargement des rankings…</span>
-                        <div class="load-bar-wrap"><div class="load-bar" id="rankingsBar" style="width:30%"></div></div>
-                    </div>
-                    <div class="rankings-table-wrap" id="rankingsTableWrap" style="display:none">
-                        <table class="rankings-table">
-                            <thead>
-                                <tr>
-                                    <th>Boss</th>
-                                    <th>Meilleur %</th>
-                                    <th>Kills</th>
-                                    <th>Fastest kill</th>
-                                </tr>
-                            </thead>
-                            <tbody id="rankingsBody"></tbody>
-                        </table>
-                    </div>
-                    <p class="rankings-note" id="rankingsNote" style="display:none"></p>
-                    <div class="status-box" id="rankingsError" style="padding:2rem">
-                        <div class="status-box-icon" style="font-size:2rem">—</div>
-                        <h3 id="rankingsErrorMsg" style="font-size:1rem">Impossible de charger les rankings</h3>
+                    <div class="rankings-grid" id="rankingsGrid"></div>
+                    <p class="rankings-note" id="rankingsNote" style="display:none">Source : WarcraftLogs — classement mondial de la guilde pour ce tier.</p>
+                    <div class="status-box" id="rankingsError" style="display:none; padding:2rem 0">
+                        <h3 id="rankingsErrorMsg" style="font-size:0.95rem; color:var(--text-muted)">Classement non disponible</h3>
                     </div>
                 </div>
 
@@ -447,55 +397,45 @@
 
         // ── Rankings ─────────────────────────────────────────────────────────
 
+        function rankCard(title, data) {
+            if (!data) return '';
+            const row = (label, rank) => {
+                if (!rank) return '';
+                const color = rank.color || 'var(--text-muted)';
+                const pct   = rank.percentile != null ? `<span class="rank-pct-pill" style="color:${color}">${rank.percentile}%</span>` : '';
+                return `<div class="rank-row">
+                    <span class="rank-scope">${label}</span>
+                    <span class="rank-number" style="color:${color}">#${rank.number.toLocaleString('fr-FR')}</span>
+                    ${pct}
+                </div>`;
+            };
+            return `<div class="ranking-card">
+                <div class="ranking-card-title">${title}</div>
+                <div class="rank-rows">
+                    ${row('Monde',   data.worldRank)}
+                    ${row('EU',      data.regionRank)}
+                    ${row('Hyjal',   data.serverRank)}
+                </div>
+            </div>`;
+        }
+
         function renderRankings(zoneName, rankings) {
             if (zoneName) {
-                document.getElementById('rankingsTitle').textContent = `Rankings — ${zoneName}`;
+                document.getElementById('rankingsTitle').textContent = `Classement de la guilde — ${zoneName}`;
             }
 
-            // rankings peut être un objet { rankings: [...], difficulty: X }
-            const rows = Array.isArray(rankings)
-                ? rankings
-                : (rankings?.rankings || []);
-
-            if (!rows.length) {
-                document.getElementById('rankingsError').classList.add('visible');
-                document.getElementById('rankingsErrorMsg').textContent = 'Aucun ranking disponible pour cette zone.';
+            if (!rankings) {
+                document.getElementById('rankingsError').style.display = 'flex';
                 return;
             }
 
-            const difficulty = rankings?.difficulty;
-            const diffLabel  = DIFF_LABELS[difficulty] || '';
-            const diffClass  = difficulty === 4 ? 'heroic' : difficulty === 5 ? 'mythic' : 'normal';
+            const grid = document.getElementById('rankingsGrid');
+            grid.innerHTML = [
+                rankCard('Progression', rankings.progress),
+                rankCard('Vitesse',     rankings.speed),
+                rankCard('Clear complet', rankings.completeRaidSpeed)
+            ].join('');
 
-            const tbody = document.getElementById('rankingsBody');
-            tbody.innerHTML = '';
-
-            rows.forEach(row => {
-                const bossName  = row.encounter?.name || row.name || '—';
-                const bestPct   = typeof row.rankPercent === 'number' ? Math.round(row.rankPercent) : null;
-                const totalKills = row.totalKills ?? row.kills ?? '—';
-                const fastest   = row.fastestKill || row.fastest || null;
-
-                const pctHtml = bestPct !== null
-                    ? `<span class="rank-pct ${rankColor(bestPct)}">${bestPct}%</span>
-                       <span class="rank-bar-wrap"><span class="rank-bar" style="width:${bestPct}%;background:${rankBarColor(bestPct)}"></span></span>`
-                    : '<span class="rank-pct common">—</span>';
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>
-                        <span class="boss-name">${escHtml(bossName)}</span>
-                        ${diffLabel ? `<span class="diff-badge ${diffClass}">${diffLabel}</span>` : ''}
-                    </td>
-                    <td>${pctHtml}</td>
-                    <td class="kills-cell">${totalKills}</td>
-                    <td class="fastest-cell">${formatMs(fastest)}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            document.getElementById('rankingsTableWrap').style.display = 'block';
-            document.getElementById('rankingsNote').textContent = 'Source : WarcraftLogs — mis à jour à chaque chargement de la page.';
             document.getElementById('rankingsNote').style.display = 'block';
         }
 

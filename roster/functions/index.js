@@ -1541,7 +1541,7 @@ exports.getWclData = onRequest(
         }
 
         const type = req.query.type;
-        if (!['reports', 'rankings'].includes(type)) {
+        if (!['reports', 'rankings', 'schema'].includes(type)) {
           return res.status(400).json({ error: 'Invalid type. Use reports or rankings.' });
         }
 
@@ -1595,6 +1595,7 @@ exports.getWclData = onRequest(
           return res.json({ reports });
         }
 
+        // ── Schema introspection (debug temporaire) ──────────────────────────
         // ── Rankings ─────────────────────────────────────────────────────────
         if (type === 'rankings') {
           // Auto-détecte la zone depuis le report le plus récent
@@ -1623,7 +1624,23 @@ exports.getWclData = onRequest(
             query GuildRankings($zoneId: Int!) {
               guildData {
                 guild(name: "Les Sages de Pandarie", serverSlug: "hyjal", serverRegion: "eu") {
-                  zoneRanking(zoneID: $zoneId)
+                  zoneRanking(zoneID: $zoneId) {
+                    progress {
+                      worldRank  { number percentile color }
+                      regionRank { number percentile color }
+                      serverRank { number percentile color }
+                    }
+                    speed {
+                      worldRank  { number percentile color }
+                      regionRank { number percentile color }
+                      serverRank { number percentile color }
+                    }
+                    completeRaidSpeed {
+                      worldRank  { number percentile color }
+                      regionRank { number percentile color }
+                      serverRank { number percentile color }
+                    }
+                  }
                 }
               }
             }
