@@ -238,10 +238,21 @@
             font-size: 0.85rem;
             border-radius: 4px;
             padding: 0.2rem 0.4rem;
-            display: inline-block;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
             min-width: 42px;
+            gap: 1px;
         }
         .parse-none { color: rgba(255,255,255,0.15); font-weight: 400; font-size: 0.8rem; }
+        /* Spec badge affiché quand le joueur a changé de spec sur ce boss */
+        .spec-badge {
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            opacity: 0.75;
+            line-height: 1;
+        }
 
         /* Average column */
         .avg-cell { font-weight: 700; font-size: 0.82rem; }
@@ -363,6 +374,23 @@
         const SYNC_API  = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/triggerWclSync';
         const DIFF_CLASS = { 'Normal': '', 'Héroïque': 'heroic', 'Mythique': 'mythic' };
 
+        // ── Abréviations de specs WoW ─────────────────────────────────────────
+        const SPEC_SHORT = {
+            'Restoration': 'Resto', 'Balance': 'Bal', 'Feral': 'Feral', 'Guardian': 'Guard',
+            'Mistweaver': 'MW', 'Windwalker': 'WW', 'Brewmaster': 'BrM',
+            'Holy': 'Holy', 'Protection': 'Prot', 'Retribution': 'Ret',
+            'BeastMastery': 'BM', 'Marksmanship': 'MM', 'Survival': 'SV',
+            'Arcane': 'Arc', 'Fire': 'Fire', 'Frost': 'Frost',
+            'Affliction': 'Aff', 'Demonology': 'Demo', 'Destruction': 'Destro',
+            'Discipline': 'Disc', 'Shadow': 'Shad',
+            'Assassination': 'Sin', 'Outlaw': 'Out', 'Subtlety': 'Sub',
+            'Elemental': 'Ele', 'Enhancement': 'Enh',
+            'Arms': 'Arms', 'Fury': 'Fury',
+            'Blood': 'Blood', 'Unholy': 'UH',
+            'Havoc': 'Hav', 'Vengeance': 'Veng',
+            'Devastation': 'Dev', 'Preservation': 'Pres', 'Augmentation': 'Aug',
+        };
+
         // ── Couleurs classes WoW ──────────────────────────────────────────────
         const CLASS_COLORS = {
             'DeathKnight': '#C41E3A', 'DemonHunter': '#A330C9', 'Druid': '#FF7C0A',
@@ -473,16 +501,31 @@
 
             players.forEach(player => {
                 const classColor = CLASS_COLORS[player.class?.replace(/\s/g, '')] || 'var(--text-main)';
+
+                // Spec principale = spec la plus fréquente parmi les encounters
+                const specCount = {};
+                Object.values(player.encounters).forEach(e => {
+                    if (e.spec) specCount[e.spec] = (specCount[e.spec] || 0) + 1;
+                });
+                const primarySpec = Object.entries(specCount).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
                 let total = 0, count = 0;
 
                 const cells = bosses.map(boss => {
                     const enc = player.encounters[boss.name];
                     if (!enc) return `<td><span class="parse-none">—</span></td>`;
-                    total += enc.rankPercent;
-                    count++;
+
+                    // N'inclut dans la moyenne que les boss joués dans la spec principale
+                    const isMainSpec = !primarySpec || enc.spec === primarySpec;
+                    if (isMainSpec) { total += enc.rankPercent; count++; }
+
                     const color = parseColor(enc.rankPercent);
                     const tooltip = enc.spec ? `title="${escHtml(enc.spec)}${enc.ilvl ? ' · ' + enc.ilvl + ' ilvl' : ''}"` : '';
-                    return `<td><span class="parse-cell" style="color:${color}" ${tooltip}>${enc.rankPercent}</span></td>`;
+                    // Badge spec uniquement si spec différente de la spec principale
+                    const specBadge = (enc.spec && enc.spec !== primarySpec)
+                        ? `<span class="spec-badge">${escHtml(SPEC_SHORT[enc.spec] || enc.spec)}</span>`
+                        : '';
+                    return `<td><span class="parse-cell" style="color:${color}" ${tooltip}>${enc.rankPercent}${specBadge}</span></td>`;
                 }).join('');
 
                 const avg     = count > 0 ? Math.round(total / count) : null;
