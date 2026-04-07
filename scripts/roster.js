@@ -1,3 +1,13 @@
+// HTML escape utility
+function escHtml(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyD0cmazoD42kD_H243Do5pIPGhwXFgOHYE",
@@ -30,10 +40,14 @@ function showToast(message, type = 'info') {
         info: 'ℹ'
     };
 
-    toast.innerHTML = `
-        <div class="toast-icon">${icons[type] || icons.info}</div>
-        <div class="toast-message">${message}</div>
-    `;
+    const iconEl = document.createElement('div');
+    iconEl.className = 'toast-icon';
+    iconEl.textContent = icons[type] || icons.info;
+    const msgEl = document.createElement('div');
+    msgEl.className = 'toast-message';
+    msgEl.textContent = message;
+    toast.appendChild(iconEl);
+    toast.appendChild(msgEl);
 
     container.appendChild(toast);
 
@@ -317,7 +331,7 @@ function renderRoster() {
     const table = document.getElementById('roster-table');
     const adminColumn = document.getElementById('admin-column');
 
-    tbody.innerHTML = '';
+    tbody.replaceChildren();
 
     // Collect all players with their section info
     const allPlayers = [];
@@ -377,8 +391,8 @@ function renderRoster() {
                 <div style="display: flex; align-items: center; gap: 0.6rem;">
                     ${avatarImg}
                     ${characterUrl ?
-                        `<a href="${characterUrl}" target="_blank" rel="noopener noreferrer" class="player-name-link" style="color:${nameColor};">${player.name}</a>` :
-                        `<span style="color:${nameColor};">${player.name}</span>`
+                        `<a href="${characterUrl}" target="_blank" rel="noopener noreferrer" class="player-name-link" style="color:${nameColor};">${escHtml(player.name)}</a>` :
+                        `<span style="color:${nameColor};">${escHtml(player.name)}</span>`
                     }
                 </div>
             </td>
@@ -397,19 +411,19 @@ function renderRoster() {
             specCellContent = `
                 <div style="display: flex; flex-direction: column; gap: 0.25rem;">
                     <div style="display: flex; align-items: center;">
-                        <img src="${specIconUrl}" alt="${player.spec}" style="width: 18px; height: 18px; border-radius: 2px; vertical-align: middle; margin-right: 0.5rem;">
-                        <span style="font-weight: 600;">${player.spec}</span>
+                        <img src="${specIconUrl}" alt="${escHtml(player.spec)}" style="width: 18px; height: 18px; border-radius: 2px; vertical-align: middle; margin-right: 0.5rem;">
+                        <span style="font-weight: 600;">${escHtml(player.spec)}</span>
                     </div>
                     ${player.offSpec && offSpecIconUrl ? `
                         <div style="display: flex; align-items: center; opacity: 0.7; font-size: 0.85rem;">
-                            <img src="${offSpecIconUrl}" alt="${player.offSpec}" style="width: 14px; height: 14px; border-radius: 2px; vertical-align: middle; margin-right: 0.4rem;">
-                            <span>Off: ${player.offSpec}</span>
+                            <img src="${offSpecIconUrl}" alt="${escHtml(player.offSpec)}" style="width: 14px; height: 14px; border-radius: 2px; vertical-align: middle; margin-right: 0.4rem;">
+                            <span>Off: ${escHtml(player.offSpec)}</span>
                         </div>
                     ` : ''}
                 </div>
             `;
         } else {
-            specCellContent = player.spec || '-';
+            specCellContent = escHtml(player.spec) || '-';
         }
 
         const specCell = `<td class="spec-cell">${specCellContent}</td>`;
@@ -446,7 +460,7 @@ function renderRoster() {
         // Availability badges — jours abrégés
         const dayAbbr = { 'Lundi': 'Lun', 'Mardi': 'Mar', 'Mercredi': 'Mer', 'Jeudi': 'Jeu', 'Vendredi': 'Ven', 'Samedi': 'Sam', 'Dimanche': 'Dim' };
         const availabilityBadges = player.availability && Array.isArray(player.availability) ?
-            player.availability.map(day => `<span class="availability-badge" title="${day}">${dayAbbr[day] || day}</span>`).join('') :
+            player.availability.map(day => `<span class="availability-badge" title="${escHtml(day)}">${escHtml(dayAbbr[day] || day)}</span>`).join('') :
             '-';
         const availabilityCell = `<td style="text-align: center;"><div class="availability-badges">${availabilityBadges}</div></td>`;
 
@@ -487,19 +501,19 @@ function showTooltip(event, player) {
 
     // Build tooltip HTML
     const avatarHTML = player.avatarUrl ?
-        `<img src="${player.avatarUrl}" alt="${player.name}" class="tooltip-avatar">` : '';
+        `<img src="${player.avatarUrl}" alt="${escHtml(player.name)}" class="tooltip-avatar">` : '';
 
     const className = getClassName(player.class);
     const specIconUrl = player.spec ? getSpecIcon(player.spec, player.class) : null;
     const specDisplay = specIconUrl ?
-        `<img src="${specIconUrl}" style="width: 16px; height: 16px; border-radius: 2px; vertical-align: middle; margin-right: 0.4rem;">${player.spec}` :
-        player.spec;
+        `<img src="${specIconUrl}" style="width: 16px; height: 16px; border-radius: 2px; vertical-align: middle; margin-right: 0.4rem;">${escHtml(player.spec)}` :
+        escHtml(player.spec);
 
     content.innerHTML = `
         <div class="tooltip-header">
             ${avatarHTML}
             <div class="tooltip-title">
-                <div class="tooltip-name" style="color: var(--${player.class});">${player.name}</div>
+                <div class="tooltip-name" style="color: var(--${player.class});">${escHtml(player.name)}</div>
                 <div class="tooltip-class-spec">${className} - ${specDisplay}</div>
             </div>
         </div>
@@ -511,20 +525,20 @@ function showTooltip(event, player) {
                         ${getSpecIcon(player.offSpec, player.class) ?
                             `<img src="${getSpecIcon(player.offSpec, player.class)}" style="width: 14px; height: 14px; border-radius: 2px; vertical-align: middle; margin-right: 0.4rem;">` :
                             ''}
-                        ${player.offSpec}
+                        ${escHtml(player.offSpec)}
                     </span>
                 </div>
             ` : ''}
             ${player.notes ? `
                 <div class="tooltip-stat-row">
                     <span class="tooltip-stat-label">Notes</span>
-                    <span class="tooltip-stat-value" style="font-size: 0.85rem;">${player.notes}</span>
+                    <span class="tooltip-stat-value" style="font-size: 0.85rem;">${escHtml(player.notes)}</span>
                 </div>
             ` : ''}
             ${player.availability && Array.isArray(player.availability) && player.availability.length > 0 ? `
                 <div class="tooltip-stat-row">
                     <span class="tooltip-stat-label">Disponibilité</span>
-                    <span class="tooltip-stat-value" style="font-size: 0.85rem;">${player.availability.join(', ')}</span>
+                    <span class="tooltip-stat-value" style="font-size: 0.85rem;">${player.availability.map(escHtml).join(', ')}</span>
                 </div>
             ` : ''}
             ${player.flexRole ? `
@@ -617,8 +631,8 @@ function closeForm() {
     document.body.style.overflow = '';
     document.getElementById('registration-form').reset();
     document.getElementById('registration-form').style.display = 'none';
-    document.getElementById('player-spec').innerHTML = '<option value="">Choisis d\'abord ta classe</option>';
-    document.getElementById('player-offspec').innerHTML = '<option value="">Aucune / Choisis d\'abord ta classe</option>';
+    document.getElementById('player-spec').replaceChildren(new Option('Choisis d\'abord ta classe', ''));
+    document.getElementById('player-offspec').replaceChildren(new Option('Aucune / Choisis d\'abord ta classe', ''));
     // Clear equipment and character data
     document.getElementById('equipment-enchant-percent').value = '';
     document.getElementById('equipment-gem-percent').value = '';
@@ -646,8 +660,8 @@ function updateSpecs() {
     const roleSelect = document.getElementById('player-role');
     const selectedClass = classSelect.value;
 
-    specSelect.innerHTML = '<option value="">Sélectionne ta spé</option>';
-    offSpecSelect.innerHTML = '<option value="">Aucune</option>';
+    specSelect.replaceChildren(new Option('Sélectionne ta spé', ''));
+    offSpecSelect.replaceChildren(new Option('Aucune', ''));
 
     if (selectedClass && classSpecs[selectedClass]) {
         classSpecs[selectedClass].forEach(spec => {
@@ -1377,7 +1391,7 @@ async function loadCharacters(accessToken) {
 function displayCharacters(characters, accessToken) {
     const charList = document.getElementById('char-list');
 
-    charList.innerHTML = '';
+    charList.replaceChildren();
 
     // Sort characters by level (highest first)
     const sortedChars = characters.sort((a, b) => b.level - a.level);
@@ -1385,12 +1399,21 @@ function displayCharacters(characters, accessToken) {
     sortedChars.forEach(char => {
         const charItem = document.createElement('div');
         charItem.className = 'char-item';
-        charItem.innerHTML = `
-            <div class="char-item-name">${char.name} <span style="color: var(--gold);">• Niveau ${char.level}</span></div>
-            <div class="char-item-details">
-                ${char.playableClass} - ${char.realm} (${char.faction})
-            </div>
-        `;
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'char-item-name';
+        nameEl.textContent = char.name + ' ';
+        const levelSpan = document.createElement('span');
+        levelSpan.style.color = 'var(--gold)';
+        levelSpan.textContent = `• Niveau ${char.level}`;
+        nameEl.appendChild(levelSpan);
+
+        const detailsEl = document.createElement('div');
+        detailsEl.className = 'char-item-details';
+        detailsEl.textContent = `${char.playableClass} - ${char.realm} (${char.faction})`;
+
+        charItem.appendChild(nameEl);
+        charItem.appendChild(detailsEl);
         charItem.onclick = () => selectCharacter(char, accessToken, charItem);
         charList.appendChild(charItem);
     });
