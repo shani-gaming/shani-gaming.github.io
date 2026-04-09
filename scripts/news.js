@@ -12,6 +12,13 @@
 
 const NEWS = [
     {
+        date: "2026-04-09",
+        label: "Progression",
+        title: "Chimaerus Héroïque — Premier Kill !",
+        content: "Deux heures de prog, des mécaniques revues à la hausse, et une détermination sans faille. Les Sages de Pandarie viennent de poser leur première pierre en Héroïque en décrochant le kill de Chimaerus HM. Le premier d'une longue série.",
+        link: { text: "Voir le report WarcraftLogs", url: "https://www.warcraftlogs.com/reports/FN4kWqLPaxYVHtD7" }
+    },
+    {
         date: "2026-04-02",
         label: "Progression",
         title: "5/8 Voidspire Normal — les Sages taillent dans le Vide",
