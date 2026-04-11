@@ -12,6 +12,13 @@
 
 const NEWS = [
     {
+        date: "2026-04-11",
+        label: "Progression",
+        title: "Voidspire Normal — Clear complet !",
+        content: "6/6 NM. Le Voidspire est nettoyé de fond en comble. Les Sages de Pandarie ont terminé le mode Normal et passent désormais à l'Héroïque. On continue à recruter — si tu veux faire partie de l'aventure, rejoins-nous.",
+        link: { text: "Nous rejoindre", url: "/index.html#join" }
+    },
+    {
         date: "2026-04-09",
         label: "Progression",
         title: "Chimaerus Héroïque — Premier Kill !",
