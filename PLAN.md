@@ -8,25 +8,25 @@ Cocher au fur et à mesure. Les tâches sont ordonnées par priorité/dépendanc
 ## Fondations (CI + Sécurité de base)
 
 - [x] Mettre en place la CI GitHub Actions (ESLint + HTMLHint + Lighthouse)
-- [ ] Créer `.gitignore` (supprime 1 finding VICE HIGH)
-- [ ] Ajouter meta description + Open Graph sur toutes les pages (SEO + prévisualisation Discord)
-- [ ] Ajouter favicon manquant sur `index.html`
+- [x] Créer `.gitignore`
+- [x] Ajouter meta description + Open Graph sur toutes les pages (SEO + prévisualisation Discord)
+- [x] Ajouter favicon manquant sur `index.html`
 
 ---
 
 ## Refactoring — Éliminer les duplications
 
-- [ ] Créer `scripts/firebase-init.js` — config Firebase centralisée (8 duplications → 1)
-- [ ] Créer `scripts/admin-auth.js` — module auth admin réutilisable (pattern identique à discordAuth.js)
+- [x] Créer `scripts/firebase-init.js` — config Firebase centralisée
+- [x] Créer `scripts/admin-auth.js` — module auth admin réutilisable
 - [ ] Déplacer `.page-header`, `.admin-btn` dans `common.css` (supprime ~10 redéfinitions locales)
 
 ---
 
-## Sécurité — XSS restants
+## Sécurité — XSS
 
-- [ ] `escHtml()` sur `stats.html` (noms membres Firestore dans arrivals/departures, lignes 660-664)
-- [ ] `escHtml()` sur `attendance.html` (err.message ligne 517, tooltip Discord ligne 643)
-- [ ] `escHtml()` sur `news.html` (données NEWS.js injectées ligne 191 — risque faible mais propre)
+- [x] `escHtml()` sur `stats.html` (noms membres Firestore dans arrivals/departures)
+- [x] `escHtml()` sur `attendance.html` (tooltip alts Discord)
+- [x] `escHtml()` sur `news.html` — pas nécessaire (données hardcodées dans news.js)
 
 ---
 
@@ -36,7 +36,13 @@ Cocher au fur et à mesure. Les tâches sont ordonnées par priorité/dépendanc
 
 ---
 
+## Divers
+
+- [ ] Investiguer le Firebase config différent dans `composition/index.html` (apiKey différent)
+- [ ] Harmoniser Firebase SDK : compat vs modulaire (index.html utilise modulaire, les autres compat)
+
+---
+
 ## Notes
 
 - Audio player site-wide : abandonné (limitation autoplay navigateur sur MPA)
-- Firebase SDK : harmoniser compat vs modulaire (index.html utilise modulaire, les autres compat)

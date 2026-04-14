@@ -23,21 +23,6 @@
     <style>
         body { padding-top: 80px; background: var(--bg-deep); }
 
-        .page-header {
-            padding: 4rem 0 2.5rem;
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border);
-        }
-        .page-header h1 { font-size: 3rem; margin-bottom: 0.5rem; }
-        .page-header p { color: var(--text-muted); font-size: 1.1rem; }
-        .page-header-row {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
         .tier-label {
             display: inline-block;
             font-size: 0.8rem;
@@ -169,20 +154,6 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── Admin buttons ── */
-        .admin-btn {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 0.4rem 0.9rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: border-color 0.15s, color 0.15s;
-        }
-        .admin-btn:hover { border-color: var(--primary); color: var(--primary); }
-        .admin-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(212,175,55,0.1); }
 
         .btn-sync {
             display: none;
