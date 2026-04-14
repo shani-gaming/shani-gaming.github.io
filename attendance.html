@@ -20,6 +20,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="scripts/firebase-init.js"></script>
+    <script src="scripts/admin-auth.js"></script>
 
     <style>
         body { padding-top: 70px; background: var(--bg-deep); }
@@ -315,9 +316,7 @@
     </div>
 
     <script>
-    const db       = firebase.firestore();
-    const auth     = firebase.auth();
-    const provider = new firebase.auth.GoogleAuthProvider();
+    const db = firebase.firestore();
 
     let isAdmin = false;
 
@@ -335,34 +334,24 @@
     function classColor(c) { return CLASS_COLORS[(c||'').toLowerCase()] || '#888'; }
 
     // ── Admin auth ────────────────────────────────────────────────────────────
-    auth.onAuthStateChanged(async user => {
-        if (user) {
-            const doc = await db.collection('admins').doc(user.email).get();
-            isAdmin = doc.exists;
-        } else {
-            isAdmin = false;
-        }
-        const btn = document.getElementById('adminBtn');
-        const bar = document.getElementById('adminBar');
-        if (isAdmin) {
+    document.getElementById('adminBtn').addEventListener('click', () => AdminAuth.toggle());
+
+    AdminAuth.init({
+        onAdmin: () => {
+            isAdmin = true;
+            const btn = document.getElementById('adminBtn');
+            const bar = document.getElementById('adminBar');
             btn.textContent = '✓ Admin';
             btn.classList.add('active');
             bar.style.display = 'flex';
-        } else if (user) {
-            btn.textContent = 'Non autorisé';
-            btn.classList.remove('active');
-        } else {
+        },
+        onSignedOut: () => {
+            isAdmin = false;
+            const btn = document.getElementById('adminBtn');
+            const bar = document.getElementById('adminBar');
             btn.textContent = 'Admin';
             btn.classList.remove('active');
             bar.style.display = 'none';
-        }
-    });
-
-    document.getElementById('adminBtn').addEventListener('click', async () => {
-        if (auth.currentUser) {
-            await auth.signOut();
-        } else {
-            try { await auth.signInWithPopup(provider); } catch(e) {}
         }
     });
 
