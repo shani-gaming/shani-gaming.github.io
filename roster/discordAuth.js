@@ -48,7 +48,7 @@ const DiscordAuth = {
 
         try {
             return JSON.parse(authData);
-        } catch (error) {
+        } catch (_error) {
             return null;
         }
     },

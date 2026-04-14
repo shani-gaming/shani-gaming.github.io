@@ -1,0 +1,14 @@
+{
+  "name": "sages-de-pandarie",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint:js": "eslint scripts/*.js roster/discordAuth.js",
+    "lint:html": "htmlhint *.html composition/index.html roster/index.html roster/discord-callback.html",
+    "lint": "npm run lint:js && npm run lint:html"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "htmlhint": "^1.1.4"
+  }
+}

@@ -271,9 +271,6 @@ let roster = {
     ranged: []
 };
 
-// Admin mode
-let isAdminMode = false;
-
 // Initialize the page
 function init() {
     // Listen to Firestore changes in real-time

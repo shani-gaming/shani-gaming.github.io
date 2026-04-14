@@ -170,8 +170,6 @@ function initDropdownEvents() {
 
     dropdowns.forEach(dropdown => {
         const btn = dropdown.querySelector('.nav-dropdown-btn');
-        const menu = dropdown.querySelector('.nav-dropdown-menu');
-
         // Toggle au clic
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
