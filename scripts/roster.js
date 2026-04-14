@@ -8,18 +8,7 @@ function escHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
-// Firebase Configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyD0cmazoD42kD_H243Do5pIPGhwXFgOHYE",
-    authDomain: "guild-roster-67da7.firebaseapp.com",
-    projectId: "guild-roster-67da7",
-    storageBucket: "guild-roster-67da7.firebasestorage.app",
-    messagingSenderId: "971948767326",
-    appId: "1:971948767326:web:4377499f1ff23db1899ccf"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+// Firebase initialisé via firebase-init.js (chargé avant ce script)
 const db = firebase.firestore();
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
