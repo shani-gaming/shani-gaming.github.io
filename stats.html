@@ -672,14 +672,20 @@
         return `
             <div class="member-row">
                 <span class="member-class-dot" style="background:${color};"></span>
-                <span class="member-name" style="color:${color};">${m.name}</span>
-                <span class="member-meta">${m.realm || ''}</span>
-                ${rank ? `<span class="member-rank-badge">${rank}</span>` : ''}
+                <span class="member-name" style="color:${color};">${escHtml(m.name)}</span>
+                <span class="member-meta">${escHtml(m.realm || '')}</span>
+                ${rank ? `<span class="member-rank-badge">${escHtml(rank)}</span>` : ''}
                 <span style="font-size:0.85rem; color:${accentColor}; font-weight:700;">${type === 'arrival' ? '+' : '−'}</span>
             </div>`;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+    function escHtml(s) {
+        return String(s)
+            .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
     function fmtDate(dateStr) {
         if (!dateStr) return '—';
         const [y, m, d] = dateStr.split('-');

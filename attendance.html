@@ -628,7 +628,7 @@
         if (!alts.length) return;
 
         tooltip.innerHTML = `<div class="global-tooltip-title">Rerolls</div>` +
-            alts.map(a => `<div class="global-tooltip-item">${a}</div>`).join('');
+            alts.map(a => `<div class="global-tooltip-item">${escHtml(a)}</div>`).join('');
         tooltip.classList.add('visible');
         positionTooltip(badge);
     });
