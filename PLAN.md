@@ -32,7 +32,7 @@ Cocher au fur et à mesure. Les tâches sont ordonnées par priorité/dépendanc
 
 ## Assets
 
-- [ ] Évaluer le téléchargement local des icônes classes/specs (guildsofwow.com + wow.zamimg.com)
+- [x] Évaluer le téléchargement local des icônes classes/specs (guildsofwow.com + wow.zamimg.com)
 
 ---
 
