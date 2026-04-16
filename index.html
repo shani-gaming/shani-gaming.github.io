@@ -12,6 +12,12 @@
     <meta property="og:url" content="https://www.sagesdepandarie.ovh/">
     <meta property="og:type" content="website">
     <link rel="stylesheet" href="styles/common.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="scripts/firebase-init.js"></script>
+
     <style>
 
         /* Hero Section */
@@ -1286,24 +1292,9 @@
         }
     </script>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, query, where, getDocs, getDoc, doc, orderBy, limit, documentId } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-        // Configuration Firebase (même config que dans roster)
-        const firebaseConfig = {
-            apiKey: "AIzaSyAjrcW6l6XkdKABiEJM2mCOQZKJ3fhwqeU",
-            authDomain: "guild-roster-67da7.firebaseapp.com",
-            projectId: "guild-roster-67da7",
-            storageBucket: "guild-roster-67da7.firebasestorage.app",
-            messagingSenderId: "824076820820",
-            appId: "1:824076820820:web:67a8ef22c699f12f2f5b8f"
-        };
-
-        // Initialiser Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    <script>
+        // Firebase initialisé via scripts/firebase-init.js
+        const db = firebase.firestore();
 
         // Mapping des classes WoW vers leurs icônes officielles
         const classIcons = {
@@ -1344,7 +1335,7 @@
                     .toISOString().split('T')[0];
 
                 // Charge tous les snapshots sans orderBy (évite tout index Firestore)
-                const snapshotsSnap = await getDocs(collection(db, 'guild-roster-snapshots'));
+                const snapshotsSnap = await db.collection('guild-roster-snapshots').get();
 
                 membersList.innerHTML = '';
 
@@ -1377,8 +1368,8 @@
                 // Enrichir avec les détails de guild-members (ilvl, spec, armoryLink)
                 const enriched = await Promise.all(
                     newMembers.map(async m => {
-                        const fullDoc = await getDoc(doc(db, 'guild-members', `${m.name}-${m.realm}`));
-                        return fullDoc.exists() ? { ...m, ...fullDoc.data() } : m;
+                        const fullDoc = await db.collection('guild-members').doc(`${m.name}-${m.realm}`).get();
+                        return fullDoc.exists ? { ...m, ...fullDoc.data() } : m;
                     })
                 );
 

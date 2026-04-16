@@ -39,7 +39,7 @@ Cocher au fur et à mesure. Les tâches sont ordonnées par priorité/dépendanc
 ## Divers
 
 - [x] Investiguer le Firebase config différent dans `composition/index.html` (apiKey différent)
-- [ ] Harmoniser Firebase SDK : compat vs modulaire (index.html utilise modulaire, les autres compat)
+- [x] Harmoniser Firebase SDK : compat vs modulaire (index.html utilise modulaire, les autres compat)
 
 ---
 
