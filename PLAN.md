@@ -18,7 +18,7 @@ Cocher au fur et à mesure. Les tâches sont ordonnées par priorité/dépendanc
 
 - [x] Créer `scripts/firebase-init.js` — config Firebase centralisée
 - [x] Créer `scripts/admin-auth.js` — module auth admin réutilisable
-- [ ] Déplacer `.page-header`, `.admin-btn` dans `common.css` (supprime ~10 redéfinitions locales)
+- [x] Déplacer `.page-header`, `.admin-btn` dans `common.css` (supprime ~10 redéfinitions locales)
 
 ---
 
@@ -38,7 +38,7 @@ Cocher au fur et à mesure. Les tâches sont ordonnées par priorité/dépendanc
 
 ## Divers
 
-- [ ] Investiguer le Firebase config différent dans `composition/index.html` (apiKey différent)
+- [x] Investiguer le Firebase config différent dans `composition/index.html` (apiKey différent)
 - [ ] Harmoniser Firebase SDK : compat vs modulaire (index.html utilise modulaire, les autres compat)
 
 ---
