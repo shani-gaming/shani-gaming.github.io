@@ -700,7 +700,7 @@
         const tentative= d.tentative || [];
 
         const bannerHtml = d.imageUrl
-            ? `<img class="modal-banner" src="${d.imageUrl}" alt="">`
+            ? `<img class="modal-banner" src="${d.imageUrl}" alt="" loading="lazy">`
             : '<div class="modal-banner-placeholder"></div>';
 
         const absHtml = absences.length ? `<div class="signup-section">

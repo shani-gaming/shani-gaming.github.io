@@ -397,7 +397,7 @@
                             : `class="${stateClass}"`;
                         return `
                             <div class="boss-cell" data-name="${boss.name}">
-                                <img src="${iconUrl}" ${clickAttr} alt="${boss.name}"
+                                <img src="${iconUrl}" ${clickAttr} alt="${boss.name}" loading="lazy"
                                      onerror="this.style.opacity='0.15';this.removeAttribute('src')">
                             </div>`;
                     }).join('');

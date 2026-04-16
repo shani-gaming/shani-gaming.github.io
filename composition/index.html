@@ -757,7 +757,7 @@
                 const ilvl = member.ilvl ? `ilvl ${member.ilvl}` : '';
 
                 card.innerHTML = `
-                    <img src="${classIcon}" alt="${member.class}" class="member-class-icon">
+                    <img src="${classIcon}" alt="${member.class}" class="member-class-icon" loading="lazy">
                     <div class="member-info">
                         <div class="member-name" style="color: var(--${member.class.toLowerCase().replace(' ', '-')})">${member.name}</div>
                         <div class="member-details">${spec}</div>
@@ -854,7 +854,7 @@
                     const div = document.createElement('div');
                     div.className = 'raid-member';
                     div.innerHTML = `
-                        <img src="${classIcon}" alt="${member.class}" class="member-class-icon">
+                        <img src="${classIcon}" alt="${member.class}" class="member-class-icon" loading="lazy">
                         <span class="member-name" style="color: var(--${member.class.toLowerCase().replace(' ', '-')})">${member.name}</span>
                         <button class="remove-member" onclick="removeFromRaid('${member.id}', '${role}')">&times;</button>
                     `;
@@ -899,7 +899,7 @@
 
                     html += `
                         <div class="buff-item ${hasProvider ? 'available' : 'missing'}">
-                            <img src="${data.icon}" alt="${utility}" class="buff-icon">
+                            <img src="${data.icon}" alt="${utility}" class="buff-icon" loading="lazy">
                             <span class="buff-name">${utility}</span>
                             <span class="buff-provider">${provider}</span>
                         </div>

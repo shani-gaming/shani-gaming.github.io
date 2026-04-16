@@ -368,7 +368,7 @@ function renderRoster() {
 
         // Name cell with avatar
         const avatarImg = player.avatarUrl
-            ? `<img src="${player.avatarUrl}" alt="" style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--${player.class}, #555); object-fit: cover; flex-shrink: 0;">`
+            ? `<img src="${player.avatarUrl}" alt="" loading="lazy" style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--${player.class}, #555); object-fit: cover; flex-shrink: 0;">`
             : `<span style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.1); display: inline-block; flex-shrink: 0;"></span>`;
 
         const nameColor = `var(--${player.class}, var(--text-main))`;
@@ -487,7 +487,7 @@ function showTooltip(event, player) {
 
     // Build tooltip HTML
     const avatarHTML = player.avatarUrl ?
-        `<img src="${player.avatarUrl}" alt="${escHtml(player.name)}" class="tooltip-avatar">` : '';
+        `<img src="${player.avatarUrl}" alt="${escHtml(player.name)}" class="tooltip-avatar" loading="lazy">` : '';
 
     const className = getClassName(player.class);
     const specIconUrl = player.spec ? getSpecIcon(player.spec, player.class) : null;

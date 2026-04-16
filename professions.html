@@ -425,7 +425,7 @@
             recipeMap.forEach(({ recipe, crafters }) => {
                 const crafterBadges = crafters.map(({ member, prof }) => `
                     <div class="crafter-badge">
-                        <img src="${classIcons[member.class] || ''}" style="width:20px;height:20px;border-radius:4px;" alt="">
+                        <img src="${classIcons[member.class] || ''}" style="width:20px;height:20px;border-radius:4px;" alt="" loading="lazy">
                         <span class="crafter-name">${member.name}</span>
                         <span class="crafter-skill">${prof.skillPoints}/${prof.maxSkillPoints}</span>
                     </div>
@@ -512,7 +512,7 @@
                 html += `
                     <div class="member-prof-card">
                         <div class="member-prof-header">
-                            <img src="${icon}" class="class-icon-small" alt="${member.class}">
+                            <img src="${icon}" class="class-icon-small" alt="${member.class}" loading="lazy">
                             <div>
                                 <div class="member-prof-name">${member.name}${realm}</div>
                                 <div class="member-prof-realm">${member.class}${member.activeSpec ? ' — ' + member.activeSpec : ''}</div>
