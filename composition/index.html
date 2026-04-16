@@ -61,7 +61,7 @@
             margin: 0 auto;
         }
 
-        /* Left Panel - Member List */
+        /* ── Left Panel – Member List ── */
         .members-panel {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -70,6 +70,8 @@
             display: flex;
             flex-direction: column;
             max-height: calc(100vh - 120px);
+            position: sticky;
+            top: 90px;
         }
 
         .panel-header {
@@ -157,7 +159,7 @@
         }
 
         .member-card.in-raid {
-            opacity: 0.4;
+            opacity: 0.35;
             pointer-events: none;
         }
 
@@ -165,6 +167,7 @@
             width: 32px;
             height: 32px;
             border-radius: 6px;
+            flex-shrink: 0;
         }
 
         .member-info {
@@ -189,9 +192,10 @@
             font-size: 0.75rem;
             color: var(--primary);
             font-weight: 600;
+            flex-shrink: 0;
         }
 
-        /* Right Panel - Raid Composition */
+        /* ── Center Panel – Raid Composition ── */
         .composition-panel {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -199,14 +203,18 @@
             padding: 1.5rem;
             display: flex;
             flex-direction: column;
+            gap: 1rem;
         }
 
         .composition-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
         }
+
+        .composition-header-left { display: flex; flex-direction: column; gap: 0.15rem; }
 
         .raid-count {
             font-size: 0.9rem;
@@ -216,6 +224,13 @@
         .raid-count strong {
             color: var(--primary);
             font-size: 1.2rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
         }
 
         .clear-btn {
@@ -234,6 +249,158 @@
             color: #ff6b6b;
         }
 
+        /* Load Event Button */
+        .load-event-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            background: rgba(212,175,55,0.08);
+            border: 1px solid rgba(212,175,55,0.35);
+            border-radius: 6px;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .load-event-btn:hover {
+            background: rgba(212,175,55,0.16);
+            border-color: var(--primary);
+        }
+
+        .load-event-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Event Banner */
+        .event-banner {
+            display: none;
+            background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.04));
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+
+        .event-banner.visible { display: flex; }
+
+        .event-banner-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+
+        .event-banner-body { flex: 1; min-width: 0; }
+
+        .event-banner-title {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .event-banner-meta { color: var(--text-muted); font-size: 0.8rem; line-height: 1.5; }
+
+        .event-banner-unmatched {
+            color: #ff9800;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .event-banner-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0;
+            line-height: 1;
+            flex-shrink: 0;
+            transition: color 0.2s;
+        }
+
+        .event-banner-close:hover { color: #ff6b6b; }
+
+        /* Buff Mini-Bar */
+        .buff-bar {
+            display: flex;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+            padding: 0.6rem 0.75rem;
+            background: var(--bg-elevated);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            align-items: center;
+        }
+
+        .buff-bar-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-right: 0.2rem;
+            flex-shrink: 0;
+        }
+
+        .buff-dot {
+            position: relative;
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .buff-dot img {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            display: block;
+        }
+
+        .buff-dot.available img {
+            border-color: rgba(76,175,80,0.6);
+        }
+
+        .buff-dot.missing img {
+            filter: grayscale(100%) brightness(0.4);
+            border-color: rgba(255,107,107,0.3);
+        }
+
+        .buff-dot.missing::after {
+            content: '×';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ff6b6b;
+            font-weight: 900;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .buff-dot[data-tooltip]:hover::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0d1117;
+            color: #fff;
+            font-size: 0.68rem;
+            white-space: nowrap;
+            padding: 3px 7px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* Role Sections */
         .role-sections {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -264,19 +431,14 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .role-icon {
-            width: 24px;
-            height: 24px;
-        }
-
         .role-title {
             font-weight: 700;
             font-size: 0.9rem;
         }
 
-        .role-title.tank { color: var(--tank); }
+        .role-title.tank   { color: var(--tank); }
         .role-title.healer { color: var(--healer); }
-        .role-title.dps { color: var(--dps-ranged); }
+        .role-title.dps    { color: var(--dps-ranged); }
 
         .role-count {
             margin-left: auto;
@@ -322,11 +484,9 @@
             transition: color 0.2s;
         }
 
-        .remove-member:hover {
-            color: #ff6b6b;
-        }
+        .remove-member:hover { color: #ff6b6b; }
 
-        /* Right Panel - Analysis */
+        /* ── Right Panel – Analysis ── */
         .analysis-panel {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -334,6 +494,8 @@
             padding: 1rem;
             max-height: calc(100vh - 120px);
             overflow-y: auto;
+            position: sticky;
+            top: 90px;
         }
 
         .analysis-panel .panel-title {
@@ -413,16 +575,95 @@
             text-align: right;
         }
 
-        /* Responsive */
+        /* ── Mobile Tab Bar ── */
+        .mobile-tab-bar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border);
+            z-index: 200;
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.2rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: color 0.2s;
+            padding: 0;
+        }
+
+        .tab-btn:hover { color: var(--text-secondary); }
+
+        .tab-btn.active { color: var(--primary); }
+
+        .tab-icon { font-size: 1.4rem; line-height: 1; }
+
+        /* ── Toast ── */
+        .toast-container {
+            position: fixed;
+            bottom: 5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.65rem 1.1rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            animation: toast-in 0.25s ease;
+        }
+
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .toast.success { border-color: var(--healer); color: var(--healer); }
+        .toast.error   { border-color: #ff6b6b; color: #ff6b6b; }
+        .toast.info    { border-color: rgba(238,187,85,0.4); color: var(--primary); }
+
+        /* Loader */
+        .loader-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        /* ── Responsive 1200px ── */
         @media (max-width: 1200px) {
             .page-container {
                 grid-template-columns: 280px 1fr;
-                max-width: 100%;
             }
 
             .analysis-panel {
                 grid-column: 1 / -1;
                 max-height: none;
+                position: static;
             }
 
             .analysis-grid {
@@ -436,55 +677,70 @@
             }
         }
 
+        /* ── Responsive 768px (mobile tabs) ── */
         @media (max-width: 768px) {
+            body { padding-bottom: 64px; }
+
+            .mobile-tab-bar { display: grid; }
+
             .page-container {
-                grid-template-columns: 1fr;
-                padding: 1rem;
+                display: block;
+                padding: 0.75rem;
+                min-height: 0;
             }
 
-            .members-panel {
-                max-height: 300px;
+            /* Hide all panels; JS adds panel-visible to the active one */
+            .members-panel,
+            .composition-panel,
+            .analysis-panel {
+                display: none !important;
+                position: static;
+                max-height: calc(100vh - 160px);
+                overflow-y: auto;
+                border-radius: 8px;
             }
 
-            .role-sections {
-                grid-template-columns: 1fr;
-            }
-        }
+            .members-panel.panel-visible    { display: flex !important; }
+            .composition-panel.panel-visible { display: flex !important; }
+            .analysis-panel.panel-visible   { display: block !important; }
 
-        /* Loader */
-        .loader-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
+            /* Tap-to-add hint */
+            .member-card {
+                cursor: pointer;
+            }
+
+            /* Stack role sections vertically */
+            .role-sections { grid-template-columns: 1fr; }
+
+            /* Shrink composition header on small screens */
+            .composition-header { flex-direction: column; align-items: flex-start; }
+            .header-actions { width: 100%; justify-content: flex-start; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Navigation -->
-    <!-- Navbar générée par navbar.js -->
     <nav class="navbar"></nav>
     <script src="../scripts/navbar.js"></script>
 
     <div class="page-container">
-        <!-- Left Panel - Member List -->
-        <div class="members-panel">
+
+        <!-- ── Left Panel – Member List ── -->
+        <div class="members-panel" id="membersPanel">
             <div class="panel-header">
                 <h2 class="panel-title">Membres de la Guilde</h2>
-                <p class="panel-subtitle">Glissez les membres vers la composition</p>
+                <p class="panel-subtitle" id="membersPanelSubtitle">Glissez les membres vers la composition</p>
             </div>
 
             <div class="filters" id="gradeFilters">
-                <button class="filter-btn active" data-grade="all">Tous</button>
-                <!-- Grade buttons will be added dynamically -->
+                <button class="filter-btn active" data-grade="all">Tous rangs</button>
             </div>
 
             <div class="filters" id="roleFilters" style="border-bottom: none; padding-bottom: 0;">
-                <button class="filter-btn active" data-role="all" onclick="filterByRole('all')">Tous rôles</button>
-                <button class="filter-btn" data-role="tank" onclick="filterByRole('tank')" style="border-color: var(--tank);">Tanks</button>
-                <button class="filter-btn" data-role="healer" onclick="filterByRole('healer')" style="border-color: var(--healer);">Healers</button>
-                <button class="filter-btn" data-role="dps" onclick="filterByRole('dps')" style="border-color: var(--dps-ranged);">DPS</button>
+                <button class="filter-btn active" data-role="all"    onclick="filterByRole('all')">Tous</button>
+                <button class="filter-btn" data-role="tank"   onclick="filterByRole('tank')"   style="border-color: var(--tank);">Tanks</button>
+                <button class="filter-btn" data-role="healer" onclick="filterByRole('healer')" style="border-color: var(--healer);">Soins</button>
+                <button class="filter-btn" data-role="dps"    onclick="filterByRole('dps')"    style="border-color: var(--dps-ranged);">DPS</button>
             </div>
 
             <div class="member-list" id="memberList">
@@ -494,18 +750,44 @@
             </div>
         </div>
 
-        <!-- Right Panel - Raid Composition -->
-        <div class="composition-panel">
+        <!-- ── Center Panel – Raid Composition ── -->
+        <div class="composition-panel" id="compositionPanel">
             <div class="composition-header">
-                <div>
+                <div class="composition-header-left">
                     <h2 class="panel-title">Composition de Raid</h2>
                     <p class="raid-count"><strong id="raidCount">0</strong> / 20 joueurs</p>
                 </div>
-                <button class="clear-btn" onclick="clearComposition()">Vider la composition</button>
+                <div class="header-actions">
+                    <button class="load-event-btn" id="loadEventBtn" onclick="loadFromEvent()">
+                        📅 Prochain raid
+                    </button>
+                    <button class="clear-btn" onclick="clearComposition()">Vider</button>
+                </div>
             </div>
 
+            <!-- Event Banner (hidden by default) -->
+            <div class="event-banner" id="eventBanner">
+                <span class="event-banner-icon">📅</span>
+                <div class="event-banner-body">
+                    <div class="event-banner-title" id="eventBannerTitle"></div>
+                    <div class="event-banner-meta" id="eventBannerMeta"></div>
+                    <div class="event-banner-unmatched" id="eventBannerUnmatched"></div>
+                </div>
+                <button class="event-banner-close" onclick="hideEventBanner()" title="Fermer">✕</button>
+            </div>
+
+            <!-- Buff Mini-Bar -->
+            <div class="buff-bar" id="buffBar">
+                <span class="buff-bar-label">Buffs</span>
+                <!-- Populated by updateBuffBar() -->
+            </div>
+
+            <!-- Role drop zones -->
             <div class="role-sections">
-                <div class="role-section" data-role="tank" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'tank')" ondragleave="handleDragLeave(event)">
+                <div class="role-section" data-role="tank"
+                     ondragover="handleDragOver(event)"
+                     ondrop="handleDrop(event, 'tank')"
+                     ondragleave="handleDragLeave(event)">
                     <div class="role-header">
                         <span class="role-title tank">Tanks</span>
                         <span class="role-count" id="tankCount">0/2</span>
@@ -513,15 +795,21 @@
                     <div class="role-members" id="tankMembers"></div>
                 </div>
 
-                <div class="role-section" data-role="healer" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'healer')" ondragleave="handleDragLeave(event)">
+                <div class="role-section" data-role="healer"
+                     ondragover="handleDragOver(event)"
+                     ondrop="handleDrop(event, 'healer')"
+                     ondragleave="handleDragLeave(event)">
                     <div class="role-header">
-                        <span class="role-title healer">Healers</span>
+                        <span class="role-title healer">Soins</span>
                         <span class="role-count" id="healerCount">0/4</span>
                     </div>
                     <div class="role-members" id="healerMembers"></div>
                 </div>
 
-                <div class="role-section" data-role="dps" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'dps')" ondragleave="handleDragLeave(event)">
+                <div class="role-section" data-role="dps"
+                     ondragover="handleDragOver(event)"
+                     ondrop="handleDrop(event, 'dps')"
+                     ondragleave="handleDragLeave(event)">
                     <div class="role-header">
                         <span class="role-title dps">DPS</span>
                         <span class="role-count" id="dpsCount">0/14</span>
@@ -531,20 +819,44 @@
             </div>
         </div>
 
-        <!-- Right Panel - Analysis -->
-        <div class="analysis-panel">
-            <h2 class="panel-title">Buffs & Debuffs</h2>
+        <!-- ── Right Panel – Buffs & Debuffs ── -->
+        <div class="analysis-panel" id="analysisPanel">
+            <h2 class="panel-title">Buffs &amp; Debuffs</h2>
             <div class="analysis-grid" id="analysisGrid">
-                <!-- Will be populated by JavaScript -->
+                <!-- Populated by updateAnalysis() -->
             </div>
         </div>
+
     </div>
+
+    <!-- Mobile Tab Bar -->
+    <div class="mobile-tab-bar" id="mobileTabBar">
+        <button class="tab-btn active" id="tabMembers" onclick="showTab('members')">
+            <span class="tab-icon">👥</span>
+            <span>Membres</span>
+        </button>
+        <button class="tab-btn" id="tabComposition" onclick="showTab('composition')">
+            <span class="tab-icon">⚔️</span>
+            <span>Compo</span>
+        </button>
+        <button class="tab-btn" id="tabBuffs" onclick="showTab('buffs')">
+            <span class="tab-icon">✨</span>
+            <span>Buffs</span>
+        </button>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
 
     <script>
         // Firebase initialisé via ../scripts/firebase-init.js
         const db = firebase.firestore();
 
-        // Grade names mapping
+        // ── RaidHelper API ────────────────────────────────────────────────────────
+        const EVENTS_API  = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getRaidHelperEvents';
+        const DETAILS_API = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getEventDetails';
+
+        // ── Grade name mapping ────────────────────────────────────────────────────
         const gradeNames = {
             0: 'Grand Sage (GM)',
             1: 'Gardien de Jade (Offs)',
@@ -552,7 +864,7 @@
             3: 'Novice du Lotus (Membre)'
         };
 
-        // Role detection based on spec (FR and EN)
+        // ── Spec → role mapping (FR + EN) ────────────────────────────────────────
         const specRoles = {
             // Tanks
             'Blood': 'tank', 'Vengeance': 'tank', 'Guardian': 'tank',
@@ -562,21 +874,31 @@
             'Restoration': 'healer', 'Holy': 'healer', 'Discipline': 'healer',
             'Mistweaver': 'healer', 'Preservation': 'healer', 'Restauration': 'healer',
             'Sacré': 'healer', 'Tisse-brume': 'healer', 'Préservation': 'healer',
-            // DPS (everything else defaults to dps)
+            // Everything else → DPS
         };
 
-        // Get member role from spec
         function getMemberRole(member) {
             const spec = member.activeSpec;
-            if (spec && specRoles[spec]) {
-                return specRoles[spec];
-            }
-            return 'dps'; // Default to DPS
+            if (spec && specRoles[spec]) return specRoles[spec];
+            return 'dps';
         }
 
-        // Buff/Debuff definitions - Based on WoW raid utility
+        // ── Class CSS color var ───────────────────────────────────────────────────
+        const classVars = {
+            'Death Knight': '--dk',  'Demon Hunter': '--dh', 'Druid': '--druid',
+            'Evoker': '--evoker',    'Hunter': '--hunter',   'Mage': '--mage',
+            'Monk': '--monk',        'Paladin': '--paladin', 'Priest': '--priest',
+            'Rogue': '--rogue',      'Shaman': '--shaman',   'Warlock': '--warlock',
+            'Warrior': '--warrior',
+        };
+
+        function classColor(cls) {
+            const v = classVars[cls];
+            return v ? `var(${v})` : 'var(--text-main)';
+        }
+
+        // ── Raid utility (buffs / debuffs) ────────────────────────────────────────
         const raidUtility = {
-            // Buffs
             'Fureur-du-ciel': {
                 providers: ['Shaman'],
                 icon: '../img/icons/specs/spell_nature_invisibilitytotem.jpg',
@@ -612,7 +934,6 @@
                 icon: '../img/icons/specs/spell_holy_wordfortitude.jpg',
                 category: 'Buffs'
             },
-            // Debuffs
             'Marque du chaos': {
                 providers: ['Demon Hunter'],
                 icon: '../img/icons/specs/ability_demonhunter_empowerwards.jpg',
@@ -625,27 +946,96 @@
             }
         };
 
-        // State
-        let allMembers = [];
-        let raidComposition = {
-            tank: [],
-            healer: [],
-            dps: []
-        };
-        let activeGradeFilter = 'all';
-        let activeRoleFilter = 'all';
-        let knownGrades = new Set();
-
-        // Initialize
-        async function init() {
-            await loadMembers();
-            updateAnalysis();
+        // ── XSS guard ─────────────────────────────────────────────────────────────
+        function escHtml(s) {
+            return String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
-        // Load members from Firestore
+        // ── Toast ─────────────────────────────────────────────────────────────────
+        function showToast(msg, type = 'info', duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.3s';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 350);
+            }, duration);
+        }
+
+        // ── State ─────────────────────────────────────────────────────────────────
+        let allMembers         = [];
+        let raidComposition    = { tank: [], healer: [], dps: [] };
+        let activeGradeFilter  = 'all';
+        let activeRoleFilter   = 'all';
+        let knownGrades        = new Set();
+        let draggedMember      = null;
+
+        // ── Mobile Tab Navigation ─────────────────────────────────────────────────
+        let activeTab = 'members';
+
+        function showTab(tab) {
+            activeTab = tab;
+            const panels = {
+                members:     document.getElementById('membersPanel'),
+                composition: document.getElementById('compositionPanel'),
+                buffs:       document.getElementById('analysisPanel'),
+            };
+            const tabs = {
+                members:     document.getElementById('tabMembers'),
+                composition: document.getElementById('tabComposition'),
+                buffs:       document.getElementById('tabBuffs'),
+            };
+            Object.entries(panels).forEach(([key, el]) => {
+                el.classList.toggle('panel-visible', key === tab);
+            });
+            Object.entries(tabs).forEach(([key, el]) => {
+                el.classList.toggle('active', key === tab);
+            });
+        }
+
+        function isMobile() { return window.innerWidth <= 768; }
+
+        function initLayout() {
+            if (isMobile()) {
+                showTab('members');
+                document.getElementById('membersPanelSubtitle').textContent = 'Appuyez sur un membre pour l\'ajouter';
+            } else {
+                // Desktop: all panels visible (no panel-visible class needed — CSS shows all)
+                ['membersPanel', 'compositionPanel', 'analysisPanel'].forEach(id => {
+                    document.getElementById(id).classList.remove('panel-visible');
+                });
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            if (!isMobile()) {
+                // Restore desktop layout
+                ['membersPanel', 'compositionPanel', 'analysisPanel'].forEach(id => {
+                    document.getElementById(id).classList.remove('panel-visible');
+                });
+                document.getElementById('membersPanelSubtitle').textContent = 'Glissez les membres vers la composition';
+            } else {
+                showTab(activeTab);
+                document.getElementById('membersPanelSubtitle').textContent = 'Appuyez sur un membre pour l\'ajouter';
+            }
+        });
+
+        // ── Tap-to-add (mobile) ───────────────────────────────────────────────────
+        function tapAddMember(member) {
+            const all = [...raidComposition.tank, ...raidComposition.healer, ...raidComposition.dps];
+            if (all.find(m => m.id === member.id)) return;
+            const role = getMemberRole(member);
+            raidComposition[role].push(member);
+            refresh();
+            if (isMobile()) showTab('composition');
+        }
+
+        // ── Firestore: load members ───────────────────────────────────────────────
         async function loadMembers() {
             const memberList = document.getElementById('memberList');
-
             try {
                 const snapshot = await db.collection('guild-members')
                     .where('active', '==', true)
@@ -660,28 +1050,20 @@
                     knownGrades.add(member.rank);
                 });
 
-                // Sort by name
-                allMembers.sort((a, b) => a.name.localeCompare(b.name));
-
-                // Create grade filters
+                allMembers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
                 createGradeFilters();
-
-                // Render members
                 renderMembers();
-
-            } catch (error) {
-                console.error('Error loading members:', error);
+            } catch (err) {
+                console.error('Error loading members:', err);
                 memberList.innerHTML = '<p style="color: var(--text-muted); padding: 1rem;">Erreur de chargement</p>';
             }
         }
 
-        // Create grade filter buttons
+        // ── Grade filter buttons ──────────────────────────────────────────────────
         function createGradeFilters() {
             const container = document.getElementById('gradeFilters');
             container.innerHTML = '<button class="filter-btn active" data-grade="all" onclick="filterByGrade(\'all\')">Tous rangs</button>';
-
-            const sortedGrades = [...knownGrades].sort((a, b) => a - b);
-            sortedGrades.forEach(grade => {
+            [...knownGrades].sort((a, b) => a - b).forEach(grade => {
                 const btn = document.createElement('button');
                 btn.className = 'filter-btn';
                 btn.dataset.grade = grade;
@@ -691,91 +1073,72 @@
             });
         }
 
-        // Filter members by grade
         function filterByGrade(grade) {
             activeGradeFilter = grade;
-
-            // Update button states
             document.querySelectorAll('#gradeFilters .filter-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.grade == grade);
             });
-
             renderMembers();
         }
 
-        // Filter members by role
         function filterByRole(role) {
             activeRoleFilter = role;
-
-            // Update button states
             document.querySelectorAll('#roleFilters .filter-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.role == role);
             });
-
             renderMembers();
         }
 
-        // Render member list
+        // ── Render member list ────────────────────────────────────────────────────
         function renderMembers() {
             const memberList = document.getElementById('memberList');
             memberList.innerHTML = '';
 
-            const raidMemberIds = new Set([
+            const raidIds = new Set([
                 ...raidComposition.tank.map(m => m.id),
                 ...raidComposition.healer.map(m => m.id),
-                ...raidComposition.dps.map(m => m.id)
+                ...raidComposition.dps.map(m => m.id),
             ]);
 
-            const filteredMembers = allMembers.filter(m => {
-                // Grade filter
-                const gradeMatch = activeGradeFilter === 'all' || m.rank == activeGradeFilter;
-
-                // Role filter
-                let roleMatch = true;
-                if (activeRoleFilter !== 'all') {
-                    const memberRole = getMemberRole(m);
-                    roleMatch = memberRole === activeRoleFilter;
-                }
-
-                return gradeMatch && roleMatch;
+            const filtered = allMembers.filter(m => {
+                const gradeOk = activeGradeFilter === 'all' || m.rank == activeGradeFilter;
+                const roleOk  = activeRoleFilter  === 'all' || getMemberRole(m) === activeRoleFilter;
+                return gradeOk && roleOk;
             });
 
-            filteredMembers.forEach(member => {
+            filtered.forEach(member => {
                 const card = document.createElement('div');
-                card.className = 'member-card';
-                if (raidMemberIds.has(member.id)) {
-                    card.classList.add('in-raid');
-                }
+                card.className = 'member-card' + (raidIds.has(member.id) ? ' in-raid' : '');
                 card.draggable = true;
                 card.dataset.memberId = member.id;
 
                 card.ondragstart = (e) => handleDragStart(e, member);
-                card.ondragend = handleDragEnd;
+                card.ondragend   = handleDragEnd;
+                card.onclick     = () => tapAddMember(member);
 
-                const classIcon = classIcons[member.class] || classIcons['Warrior'];
-                const spec = member.activeSpec || '';
+                const icon = classIcons[member.class] || classIcons['Warrior'];
+                const spec = escHtml(member.activeSpec || '');
                 const ilvl = member.ilvl ? `ilvl ${member.ilvl}` : '';
+                const color = classColor(member.class);
 
                 card.innerHTML = `
-                    <img src="${classIcon}" alt="${member.class}" class="member-class-icon" loading="lazy">
+                    <img src="${escHtml(icon)}" alt="${escHtml(member.class)}" class="member-class-icon" loading="lazy">
                     <div class="member-info">
-                        <div class="member-name" style="color: var(--${member.class.toLowerCase().replace(' ', '-')})">${member.name}</div>
+                        <div class="member-name" style="color:${color}">${escHtml(member.name)}</div>
                         <div class="member-details">${spec}</div>
                     </div>
-                    <span class="member-ilvl">${ilvl}</span>
+                    <span class="member-ilvl">${escHtml(ilvl)}</span>
                 `;
 
                 memberList.appendChild(card);
             });
 
-            if (filteredMembers.length === 0) {
+            if (filtered.length === 0) {
                 memberList.innerHTML = '<p style="color: var(--text-muted); padding: 1rem; text-align: center;">Aucun membre trouvé</p>';
             }
         }
 
-        // Drag and Drop handlers
-        let draggedMember = null;
-
+        // ── Drag and Drop ─────────────────────────────────────────────────────────
         function handleDragStart(e, member) {
             draggedMember = member;
             e.target.classList.add('dragging');
@@ -799,111 +1162,109 @@
         function handleDrop(e, role) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
-
             if (!draggedMember) return;
-
-            // Check if already in raid
-            const allRaidMembers = [...raidComposition.tank, ...raidComposition.healer, ...raidComposition.dps];
-            if (allRaidMembers.find(m => m.id === draggedMember.id)) {
-                draggedMember = null;
-                return;
-            }
-
-            // Add to composition
+            const all = [...raidComposition.tank, ...raidComposition.healer, ...raidComposition.dps];
+            if (all.find(m => m.id === draggedMember.id)) { draggedMember = null; return; }
             raidComposition[role].push(draggedMember);
             draggedMember = null;
-
-            updateRaidDisplay();
-            renderMembers();
-            updateAnalysis();
+            refresh();
         }
 
-        // Remove member from raid
+        // ── Composition management ────────────────────────────────────────────────
         function removeFromRaid(memberId, role) {
             raidComposition[role] = raidComposition[role].filter(m => m.id !== memberId);
-            updateRaidDisplay();
-            renderMembers();
-            updateAnalysis();
+            refresh();
         }
 
-        // Clear entire composition
         function clearComposition() {
             raidComposition = { tank: [], healer: [], dps: [] };
+            hideEventBanner();
+            refresh();
+        }
+
+        // ── Master refresh ────────────────────────────────────────────────────────
+        function refresh() {
             updateRaidDisplay();
             renderMembers();
             updateAnalysis();
+            updateBuffBar();
         }
 
-        // Update raid display
+        // ── Update raid display ───────────────────────────────────────────────────
         function updateRaidDisplay() {
             const total = raidComposition.tank.length + raidComposition.healer.length + raidComposition.dps.length;
             document.getElementById('raidCount').textContent = total;
-
-            // Update role counts
-            document.getElementById('tankCount').textContent = `${raidComposition.tank.length}/2`;
+            document.getElementById('tankCount').textContent   = `${raidComposition.tank.length}/2`;
             document.getElementById('healerCount').textContent = `${raidComposition.healer.length}/4`;
-            document.getElementById('dpsCount').textContent = `${raidComposition.dps.length}/14`;
+            document.getElementById('dpsCount').textContent    = `${raidComposition.dps.length}/14`;
 
-            // Render each role section
             ['tank', 'healer', 'dps'].forEach(role => {
                 const container = document.getElementById(`${role}Members`);
                 container.innerHTML = '';
-
                 raidComposition[role].forEach(member => {
-                    const classIcon = classIcons[member.class] || classIcons['Warrior'];
-                    const div = document.createElement('div');
+                    const icon  = classIcons[member.class] || classIcons['Warrior'];
+                    const color = classColor(member.class);
+                    const div   = document.createElement('div');
                     div.className = 'raid-member';
                     div.innerHTML = `
-                        <img src="${classIcon}" alt="${member.class}" class="member-class-icon" loading="lazy">
-                        <span class="member-name" style="color: var(--${member.class.toLowerCase().replace(' ', '-')})">${member.name}</span>
-                        <button class="remove-member" onclick="removeFromRaid('${member.id}', '${role}')">&times;</button>
+                        <img src="${escHtml(icon)}" alt="${escHtml(member.class)}" class="member-class-icon" loading="lazy">
+                        <span class="member-name" style="color:${color}">${escHtml(member.name)}</span>
+                        <button class="remove-member" onclick="removeFromRaid('${escHtml(member.id)}', '${role}')" title="Retirer">&times;</button>
                     `;
                     container.appendChild(div);
                 });
             });
         }
 
-        // Update analysis panel
+        // ── Buff mini-bar (composition panel) ────────────────────────────────────
+        function updateBuffBar() {
+            const bar = document.getElementById('buffBar');
+            const classesInRaid = new Set(
+                [...raidComposition.tank, ...raidComposition.healer, ...raidComposition.dps].map(m => m.class)
+            );
+
+            let html = '<span class="buff-bar-label">Buffs</span>';
+            for (const [name, data] of Object.entries(raidUtility)) {
+                const has = data.providers.some(p => classesInRaid.has(p));
+                html += `<div class="buff-dot ${has ? 'available' : 'missing'}" data-tooltip="${escHtml(name)}">
+                    <img src="${escHtml(data.icon)}" alt="${escHtml(name)}" loading="lazy">
+                </div>`;
+            }
+            bar.innerHTML = html;
+        }
+
+        // ── Analysis panel (right) ────────────────────────────────────────────────
         function updateAnalysis() {
             const grid = document.getElementById('analysisGrid');
-            const allRaidMembers = [...raidComposition.tank, ...raidComposition.healer, ...raidComposition.dps];
-            const classesInRaid = new Set(allRaidMembers.map(m => m.class));
+            const classesInRaid = new Set(
+                [...raidComposition.tank, ...raidComposition.healer, ...raidComposition.dps].map(m => m.class)
+            );
 
-            let html = '';
-
-            // Group utilities by category from raidUtility
             const categories = {};
-            for (const [utilityName, data] of Object.entries(raidUtility)) {
-                const cat = data.category;
-                if (!categories[cat]) categories[cat] = [];
-                categories[cat].push(utilityName);
+            for (const [name, data] of Object.entries(raidUtility)) {
+                if (!categories[data.category]) categories[data.category] = [];
+                categories[data.category].push(name);
             }
 
-            // Order categories
-            const categoryOrder = ['Buffs', 'Debuffs'];
-
-            for (const category of categoryOrder) {
+            let html = '';
+            for (const category of ['Buffs', 'Debuffs']) {
                 const utilities = categories[category];
                 if (!utilities) continue;
 
                 html += `<div class="buff-category">
-                    <div class="buff-category-title">${category}</div>
+                    <div class="buff-category-title">${escHtml(category)}</div>
                     <div class="buff-list">`;
 
-                utilities.forEach(utility => {
-                    const data = raidUtility[utility];
-                    const hasProvider = data.providers.some(p => classesInRaid.has(p));
-                    const provider = hasProvider
-                        ? data.providers.find(p => classesInRaid.has(p))
-                        : data.providers[0];
+                utilities.forEach(name => {
+                    const data     = raidUtility[name];
+                    const has      = data.providers.some(p => classesInRaid.has(p));
+                    const provider = has ? data.providers.find(p => classesInRaid.has(p)) : data.providers[0];
 
-                    html += `
-                        <div class="buff-item ${hasProvider ? 'available' : 'missing'}">
-                            <img src="${data.icon}" alt="${utility}" class="buff-icon" loading="lazy">
-                            <span class="buff-name">${utility}</span>
-                            <span class="buff-provider">${provider}</span>
-                        </div>
-                    `;
+                    html += `<div class="buff-item ${has ? 'available' : 'missing'}">
+                        <img src="${escHtml(data.icon)}" alt="${escHtml(name)}" class="buff-icon" loading="lazy">
+                        <span class="buff-name">${escHtml(name)}</span>
+                        <span class="buff-provider">${escHtml(provider)}</span>
+                    </div>`;
                 });
 
                 html += `</div></div>`;
@@ -912,7 +1273,118 @@
             grid.innerHTML = html;
         }
 
-        // Initialize on load
+        // ── Event Integration ─────────────────────────────────────────────────────
+        const ROLE_MAP = { 'Tanks': 'tank', 'Healers': 'healer', 'Melee': 'dps', 'Ranged': 'dps' };
+
+        async function loadFromEvent() {
+            const btn = document.getElementById('loadEventBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Chargement…';
+
+            try {
+                // 1. Fetch event list
+                const evRes = await fetch(EVENTS_API);
+                if (!evRes.ok) throw new Error(`Events API: ${evRes.status}`);
+                const { events } = await evRes.json();
+
+                if (!events || events.length === 0) {
+                    showToast('Aucun événement trouvé dans RaidHelper.', 'error');
+                    return;
+                }
+
+                // 2. Find the next upcoming event (sort by startTime, prefer future)
+                const now = Date.now();
+                const sorted = [...events].sort((a, b) => a.startTime - b.startTime);
+                const next = sorted.find(e => e.startTime * 1000 >= now) || sorted[0];
+
+                // 3. Fetch event details (sign-ups)
+                const detRes = await fetch(`${DETAILS_API}?eventId=${encodeURIComponent(next.id)}`);
+                if (!detRes.ok) throw new Error(`Details API: ${detRes.status}`);
+                const detail = await detRes.json();
+
+                const signUps = detail.signUps || [];
+                if (signUps.length === 0) {
+                    showToast('Aucune inscription pour cet événement.', 'info');
+                    showEventBanner(next, 0, 0, []);
+                    return;
+                }
+
+                // 4. Build lookup: lowercase name → member
+                const memberMap = new Map(allMembers.map(m => [m.name.toLowerCase(), m]));
+
+                // 5. Clear composition and populate from sign-ups
+                raidComposition = { tank: [], healer: [], dps: [] };
+                const matched   = [];
+                const unmatched = [];
+
+                signUps.forEach(su => {
+                    const role = ROLE_MAP[su.role];
+                    if (!role) return; // skip absences/bench rows if they appear
+                    const member = memberMap.get((su.name || '').toLowerCase());
+                    if (member) {
+                        // Avoid duplicates
+                        const all = [...raidComposition.tank, ...raidComposition.healer, ...raidComposition.dps];
+                        if (!all.find(m => m.id === member.id)) {
+                            raidComposition[role].push(member);
+                            matched.push(member.name);
+                        }
+                    } else {
+                        unmatched.push(su.name || '?');
+                    }
+                });
+
+                refresh();
+                showEventBanner(next, matched.length, signUps.length, unmatched);
+
+                const msg = `${matched.length} joueur${matched.length !== 1 ? 's' : ''} chargé${matched.length !== 1 ? 's' : ''} depuis RaidHelper.`;
+                showToast(msg, matched.length > 0 ? 'success' : 'info');
+
+                if (isMobile()) showTab('composition');
+
+            } catch (err) {
+                console.error('loadFromEvent:', err);
+                showToast('Impossible de charger l\'événement. Vérifiez la console.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '📅 Prochain raid';
+            }
+        }
+
+        function showEventBanner(event, matched, total, unmatched) {
+            const banner   = document.getElementById('eventBanner');
+            const title    = document.getElementById('eventBannerTitle');
+            const meta     = document.getElementById('eventBannerMeta');
+            const unmEl    = document.getElementById('eventBannerUnmatched');
+
+            const date = event.startTime
+                ? new Date(event.startTime * 1000).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+                : '';
+
+            title.textContent = event.title || 'Raid';
+            meta.textContent  = `${date} · ${matched} / ${total} joueurs reconnus`;
+
+            if (unmatched.length > 0) {
+                unmEl.textContent = `Non trouvés : ${unmatched.slice(0, 8).map(n => n).join(', ')}${unmatched.length > 8 ? ` +${unmatched.length - 8}` : ''}`;
+                unmEl.style.display = '';
+            } else {
+                unmEl.style.display = 'none';
+            }
+
+            banner.classList.add('visible');
+        }
+
+        function hideEventBanner() {
+            document.getElementById('eventBanner').classList.remove('visible');
+        }
+
+        // ── Init ──────────────────────────────────────────────────────────────────
+        async function init() {
+            initLayout();
+            await loadMembers();
+            updateAnalysis();
+            updateBuffBar();
+        }
+
         init();
     </script>
 
