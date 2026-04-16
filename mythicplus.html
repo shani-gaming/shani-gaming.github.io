@@ -271,6 +271,10 @@
     </footer>
 
     <script>
+        function escHtml(s) {
+            return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
         const db = firebase.firestore();
 
         // ─── WoW class colors ──────────────────────────────────────────────────
@@ -404,7 +408,7 @@ function updateSummary() {
                 document.getElementById('summaryBar').innerHTML = `
                     <span><strong>${withData.length}</strong> membres avec des runs</span>
                     <span>Score moyen : <strong style="color:${scoreColor(avg)}">${avg}</strong></span>
-                    <span>Meilleur score : <strong style="color:${scoreColor(getScore(best.name.toLowerCase()))}">${best.name}</strong> — ${Math.round(getScore(best.name.toLowerCase()))}</span>
+                    <span>Meilleur score : <strong style="color:${scoreColor(getScore(best.name.toLowerCase()))}">${escHtml(best.name)}</strong> — ${Math.round(getScore(best.name.toLowerCase()))}</span>
                 `;
             }
         }
@@ -436,11 +440,11 @@ function updateSummary() {
                 <th class="${sortCol === 'name' ? 'sort-active' : ''}" onclick="setSort('name')">Joueur ${arrow('name')}</th>
                 <th class="${sortCol === 'score' ? 'sort-active' : ''}" onclick="setSort('score')">Score ${arrow('score')}</th>
                 ${dungeonList.map(dg => {
-                    const safe = dg.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                    const safe = escHtml(dg.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
                     return `<th class="${sortCol === dg.name ? 'sort-active' : ''}"
                               onclick="setSort('${safe}')"
-                              title="${dg.name}">
-                        ${dg.shortName} ${arrow(dg.name)}
+                              title="${escHtml(dg.name)}">
+                        ${escHtml(dg.shortName)} ${arrow(dg.name)}
                     </th>`;
                 }).join('')}
             </tr>`;
@@ -473,7 +477,7 @@ function updateSummary() {
                     <td>
                         <div class="player-name">
                             <span class="class-dot" style="background:${cc}"></span>
-                            <span style="color:${found ? cc : 'var(--text-muted)'}">${m.name}</span>
+                            <span style="color:${found ? cc : 'var(--text-muted)'}">${escHtml(m.name)}</span>
                         </div>
                     </td>
                     <td>${scoreCell}</td>

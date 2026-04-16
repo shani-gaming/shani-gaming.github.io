@@ -409,6 +409,10 @@
     </div>
 
     <script>
+    function escHtml(s) {
+        return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
     const EVENTS_API  = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getRaidHelperEvents';
     const DETAILS_API = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getEventDetails';
 
@@ -506,13 +510,13 @@
                     <div class="event-month-name">${MONTHS_SHORT[d.getMonth()]}</div>
                 </div>
                 <div class="event-body">
-                    <div class="event-title">${title}</div>
+                    <div class="event-title">${escHtml(title)}</div>
                     <div class="event-time-row">${time}${endT}</div>
-                    ${desc ? `<div class="event-desc-preview">${desc.replace(/\n/g,' · ').substring(0,120)}</div>` : ''}
+                    ${desc ? `<div class="event-desc-preview">${escHtml(desc).replace(/\n/g,' · ').substring(0,120)}</div>` : ''}
                 </div>
                 <div class="event-meta">
                     <span class="signup-badge">⚔ ${e.signUps} inscrit${e.signUps > 1 ? 's' : ''}</span>
-                    ${e.leader ? `<div class="leader-badge">RL : ${e.leader}</div>` : ''}
+                    ${e.leader ? `<div class="leader-badge">RL : ${escHtml(e.leader)}</div>` : ''}
                     <div class="details-hint">Voir les inscrits →</div>
                 </div>
             </div>`;
@@ -617,7 +621,7 @@
                     pill.dataset.eid = e.id;
                     pill.innerHTML = `
                         <span class="cal-event-pill-dot"></span>
-                        <span class="cal-event-pill-title">${extractTitle(e)}</span>
+                        <span class="cal-event-pill-title">${escHtml(extractTitle(e))}</span>
                         <span class="cal-event-pill-time">${fmtTime(e.startTime)}</span>`;
                     cell.appendChild(pill);
                 });
@@ -673,8 +677,8 @@
             const color = classColor(p.class);
             return `<div class="signup-row">
                 <span class="class-dot" style="background:${color}"></span>
-                <span class="signup-name" style="color:${color}">${p.name}</span>
-                <span class="signup-spec">${p.spec||''}</span>
+                <span class="signup-name" style="color:${color}">${escHtml(p.name)}</span>
+                <span class="signup-spec">${escHtml(p.spec||'')}</span>
             </div>`;
         }).join('');
         return `<div class="signup-section">
@@ -701,7 +705,7 @@
 
         const absHtml = absences.length ? `<div class="signup-section">
             <div class="signup-section-title">Absences (${absences.length})</div>
-            <div class="absence-list">${absences.map(p => `<span class="absence-chip">${p.name}</span>`).join('')}</div>
+            <div class="absence-list">${absences.map(p => `<span class="absence-chip">${escHtml(p.name)}</span>`).join('')}</div>
         </div>` : '';
 
         const otherHtml = [
@@ -714,10 +718,10 @@
             ${bannerHtml}
             <button class="modal-close" onclick="closeModal()">✕</button>
             <div class="modal-body">
-                <div class="modal-title">${title}</div>
+                <div class="modal-title">${escHtml(title)}</div>
                 <div class="modal-sub">
                     <span>${fmtDateLong(d.startTime)}</span> · <span>${fmtTime(d.startTime)}</span>
-                    ${d.leader ? ` · RL : <span>${d.leader}</span>` : ''}
+                    ${d.leader ? ` · RL : <span>${escHtml(d.leader)}</span>` : ''}
                 </div>
                 <div class="role-summary">
                     ${rs.Tanks   ? `<span class="role-pill tanks">🛡 Tanks ${rs.Tanks}</span>`      : ''}
