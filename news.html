@@ -12,14 +12,21 @@
     <meta property="og:url" content="https://www.sagesdepandarie.ovh/news.html">
     <meta property="og:type" content="website">
     <link rel="stylesheet" href="styles/common.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="scripts/firebase-init.js"></script>
+    <script src="scripts/admin-auth.js"></script>
+    <!-- Données statiques de fallback -->
+    <script src="scripts/news.js"></script>
+
     <style>
         body { padding-top: 80px; }
 
-
-        .news-section {
-            padding: 4rem 0;
-            min-height: 60vh;
-        }
+        /* ── News Grid ── */
+        .news-section { padding: 4rem 0; min-height: 60vh; }
 
         .news-grid {
             display: grid;
@@ -28,20 +35,49 @@
             margin-bottom: 3rem;
         }
 
+        /* ── News Card ── */
         .news-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 2rem;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            position: relative;
             transition: transform 0.3s, border-color 0.3s;
         }
 
         .news-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
+            transform: translateY(-4px);
+            border-color: rgba(212,175,55,0.4);
+        }
+
+        /* Hero image */
+        .news-image {
+            height: 180px;
+            background-size: cover;
+            background-position: center;
+            background-color: var(--bg-surface);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .news-image::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 80px;
+            background: linear-gradient(transparent, var(--bg-card));
+            pointer-events: none;
+        }
+
+        /* Card body */
+        .news-body {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            flex: 1;
         }
 
         .news-meta {
@@ -51,47 +87,340 @@
         }
 
         .news-label {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.08em;
             font-weight: 700;
         }
 
-        .news-label.progression { color: var(--primary); }
+        .news-label.progression  { color: var(--primary); }
         .news-label.organisation { color: var(--accent); }
-        .news-label.recrutement { color: #7289da; }
-        .news-label.communaute { color: #f48cba; }
-        .news-label.default { color: var(--primary); }
+        .news-label.recrutement  { color: #7289da; }
+        .news-label.communaute   { color: #f48cba; }
+        .news-label.default      { color: var(--primary); }
 
         .news-date {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: var(--text-muted);
         }
 
         .news-title {
-            font-size: 1.3rem;
+            font-size: 1.15rem;
             color: #fff;
             font-weight: 700;
-            line-height: 1.3;
+            line-height: 1.35;
+            margin: 0;
         }
 
         .news-content {
             color: var(--text-muted);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             flex: 1;
-            line-height: 1.6;
+            line-height: 1.65;
+            margin: 0;
         }
 
         .news-link {
             color: var(--primary);
             text-decoration: none;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
+            display: inline-block;
         }
 
         .news-link:hover { color: #fff; }
 
-        /* Pagination */
+        /* ── Admin: action buttons on card ── */
+        .card-actions {
+            position: absolute;
+            top: 0.6rem;
+            right: 0.6rem;
+            display: flex;
+            gap: 0.3rem;
+            z-index: 10;
+        }
+
+        .card-action-btn {
+            background: rgba(13,17,23,0.88);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.3rem 0.55rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            line-height: 1;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+
+        .card-action-btn:hover            { border-color: var(--primary); color: var(--primary); }
+        .card-action-btn.delete:hover     { border-color: #ff6b6b; color: #ff6b6b; }
+
+        /* ── Admin notice ── */
+        .admin-notice {
+            display: none;
+            background: rgba(212,175,55,0.07);
+            border: 1px solid rgba(212,175,55,0.28);
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        .admin-notice.visible { display: block; }
+
+        /* ── "Nouvelle actu" button ── */
+        .new-news-btn {
+            padding: 0.5rem 1.1rem;
+            background: rgba(212,175,55,0.08);
+            border: 1px solid rgba(212,175,55,0.4);
+            border-radius: 8px;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            display: none;
+        }
+        .new-news-btn:hover { background: rgba(212,175,55,0.16); border-color: var(--primary); }
+        .new-news-btn.visible { display: inline-flex; align-items: center; gap: 0.4rem; }
+
+        /* ── Modal overlay ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.72);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.visible { display: flex; }
+
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 92vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+        }
+
+        .modal-box::-webkit-scrollbar { width: 6px; }
+        .modal-box::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 1.5rem 1rem;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg-card);
+            z-index: 1;
+            border-radius: 14px 14px 0 0;
+        }
+
+        .modal-header h3 {
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0.25rem;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+        .modal-close:hover { color: #ff6b6b; }
+
+        /* ── Form ── */
+        .modal-form { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.1rem; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+
+        .form-group label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+
+        .form-hint {
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0;
+            font-size: 0.72rem;
+            opacity: 0.7;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: var(--bg-elevated, #2a2f38);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 0.65rem 0.85rem;
+            color: var(--text-main, #e6edf3);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder { color: var(--text-muted); opacity: 0.6; }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-group textarea { resize: vertical; min-height: 110px; }
+
+        .form-group select option { background: #1a1f28; }
+
+        /* Image preview */
+        .image-preview {
+            margin-top: 0.4rem;
+            border-radius: 7px;
+            overflow: hidden;
+            height: 0;
+            transition: height 0.25s;
+        }
+
+        .image-preview.has-image { height: 110px; }
+
+        .image-preview img {
+            width: 100%;
+            height: 110px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-error {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 110px;
+            font-size: 0.8rem;
+            color: #ff6b6b;
+            background: rgba(255,107,107,0.08);
+            border-radius: 7px;
+            border: 1px dashed rgba(255,107,107,0.3);
+        }
+
+        /* Separator in form */
+        .form-separator {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 0.25rem 0;
+        }
+
+        .form-section-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: -0.25rem;
+        }
+
+        /* Modal footer */
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid var(--border);
+            background: var(--bg-card);
+            border-radius: 0 0 14px 14px;
+            position: sticky;
+            bottom: 0;
+        }
+
+        .btn-cancel {
+            padding: 0.6rem 1.2rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .btn-cancel:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
+
+        .btn-save {
+            padding: 0.6rem 1.5rem;
+            background: rgba(212,175,55,0.12);
+            border: 1px solid var(--primary);
+            border-radius: 7px;
+            color: var(--primary);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        .btn-save:hover { background: rgba(212,175,55,0.22); }
+        .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ── Toast ── */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.65rem 1.2rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            animation: toast-in 0.25s ease;
+        }
+
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .toast.success { border-color: #4caf50; color: #4caf50; }
+        .toast.error   { border-color: #ff6b6b; color: #ff6b6b; }
+        .toast.info    { border-color: rgba(212,175,55,0.5); color: var(--primary); }
+
+        /* ── Pagination ── */
         .pagination {
             display: flex;
             justify-content: center;
@@ -111,28 +440,23 @@
             transition: all 0.2s;
         }
 
-        .pagination-btn:hover:not(:disabled) {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
+        .pagination-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+        .pagination-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .pagination-info { color: var(--text-muted); font-size: 0.9rem; }
 
-        .pagination-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        .pagination-info {
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
             color: var(--text-muted);
-            font-size: 0.9rem;
         }
 
-        @media (max-width: 1024px) {
-            .news-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        @media (max-width: 600px) {
+        /* ── Responsive ── */
+        @media (max-width: 1024px) { .news-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px)  {
             .news-grid { grid-template-columns: 1fr; }
             .page-header h1 { font-size: 2rem; }
+            .form-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -140,18 +464,30 @@
 
     <nav class="navbar"></nav>
     <script src="scripts/navbar.js"></script>
-    <script src="scripts/news.js"></script>
 
     <div class="page-header">
         <div class="container">
-            <h1>Actualités</h1>
-            <p>Toutes les nouvelles de la guilde Les Sages de Pandarie</p>
+            <div class="page-header-row">
+                <div>
+                    <h1>Actualités</h1>
+                    <p>Toutes les nouvelles de la guilde Les Sages de Pandarie</p>
+                </div>
+                <div style="display:flex;gap:0.75rem;align-items:center;">
+                    <button id="newNewsBtn" class="new-news-btn" onclick="openCreateModal()">+ Nouvelle actu</button>
+                    <button id="adminBtn" class="admin-btn" onclick="toggleAdmin()">Admin</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <section class="news-section">
         <div class="container">
-            <div class="news-grid" id="newsGrid"></div>
+            <div id="adminNotice" class="admin-notice">
+                Mode admin actif — créez, modifiez ou supprimez des actualités.
+            </div>
+            <div class="news-grid" id="newsGrid">
+                <div class="loader"></div>
+            </div>
             <div class="pagination" id="pagination"></div>
         </div>
     </section>
@@ -162,54 +498,212 @@
         </div>
     </footer>
 
-    <script>
-        const PER_PAGE = 6;
-        let currentPage = 0;
+    <!-- ── Create / Edit Modal ── -->
+    <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle">Nouvelle actualité</h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <form class="modal-form" id="newsForm" onsubmit="saveNews(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Catégorie</label>
+                        <select id="fLabel">
+                            <option>Progression</option>
+                            <option>Organisation</option>
+                            <option>Recrutement</option>
+                            <option>Communauté</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date de publication</label>
+                        <input type="date" id="fDate" required>
+                    </div>
+                </div>
 
-        const labelColors = {
-            'progression': 'progression',
-            'organisation': 'organisation',
-            'recrutement': 'recrutement',
-            'communauté': 'communaute'
+                <div class="form-group">
+                    <label>Titre</label>
+                    <input type="text" id="fTitle" required placeholder="Ex : Voidspire Normal — Clear complet !">
+                </div>
+
+                <div class="form-group">
+                    <label>Contenu</label>
+                    <textarea id="fContent" required placeholder="2-3 phrases résumant l'actualité…"></textarea>
+                </div>
+
+                <hr class="form-separator">
+                <span class="form-section-label">Image</span>
+
+                <div class="form-group">
+                    <label>URL ou chemin de l'image <span class="form-hint">optionnel — ex&nbsp;: /img/news/kill.jpg ou https://…</span></label>
+                    <input type="text" id="fImageUrl" placeholder="/img/news/kill.jpg" oninput="updateImagePreview()">
+                    <div class="image-preview" id="imagePreview"></div>
+                </div>
+
+                <hr class="form-separator">
+                <span class="form-section-label">Lien <span class="form-hint">(optionnel)</span></span>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Texte du lien</label>
+                        <input type="text" id="fLinkText" placeholder="Voir le report">
+                    </div>
+                    <div class="form-group">
+                        <label>URL du lien</label>
+                        <input type="text" id="fLinkUrl" placeholder="/progression.html">
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal()">Annuler</button>
+                <button type="submit" form="newsForm" class="btn-save" id="btnSave">Publier</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const db = firebase.firestore();
+        const PER_PAGE = 6;
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+        function escHtml(s) {
+            return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function showToast(msg, type = 'info', ms = 4000) {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast ${type}`;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => { t.style.transition = 'opacity 0.3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 350); }, ms);
+        }
+
+        function formatDate(date) {
+            if (!date) return '';
+            const d = date?.toDate ? date.toDate() : new Date(date);
+            return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        const LABEL_CSS = {
+            'progression': 'progression', 'organisation': 'organisation',
+            'recrutement': 'recrutement', 'communauté': 'communaute', 'communaute': 'communaute'
         };
 
-        function renderPage(page) {
-            const grid = document.getElementById('newsGrid');
-            const paginationEl = document.getElementById('pagination');
-            const totalPages = Math.ceil(NEWS.length / PER_PAGE);
-            const slice = NEWS.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
+        // ── State ─────────────────────────────────────────────────────────────
+        let isAdmin     = false;
+        let allNews     = [];
+        let currentPage = 0;
+        let editingId   = null;
 
-            grid.innerHTML = slice.map(news => {
-                const date = new Date(news.date).toLocaleDateString('fr-FR', {
-                    day: 'numeric', month: 'long', year: 'numeric'
-                });
-                const colorClass = labelColors[news.label.toLowerCase()] || 'default';
-                const linkHtml = news.link
-                    ? `<a href="${news.link.url}" class="news-link">${news.link.text} →</a>`
-                    : '';
+        // ── Admin Auth ────────────────────────────────────────────────────────
+        function toggleAdmin() { AdminAuth.toggle(); }
 
-                return `
-                    <div class="news-card">
-                        <div class="news-meta">
-                            <span class="news-label ${colorClass}">${news.label}</span>
-                            <span class="news-date">${date}</span>
-                        </div>
-                        <h3 class="news-title">${news.title}</h3>
-                        <p class="news-content">${news.content}</p>
-                        ${linkHtml}
-                    </div>
-                `;
-            }).join('');
-
-            if (totalPages > 1) {
-                paginationEl.innerHTML = `
-                    <button class="pagination-btn" onclick="changePage(${page - 1})" ${page === 0 ? 'disabled' : ''}>← Précédent</button>
-                    <span class="pagination-info">Page ${page + 1} / ${totalPages}</span>
-                    <button class="pagination-btn" onclick="changePage(${page + 1})" ${page >= totalPages - 1 ? 'disabled' : ''}>Suivant →</button>
-                `;
+        function updateAdminUI() {
+            const btn    = document.getElementById('adminBtn');
+            const notice = document.getElementById('adminNotice');
+            const newBtn = document.getElementById('newNewsBtn');
+            if (isAdmin) {
+                btn.textContent = 'Quitter admin';
+                btn.classList.add('active');
+                notice.classList.add('visible');
+                newBtn.classList.add('visible');
             } else {
-                paginationEl.innerHTML = '';
+                btn.textContent = 'Admin';
+                btn.classList.remove('active');
+                notice.classList.remove('visible');
+                newBtn.classList.remove('visible');
             }
+            renderPage(currentPage);
+        }
+
+        AdminAuth.init({
+            onAdmin: () => { isAdmin = true; updateAdminUI(); },
+            onSignedOut: () => { isAdmin = false; updateAdminUI(); }
+        });
+
+        // ── Firestore subscription ────────────────────────────────────────────
+        function subscribeNews() {
+            db.collection('news').orderBy('date', 'desc').onSnapshot(
+                snap => {
+                    if (!snap.empty) {
+                        allNews = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    } else {
+                        // Firestore vide → fallback données statiques
+                        allNews = (typeof NEWS !== 'undefined')
+                            ? NEWS.map((n, i) => ({ id: `static-${i}`, ...n, _static: true }))
+                            : [];
+                    }
+                    renderPage(0);
+                },
+                err => {
+                    console.warn('Firestore snapshot error, using static data:', err);
+                    allNews = (typeof NEWS !== 'undefined')
+                        ? NEWS.map((n, i) => ({ id: `static-${i}`, ...n, _static: true }))
+                        : [];
+                    renderPage(0);
+                }
+            );
+        }
+
+        // ── Render ────────────────────────────────────────────────────────────
+        function renderPage(page) {
+            currentPage = page;
+            const grid  = document.getElementById('newsGrid');
+            const pagEl = document.getElementById('pagination');
+            const total = Math.ceil(allNews.length / PER_PAGE);
+            const slice = allNews.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
+
+            if (allNews.length === 0) {
+                grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+                    <p style="font-size:2rem;margin-bottom:0.5rem">📭</p>
+                    <p>Aucune actualité pour le moment.</p>
+                    ${isAdmin ? '<p style="font-size:0.85rem;margin-top:0.5rem">Créez la première avec le bouton « + Nouvelle actu ».</p>' : ''}
+                </div>`;
+                pagEl.innerHTML = '';
+                return;
+            }
+
+            grid.innerHTML = slice.map(renderCard).join('');
+
+            pagEl.innerHTML = total > 1 ? `
+                <button class="pagination-btn" onclick="changePage(${page - 1})" ${page === 0 ? 'disabled' : ''}>← Précédent</button>
+                <span class="pagination-info">Page ${page + 1} / ${total}</span>
+                <button class="pagination-btn" onclick="changePage(${page + 1})" ${page >= total - 1 ? 'disabled' : ''}>Suivant →</button>
+            ` : '';
+        }
+
+        function renderCard(news) {
+            const colorClass = LABEL_CSS[news.label?.toLowerCase()] || 'default';
+            const imageHtml  = news.imageUrl
+                ? `<div class="news-image" style="background-image:url('${escHtml(news.imageUrl)}')"></div>`
+                : '';
+            const linkHtml   = news.link
+                ? `<a href="${escHtml(news.link.url)}" class="news-link">${escHtml(news.link.text)} →</a>`
+                : '';
+            const adminHtml  = isAdmin && !news._static ? `
+                <div class="card-actions">
+                    <button class="card-action-btn edit"   onclick="openEditModal('${escHtml(news.id)}')" title="Modifier">✏️</button>
+                    <button class="card-action-btn delete" onclick="confirmDelete('${escHtml(news.id)}')" title="Supprimer">🗑️</button>
+                </div>` : '';
+
+            return `<div class="news-card">
+                ${imageHtml}
+                ${adminHtml}
+                <div class="news-body">
+                    <div class="news-meta">
+                        <span class="news-label ${colorClass}">${escHtml(news.label || '')}</span>
+                        <span class="news-date">${formatDate(news.date)}</span>
+                    </div>
+                    <h3 class="news-title">${escHtml(news.title || '')}</h3>
+                    <p class="news-content">${escHtml(news.content || '')}</p>
+                    ${linkHtml}
+                </div>
+            </div>`;
         }
 
         function changePage(page) {
@@ -218,7 +712,120 @@
             renderPage(currentPage);
         }
 
-        renderPage(0);
+        // ── Modal ─────────────────────────────────────────────────────────────
+        function openCreateModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent  = 'Nouvelle actualité';
+            document.getElementById('btnSave').textContent     = 'Publier';
+            document.getElementById('newsForm').reset();
+            document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+            clearImagePreview();
+            document.getElementById('modalOverlay').classList.add('visible');
+        }
+
+        function openEditModal(id) {
+            const news = allNews.find(n => n.id === id);
+            if (!news) return;
+            editingId = id;
+            document.getElementById('modalTitle').textContent  = 'Modifier l\'actualité';
+            document.getElementById('btnSave').textContent     = 'Enregistrer';
+
+            document.getElementById('fLabel').value   = news.label   || 'Progression';
+            document.getElementById('fTitle').value   = news.title   || '';
+            document.getElementById('fContent').value = news.content || '';
+            document.getElementById('fImageUrl').value = news.imageUrl || '';
+            document.getElementById('fLinkText').value = news.link?.text || '';
+            document.getElementById('fLinkUrl').value  = news.link?.url  || '';
+
+            const d = news.date?.toDate ? news.date.toDate() : new Date(news.date);
+            document.getElementById('fDate').value = d.toISOString().split('T')[0];
+
+            updateImagePreview();
+            document.getElementById('modalOverlay').classList.add('visible');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('visible');
+            editingId = null;
+        }
+
+        function handleOverlayClick(e) {
+            if (e.target === document.getElementById('modalOverlay')) closeModal();
+        }
+
+        // Escape key
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        // ── Image preview ─────────────────────────────────────────────────────
+        function updateImagePreview() {
+            const url     = document.getElementById('fImageUrl').value.trim();
+            const preview = document.getElementById('imagePreview');
+            if (!url) { clearImagePreview(); return; }
+
+            preview.classList.add('has-image');
+            preview.innerHTML = `<img src="${escHtml(url)}" alt="Aperçu"
+                onload="this.parentElement.querySelector('.image-error')?.remove()"
+                onerror="this.style.display='none';this.parentElement.innerHTML='<div class=image-error>Image introuvable — vérifiez le chemin</div>'">`;
+        }
+
+        function clearImagePreview() {
+            const preview = document.getElementById('imagePreview');
+            preview.classList.remove('has-image');
+            preview.innerHTML = '';
+        }
+
+        // ── Save (create / update) ────────────────────────────────────────────
+        async function saveNews(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSave');
+            btn.disabled = true;
+
+            const dateStr  = document.getElementById('fDate').value;
+            const linkText = document.getElementById('fLinkText').value.trim();
+            const linkUrl  = document.getElementById('fLinkUrl').value.trim();
+
+            const data = {
+                label:    document.getElementById('fLabel').value,
+                title:    document.getElementById('fTitle').value.trim(),
+                content:  document.getElementById('fContent').value.trim(),
+                date:     firebase.firestore.Timestamp.fromDate(new Date(dateStr)),
+                imageUrl: document.getElementById('fImageUrl').value.trim() || null,
+                link:     (linkText && linkUrl) ? { text: linkText, url: linkUrl } : null,
+            };
+
+            try {
+                if (editingId) {
+                    await db.collection('news').doc(editingId).update(data);
+                    showToast('Actualité mise à jour.', 'success');
+                } else {
+                    data.createdAt   = firebase.firestore.FieldValue.serverTimestamp();
+                    data.authorEmail = firebase.auth().currentUser?.email || '';
+                    await db.collection('news').add(data);
+                    showToast('Actualité publiée !', 'success');
+                }
+                closeModal();
+            } catch (err) {
+                console.error('saveNews:', err);
+                showToast('Erreur lors de la sauvegarde.', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // ── Delete ────────────────────────────────────────────────────────────
+        async function confirmDelete(id) {
+            if (!confirm('Supprimer cette actualité définitivement ?')) return;
+            try {
+                await db.collection('news').doc(id).delete();
+                showToast('Actualité supprimée.', 'success');
+            } catch (err) {
+                console.error('deleteNews:', err);
+                showToast('Erreur lors de la suppression.', 'error');
+            }
+        }
+
+        // ── Init ──────────────────────────────────────────────────────────────
+        subscribeNews();
     </script>
 
 </body>

@@ -41,6 +41,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Actualités — lecture publique, écriture admin uniquement
+    match /news/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Attendance mapping Discord↔WoW — lecture publique, écriture admin uniquement
     match /attendance-mapping/{userId} {
       allow read: if true;
