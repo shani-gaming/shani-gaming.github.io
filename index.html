@@ -602,6 +602,7 @@
         }
 
         .news-card {
+            overflow: hidden;
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -644,6 +645,13 @@
 
         .news-link { color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
         .news-link:hover { color: #fff; }
+        .news-image {
+            height: 160px;
+            background-size: cover;
+            background-position: center;
+            background-color: var(--bg-surface);
+        }
+        .news-body { padding: 2rem; display: flex; flex-direction: column; gap: 0.75rem; flex: 1; }
 
         @media (max-width: 1024px) {
             .news-grid { grid-template-columns: repeat(2, 1fr); }
@@ -710,33 +718,56 @@
     </section>
     <script>
         (function() {
-            const labelColors = {
-                'progression': 'progression',
-                'organisation': 'organisation',
-                'recrutement': 'recrutement',
-                'communauté': 'communaute'
+            function escHtml(s) {
+                return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            }
+            const LABEL_CSS = {
+                'progression': 'progression', 'organisation': 'organisation',
+                'recrutement': 'recrutement', 'communauté': 'communaute', 'communaute': 'communaute'
             };
-            const grid = document.getElementById('indexNewsGrid');
-            NEWS.slice(0, 3).forEach(news => {
-                const date = new Date(news.date).toLocaleDateString('fr-FR', {
-                    day: 'numeric', month: 'long', year: 'numeric'
-                });
-                const colorClass = labelColors[news.label.toLowerCase()] || 'default';
-                const linkHtml = news.link
-                    ? `<a href="${news.link.url}" class="news-link">${news.link.text} →</a>`
-                    : '';
-                grid.innerHTML += `
-                    <div class="news-card">
-                        <div class="news-meta">
-                            <span class="news-label ${colorClass}">${news.label}</span>
-                            <span class="news-date">${date}</span>
+            function formatDate(date) {
+                const d = date?.toDate ? date.toDate() : new Date(date);
+                return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+            }
+            function renderCards(items) {
+                const grid = document.getElementById('indexNewsGrid');
+                grid.innerHTML = items.slice(0, 3).map(news => {
+                    const colorClass = LABEL_CSS[news.label?.toLowerCase()] || 'default';
+                    const linkHtml   = news.link
+                        ? `<a href="${escHtml(news.link.url)}" class="news-link">${escHtml(news.link.text)} →</a>`
+                        : '';
+                    const imageHtml  = news.imageUrl
+                        ? `<div class="news-image" style="background-image:url('${escHtml(news.imageUrl)}')"></div>`
+                        : '';
+                    return `<div class="news-card">
+                        ${imageHtml}
+                        <div class="news-body">
+                            <div class="news-meta">
+                                <span class="news-label ${colorClass}">${escHtml(news.label || '')}</span>
+                                <span class="news-date">${formatDate(news.date)}</span>
+                            </div>
+                            <h3 class="news-title">${escHtml(news.title || '')}</h3>
+                            <p class="news-content">${escHtml(news.content || '')}</p>
+                            ${linkHtml}
                         </div>
-                        <h3 class="news-title">${news.title}</h3>
-                        <p class="news-content">${news.content}</p>
-                        ${linkHtml}
-                    </div>
-                `;
-            });
+                    </div>`;
+                }).join('');
+            }
+
+            // Firestore en priorité, fallback statique
+            try {
+                firebase.firestore().collection('news').orderBy('date', 'desc').limit(3).get()
+                    .then(snap => {
+                        if (!snap.empty) {
+                            renderCards(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+                        } else {
+                            renderCards(typeof NEWS !== 'undefined' ? NEWS : []);
+                        }
+                    })
+                    .catch(() => renderCards(typeof NEWS !== 'undefined' ? NEWS : []));
+            } catch(e) {
+                renderCards(typeof NEWS !== 'undefined' ? NEWS : []);
+            }
         })();
     </script>
 
