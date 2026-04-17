@@ -300,6 +300,76 @@
 
         .form-group select option { background: #1a1f28; }
 
+        /* Upload zone */
+        .upload-zone {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            transition: border-color 0.2s, background 0.2s;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: var(--primary);
+            background: rgba(212,175,55,0.05);
+        }
+
+        .upload-zone-btn {
+            padding: 0.45rem 0.9rem;
+            background: rgba(212,175,55,0.08);
+            border: 1px solid rgba(212,175,55,0.35);
+            border-radius: 6px;
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            white-space: nowrap;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .upload-zone-btn:hover { background: rgba(212,175,55,0.16); }
+
+        .upload-zone-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Upload progress */
+        .upload-progress-wrap {
+            display: none;
+            flex-direction: column;
+            gap: 0.3rem;
+            margin-top: 0.4rem;
+        }
+
+        .upload-progress-wrap.visible { display: flex; }
+
+        .upload-progress-track {
+            height: 5px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .upload-progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.15s;
+        }
+
+        .upload-progress-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
         /* Image preview */
         .image-preview {
             margin-top: 0.4rem;
@@ -533,11 +603,32 @@
                 </div>
 
                 <hr class="form-separator">
-                <span class="form-section-label">Image</span>
+                <span class="form-section-label">Image <span class="form-hint">(optionnel)</span></span>
+
+                <!-- Zone drag & drop / fichier -->
+                <input type="file" id="fImageFile" accept="image/*" style="display:none" onchange="handleFileSelect(this.files[0])">
+                <div class="upload-zone" id="uploadZone"
+                     onclick="document.getElementById('fImageFile').click()"
+                     ondragover="event.preventDefault(); this.classList.add('drag-over')"
+                     ondragleave="this.classList.remove('drag-over')"
+                     ondrop="this.classList.remove('drag-over'); handleFileSelect(event.dataTransfer.files[0]); event.preventDefault()">
+                    <button type="button" class="upload-zone-btn" onclick="event.stopPropagation(); document.getElementById('fImageFile').click()">
+                        📎 Choisir une image
+                    </button>
+                    <span class="upload-zone-hint">ou glisser-déposer ici</span>
+                </div>
+
+                <!-- Barre de progression -->
+                <div class="upload-progress-wrap" id="uploadProgress">
+                    <div class="upload-progress-track">
+                        <div class="upload-progress-fill" id="uploadProgressFill"></div>
+                    </div>
+                    <span class="upload-progress-label" id="uploadProgressLabel">Upload en cours…</span>
+                </div>
 
                 <div class="form-group">
-                    <label>URL ou chemin de l'image <span class="form-hint">optionnel — ex&nbsp;: /img/news/kill.jpg ou https://…</span></label>
-                    <input type="text" id="fImageUrl" placeholder="/img/news/kill.jpg" oninput="updateImagePreview()">
+                    <label>URL de l'image <span class="form-hint">remplie automatiquement après upload, ou saisir une URL externe</span></label>
+                    <input type="text" id="fImageUrl" placeholder="Choisir un fichier ci-dessus…" oninput="updateImagePreview()">
                     <div class="image-preview" id="imagePreview"></div>
                 </div>
 
@@ -755,6 +846,77 @@
 
         // Escape key
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        // ── Cloudinary upload ─────────────────────────────────────────────────
+        const CLOUDINARY_CLOUD  = 'dcgb4bhvh';
+        const CLOUDINARY_PRESET = 'guild_news';
+
+        async function handleFileSelect(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                showToast('Sélectionne un fichier image (jpg, png, gif…)', 'error');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Image trop lourde — 5 Mo maximum.', 'error');
+                return;
+            }
+
+            const progress      = document.getElementById('uploadProgress');
+            const fill          = document.getElementById('uploadProgressFill');
+            const label         = document.getElementById('uploadProgressLabel');
+            const btnSave       = document.getElementById('btnSave');
+
+            progress.classList.add('visible');
+            btnSave.disabled = true;
+            fill.style.width = '0%';
+            label.textContent = 'Upload en cours…';
+
+            const formData = new FormData();
+            formData.append('file',           file);
+            formData.append('upload_preset',  CLOUDINARY_PRESET);
+
+            try {
+                // XMLHttpRequest pour avoir la progression réelle
+                await new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
+
+                    xhr.upload.onprogress = e => {
+                        if (e.lengthComputable) {
+                            const pct = Math.round(e.loaded / e.total * 100);
+                            fill.style.width  = pct + '%';
+                            label.textContent = `Upload… ${pct}%`;
+                        }
+                    };
+
+                    xhr.onload = () => {
+                        if (xhr.status === 200) {
+                            const res = JSON.parse(xhr.responseText);
+                            document.getElementById('fImageUrl').value = res.secure_url;
+                            updateImagePreview();
+                            label.textContent = 'Image uploadée ✓';
+                            fill.style.width  = '100%';
+                            showToast('Image uploadée !', 'success');
+                            setTimeout(() => progress.classList.remove('visible'), 1800);
+                            resolve();
+                        } else {
+                            reject(new Error(`HTTP ${xhr.status}`));
+                        }
+                    };
+
+                    xhr.onerror = () => reject(new Error('Réseau'));
+                    xhr.send(formData);
+                });
+            } catch (err) {
+                console.error('Cloudinary upload:', err);
+                showToast('Erreur upload — réessaie.', 'error');
+                progress.classList.remove('visible');
+            } finally {
+                btnSave.disabled = false;
+                // reset file input so re-selecting the same file retrigger onchange
+                document.getElementById('fImageFile').value = '';
+            }
+        }
 
         // ── Image preview ─────────────────────────────────────────────────────
         function updateImagePreview() {
