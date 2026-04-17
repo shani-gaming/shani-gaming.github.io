@@ -130,9 +130,11 @@
                         </div>
                     `;
 
-                    // Redirect to roster page
+                    // Redirect to origin page (or roster by default)
+                    const returnUrl = sessionStorage.getItem('discord_return_url') || '/roster/';
+                    sessionStorage.removeItem('discord_return_url');
                     setTimeout(() => {
-                        window.location.href = '/roster/';
+                        window.location.href = returnUrl;
                     }, 2000);
                 } else {
                     // Access denied - show debug info

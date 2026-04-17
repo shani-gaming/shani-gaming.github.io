@@ -15,7 +15,8 @@ const navConfig = {
     // Liens principaux (affichés directement dans la navbar) — ordre alphabétique
     mainLinks: [
         { text: 'Accueil', href: '/index.html' },
-        { text: 'Actualités', href: '/news.html' }
+        { text: 'Actualités', href: '/news.html' },
+        { text: 'Galerie', href: '/gallery.html' }
     ],
 
     // Menus déroulants — ordre alphabétique (dropdown et items)

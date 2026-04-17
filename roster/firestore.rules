@@ -47,6 +47,14 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Galerie membres — lecture publique, création ouverte (gate Discord côté client), suppression admin
+    match /gallery/{docId} {
+      allow read: if true;
+      allow create: if true;
+      allow delete: if isAdmin();
+      allow update: if false;
+    }
+
     // Attendance mapping Discord↔WoW — lecture publique, écriture admin uniquement
     match /attendance-mapping/{userId} {
       allow read: if true;
