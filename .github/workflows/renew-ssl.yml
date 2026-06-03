@@ -101,11 +101,12 @@ jobs:
           if [ "$NEW_TS" -gt "$OLD_TS" ]; then
             echo "Cert renouvelé avec succès !"
           else
-            echo "AVERTISSEMENT : le cert n'a pas été renouvelé. Vérifier manuellement."
+            echo "ERREUR : le cert n'a pas été renouvelé. Intervention manuelle requise."
+            exit 1
           fi
 
       - name: Re-enable Cloudflare proxy
-        if: steps.check.outputs.skip == 'false'
+        if: steps.check.outputs.skip == 'false' && always()
         env:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
