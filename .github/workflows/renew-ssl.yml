@@ -6,8 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  pages: write
-  id-token: write
+  contents: read
 
 jobs:
   renew-cert:
@@ -31,24 +30,6 @@ jobs:
               -H "Content-Type: application/json" \
               -d '{"proxied":false}'
           done
-
-      - name: Force GitHub Pages cert renewal
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          curl -s -X DELETE \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/shani-gaming/shani-gaming.github.io/pages" \
-            || true
-
-          sleep 5
-
-          curl -s -X POST \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/shani-gaming/shani-gaming.github.io/pages" \
-            -d '{"source":{"branch":"main","path":"/"},"cname":"www.sagesdepandarie.ovh"}'
 
       - name: Wait for cert approval (max 20 min)
         env:
