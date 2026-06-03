@@ -1,0 +1,85 @@
+name: Renew GitHub Pages SSL Certificate
+
+on:
+  schedule:
+    - cron: '0 3 1 */2 *'  # 1er de chaque mois pair (tous les 2 mois)
+  workflow_dispatch:
+
+permissions:
+  pages: write
+  id-token: write
+
+jobs:
+  renew-cert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disable Cloudflare proxy
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: |
+          RECORDS=$(curl -s \
+            "https://api.cloudflare.com/client/v4/zones/$CF_ZONE/dns_records?proxied=true&per_page=100" \
+            -H "Authorization: Bearer $CF_TOKEN")
+
+          echo "$RECORDS" | jq -r '.result[] | select(.content | test("github\\.io|185\\.199\\.")) | .id' \
+          | while read id; do
+            echo "Disabling proxy: $id"
+            curl -s -X PATCH \
+              "https://api.cloudflare.com/client/v4/zones/$CF_ZONE/dns_records/$id" \
+              -H "Authorization: Bearer $CF_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d '{"proxied":false}'
+          done
+
+      - name: Force GitHub Pages cert renewal
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -s -X DELETE \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/shani-gaming/shani-gaming.github.io/pages" \
+            || true
+
+          sleep 5
+
+          curl -s -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/shani-gaming/shani-gaming.github.io/pages" \
+            -d '{"source":{"branch":"main","path":"/"},"cname":"www.sagesdepandarie.ovh"}'
+
+      - name: Wait for cert approval (max 20 min)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for i in $(seq 1 20); do
+            STATE=$(curl -s \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/shani-gaming/shani-gaming.github.io/pages" \
+              | jq -r '.https_certificate.state // "unknown"')
+            echo "Tentative $i/20 — état cert : $STATE"
+            [ "$STATE" = "approved" ] && { echo "Cert renouvelé !"; break; }
+            sleep 60
+          done
+
+      - name: Re-enable Cloudflare proxy
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: |
+          RECORDS=$(curl -s \
+            "https://api.cloudflare.com/client/v4/zones/$CF_ZONE/dns_records?per_page=100" \
+            -H "Authorization: Bearer $CF_TOKEN")
+
+          echo "$RECORDS" | jq -r '.result[] | select(.content | test("github\\.io|185\\.199\\.")) | .id' \
+          | while read id; do
+            echo "Re-enabling proxy: $id"
+            curl -s -X PATCH \
+              "https://api.cloudflare.com/client/v4/zones/$CF_ZONE/dns_records/$id" \
+              -H "Authorization: Bearer $CF_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d '{"proxied":true}'
+          done
