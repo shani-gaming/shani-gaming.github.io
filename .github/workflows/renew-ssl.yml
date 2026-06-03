@@ -2,7 +2,7 @@ name: Renew GitHub Pages SSL Certificate
 
 on:
   schedule:
-    - cron: '0 3 1 */2 *'  # 1er de chaque mois pair (tous les 2 mois)
+    - cron: '0 3 1 * *'  # 1er de chaque mois
   workflow_dispatch:
 
 permissions:
@@ -12,7 +12,26 @@ jobs:
   renew-cert:
     runs-on: ubuntu-latest
     steps:
+      - name: Check cert expiry
+        id: check
+        run: |
+          EXPIRY=$(echo | openssl s_client -connect www.sagesdepandarie.ovh:443 \
+            -servername www.sagesdepandarie.ovh 2>/dev/null \
+            | openssl x509 -noout -enddate 2>/dev/null \
+            | cut -d= -f2)
+          echo "Expiry: $EXPIRY"
+          DAYS=$(( ( $(date -d "$EXPIRY" +%s) - $(date +%s) ) / 86400 ))
+          echo "Days remaining: $DAYS"
+          if [ "$DAYS" -gt 35 ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Cert valid for $DAYS days — nothing to do."
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "Cert expires in $DAYS days — renewing."
+          fi
+
       - name: Disable Cloudflare proxy
+        if: steps.check.outputs.skip == 'false'
         env:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
@@ -32,6 +51,7 @@ jobs:
           done
 
       - name: Wait for cert approval (max 20 min)
+        if: steps.check.outputs.skip == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -47,6 +67,7 @@ jobs:
           done
 
       - name: Re-enable Cloudflare proxy
+        if: steps.check.outputs.skip == 'false'
         env:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
