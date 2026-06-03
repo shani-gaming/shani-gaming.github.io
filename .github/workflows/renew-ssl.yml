@@ -20,7 +20,9 @@ jobs:
             | openssl x509 -noout -enddate 2>/dev/null \
             | cut -d= -f2)
           echo "Expiry: $EXPIRY"
-          DAYS=$(( ( $(date -d "$EXPIRY" +%s) - $(date +%s) ) / 86400 ))
+          EXPIRY_TS=$(date -d "$EXPIRY" +%s)
+          echo "expiry_ts=$EXPIRY_TS" >> $GITHUB_OUTPUT
+          DAYS=$(( ( $EXPIRY_TS - $(date +%s) ) / 86400 ))
           echo "Days remaining: $DAYS"
           if [ "$DAYS" -gt 35 ]; then
             echo "skip=true" >> $GITHUB_OUTPUT
@@ -50,21 +52,28 @@ jobs:
               -d '{"proxied":false}'
           done
 
-      - name: Wait for cert approval (max 20 min)
+      - name: Wait for GitHub to renew cert (15 min)
         if: steps.check.outputs.skip == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for i in $(seq 1 20); do
-            STATE=$(curl -s \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/shani-gaming/shani-gaming.github.io/pages" \
-              | jq -r '.https_certificate.state // "unknown"')
-            echo "Tentative $i/20 — état cert : $STATE"
-            [ "$STATE" = "approved" ] && { echo "Cert renouvelé !"; break; }
-            sleep 60
-          done
+          echo "Proxy désactivé — attente 15 min pour que GitHub renouvelle le cert..."
+          sleep 900
+
+      - name: Verify cert was renewed
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          OLD_TS=${{ steps.check.outputs.expiry_ts }}
+          NEW_EXPIRY=$(echo | openssl s_client -connect www.sagesdepandarie.ovh:443 \
+            -servername www.sagesdepandarie.ovh 2>/dev/null \
+            | openssl x509 -noout -enddate 2>/dev/null \
+            | cut -d= -f2)
+          NEW_TS=$(date -d "$NEW_EXPIRY" +%s)
+          echo "Ancien cert : $(date -d @$OLD_TS)"
+          echo "Nouveau cert : $NEW_EXPIRY"
+          if [ "$NEW_TS" -gt "$OLD_TS" ]; then
+            echo "Cert renouvelé avec succès !"
+          else
+            echo "AVERTISSEMENT : le cert n'a pas été renouvelé. Vérifier manuellement."
+          fi
 
       - name: Re-enable Cloudflare proxy
         if: steps.check.outputs.skip == 'false'
