@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 3 1 * *'  # 1er de chaque mois
   workflow_dispatch:
+    inputs:
+      force:
+        description: 'Forcer le renouvellement même si le cert est valide'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -24,12 +29,12 @@ jobs:
           echo "expiry_ts=$EXPIRY_TS" >> $GITHUB_OUTPUT
           DAYS=$(( ( $EXPIRY_TS - $(date +%s) ) / 86400 ))
           echo "Days remaining: $DAYS"
-          if [ "$DAYS" -gt 35 ]; then
+          if [ "$DAYS" -gt 35 ] && [ "${{ inputs.force }}" != "true" ]; then
             echo "skip=true" >> $GITHUB_OUTPUT
             echo "Cert valid for $DAYS days — nothing to do."
           else
             echo "skip=false" >> $GITHUB_OUTPUT
-            echo "Cert expires in $DAYS days — renewing."
+            echo "Cert expires in $DAYS days — renewing (force=${{ inputs.force }})."
           fi
 
       - name: Disable Cloudflare proxy
