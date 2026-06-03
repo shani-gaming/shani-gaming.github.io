@@ -52,10 +52,29 @@ jobs:
               -d '{"proxied":false}'
           done
 
-      - name: Wait for GitHub to renew cert (15 min)
+      - name: Trigger GitHub Pages cert renewal
         if: steps.check.outputs.skip == 'false'
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          echo "Proxy désactivé — attente 15 min pour que GitHub renouvelle le cert..."
+          echo "Suppression du custom domain..."
+          curl -s -X DELETE \
+            -H "Authorization: Bearer $GH_PAT" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/shani-gaming/shani-gaming.github.io/pages"
+
+          sleep 10
+
+          echo "Recréation du custom domain..."
+          curl -s -X POST \
+            -H "Authorization: Bearer $GH_PAT" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/shani-gaming/shani-gaming.github.io/pages" \
+            -d '{"source":{"branch":"main","path":"/"},"cname":"www.sagesdepandarie.ovh"}'
+
+          echo "Attente 15 min pour que GitHub émette le cert..."
           sleep 900
 
       - name: Verify cert was renewed
