@@ -42,10 +42,10 @@
         .progression-section { padding: 3rem 0 4rem; }
         .raids-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 1.5rem;
         }
-        @media (max-width: 1000px) { .raids-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 700px) { .raids-grid { grid-template-columns: 1fr; } }
 
         /* Raid card */
         .raid-card {
@@ -273,6 +273,14 @@
                 bosses: [
                     { id: 'beloren', name: "Belo'ren, Enfant d'Al'ar", icon: 'ui-ej-boss-light-void-phoenix' },
                     { id: 'lura',    name: 'La Nuit Tombe',            icon: 'ui-ej-boss-lura-midnight' }
+                ]
+            },
+            {
+                id: 'sporefall',
+                name: 'Sporefall',
+                imageUrl: 'https://wow.zamimg.com/optimized/guide-header-revamp/uploads/guide/header/675a1121b7a2db0b8c36a74176c6b4f8b20bcb95.jpg',
+                bosses: [
+                    { id: 'rotmire', name: 'Rotmire', icon: 'ui-ej-boss-fungariangiant' }
                 ]
             }
         ];
