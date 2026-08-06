@@ -89,6 +89,15 @@
             50% { transform: translateY(-20px); }
         }
 
+        /* Badge Saison 2 - flottant à droite du titre */
+        .hero-season-badge {
+            width: 260px;
+            height: auto;
+            filter: drop-shadow(0 0 40px rgba(120, 220, 100, 0.35));
+            animation: float 6s ease-in-out infinite;
+            animation-delay: -3s;
+        }
+
 
         /* Hero Event Encart */
         .hero-event-encart {
@@ -701,6 +710,7 @@
                 <div class="hero-visual">
                     <!-- LOGO SANS CERCLE, JUSTE L'IMAGE DÉTOURÉE -->
                     <img src="img/logo.png" alt="Logo Les Sages" class="hero-logo" style="visibility:hidden">
+                    <img src="img/logo-season2.png" alt="Saison 2 - Curse of Ula'Tek" class="hero-season-badge">
                 </div>
             </div>
         </div>
