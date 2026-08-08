@@ -22,17 +22,29 @@
         body { padding-top: 80px; background: var(--bg-deep); }
 
 
-        .season-label {
-            display: inline-block;
+        .season-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .season-tab {
             font-size: 0.8rem;
             font-weight: 700;
             letter-spacing: 0.1em;
-            color: var(--primary);
-            border: 1px solid var(--primary);
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid var(--border);
             border-radius: 4px;
             padding: 0.15rem 0.6rem;
-            margin-bottom: 0.75rem;
             text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .season-tab:hover { color: var(--text-main); border-color: rgba(255,255,255,0.3); }
+        .season-tab.active {
+            color: var(--primary);
+            border-color: var(--primary);
+            background: rgba(212,175,55,0.08);
         }
 
         .content-section { padding: 2.5rem 0 4rem; }
@@ -220,7 +232,7 @@
         <div class="container">
             <div class="page-header-row">
                 <div>
-                    <div class="season-label">Saison 1</div>
+                    <div class="season-tabs" id="seasonTabs"></div>
                     <h1>Mythic+</h1>
                     <p>Midnight — Les Sages de Pandarie</p>
                 </div>
@@ -305,6 +317,16 @@
             return '#ff8000';
         }
 
+        // ─── Configuration des saisons ─────────────────────────────────────────
+        // IMPORTANT : Raider.IO bascule silencieusement sa notion de saison "current"
+        // le jour du switch — on épingle donc toujours un slug de saison explicite
+        // (mythic_plus_scores_by_season:<slug>) plutôt que ":current", pour garder
+        // l'accès à l'historique Saison 1 une fois la Saison 2 lancée.
+        const SEASONS = [
+            { id: 'season1', label: 'Saison 1', rioSlug: 'season-mn-1' },
+            { id: 'season2', label: 'Saison 2', rioSlug: 'season-mn-2' }
+        ];
+
         // ─── State ─────────────────────────────────────────────────────────────
         let members = [];
         let memberData = {};   // name.toLowerCase() → { score, cls, runs, status }
@@ -312,6 +334,37 @@
         let dungeonSet  = new Set();
         let sortCol = 'score';
         let sortDir = -1; // -1 = desc, 1 = asc
+        let activeSeason = SEASONS[SEASONS.length - 1].id; // saison la plus récente par défaut
+
+        function currentSeasonSlug() {
+            return SEASONS.find(s => s.id === activeSeason).rioSlug;
+        }
+
+        function renderSeasonTabs() {
+            const wrap = document.getElementById('seasonTabs');
+            wrap.innerHTML = SEASONS.map(s => `
+                <button type="button" class="season-tab${s.id === activeSeason ? ' active' : ''}" onclick="selectSeason('${s.id}')">${s.label}</button>
+            `).join('');
+        }
+
+        function selectSeason(seasonId) {
+            if (seasonId === activeSeason) return;
+            activeSeason = seasonId;
+            renderSeasonTabs();
+
+            // Reset — les données M+ sont scopées par saison (dungeons, scores, runs)
+            memberData = {};
+            dungeonList = [];
+            dungeonSet = new Set();
+            sortCol = 'score';
+            sortDir = -1;
+
+            document.getElementById('loadProgress').style.display = 'flex';
+            document.getElementById('loadText').textContent = `Récupération Raider.IO (${members.length} membres)…`;
+            document.getElementById('loadBar').style.width = '0%';
+            document.getElementById('loadCount').textContent = '';
+            fetchAll();
+        }
 
         function getScore(key) {
             return (memberData[key] || {}).score || 0;
@@ -331,7 +384,8 @@
         // ─── Raider.IO ─────────────────────────────────────────────────────────
         async function fetchRIO(member) {
             try {
-                const url = `https://raider.io/api/v1/characters/profile?region=eu&realm=${encodeURIComponent(member.realm)}&name=${encodeURIComponent(member.name)}&fields=mythic_plus_scores_by_season:current,mythic_plus_best_runs`;
+                const slug = currentSeasonSlug();
+                const url = `https://raider.io/api/v1/characters/profile?region=eu&realm=${encodeURIComponent(member.realm)}&name=${encodeURIComponent(member.name)}&fields=mythic_plus_scores_by_season:${slug},mythic_plus_best_runs:${slug}`;
                 const r = await fetch(url);
                 if (!r.ok) return null;
                 return await r.json();
@@ -503,6 +557,7 @@ function updateSummary() {
 
         // ─── Init ──────────────────────────────────────────────────────────────
         async function init() {
+            renderSeasonTabs();
             await loadMembers();
             if (members.length === 0) {
                 document.getElementById('loadProgress').style.display = 'none';
