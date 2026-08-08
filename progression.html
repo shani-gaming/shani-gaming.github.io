@@ -24,18 +24,30 @@
         body { padding-top: 80px; background: var(--bg-deep); }
 
 
-        /* Season label */
-        .season-label {
-            display: inline-block;
+        /* Season tabs */
+        .season-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .season-tab {
             font-size: 0.8rem;
             font-weight: 700;
             letter-spacing: 0.1em;
-            color: var(--primary);
-            border: 1px solid var(--primary);
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid var(--border);
             border-radius: 4px;
             padding: 0.15rem 0.6rem;
-            margin-bottom: 0.75rem;
             text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .season-tab:hover { color: var(--text-main); border-color: rgba(255,255,255,0.3); }
+        .season-tab.active {
+            color: var(--primary);
+            border-color: var(--primary);
+            background: rgba(212,175,55,0.08);
         }
 
         /* Raids grid */
@@ -212,7 +224,7 @@
         <div class="container">
             <div class="page-header-row">
                 <div>
-                    <div class="season-label">Saison 1</div>
+                    <div class="season-tabs" id="seasonTabs"></div>
                     <h1>Progression Raid</h1>
                     <p>Midnight — Les Sages de Pandarie</p>
                 </div>
@@ -243,10 +255,17 @@
     <script>
         const db = firebase.firestore();
 
+        // ─── Configuration des saisons ─────────────────────────────────────────
+        const SEASONS = [
+            { id: 'season1', label: 'Saison 1' },
+            { id: 'season2', label: 'Saison 2' }
+        ];
+
         // ─── Configuration des raids ───────────────────────────────────────────
         const RAIDS = [
             {
                 id: 'dreamrift',
+                season: 'season1',
                 name: 'Faille du Rêve',
                 imageUrl: 'https://wow.zamimg.com/uploads/screenshots/normal/1267841.jpg',
                 bosses: [
@@ -255,6 +274,7 @@
             },
             {
                 id: 'voidspire',
+                season: 'season1',
                 name: 'Flèche du Vide',
                 imageUrl: 'https://wow.zamimg.com/uploads/screenshots/normal/1267840.jpg',
                 bosses: [
@@ -268,6 +288,7 @@
             },
             {
                 id: 'march-queldasas',
+                season: 'season1',
                 name: "Marche sur Quel'Danas",
                 imageUrl: 'https://wow.zamimg.com/uploads/screenshots/normal/1267842.jpg',
                 bosses: [
@@ -277,10 +298,27 @@
             },
             {
                 id: 'sporefall',
+                season: 'season1',
                 name: 'Sporefall',
                 imageUrl: 'https://wow.zamimg.com/optimized/guide-header-revamp/uploads/guide/header/675a1121b7a2db0b8c36a74176c6b4f8b20bcb95.jpg',
                 bosses: [
                     { id: 'rotmire', name: 'Rotmire', icon: 'ui-ej-boss-fungariangiant' }
+                ]
+            },
+            {
+                id: 'venomous-abyss',
+                season: 'season2',
+                name: 'The Venomous Abyss',
+                imageUrl: 'https://wow.zamimg.com/optimized/guide-header-revamp/uploads/guide/header/9ee78a923c147797e674597931de05f25eab1247.jpg',
+                bosses: [
+                    { id: 'nekzali',     name: "Nek'zali the Soulcoiler", iconUrl: 'https://wow.zamimg.com/images/wow/icons/large/inv_121_raid_achievement_priestess.jpg' },
+                    { id: 'sentinels',   name: 'Entombed Sentinels',      iconUrl: 'https://wow.zamimg.com/images/wow/icons/large/inv_121_raid_achievement_golems.jpg' },
+                    { id: 'vashnik',     name: 'Vashnik the Malignant',   iconUrl: 'https://wow.zamimg.com/images/wow/icons/large/inv_121_raid_achievement_alchemist.jpg' },
+                    { id: 'explorers',   name: 'The Lost Explorers',      iconUrl: 'https://wow.zamimg.com/images/wow/icons/large/inv_121_raid_achievement_tortollans.jpg' },
+                    { id: 'sszorak',     name: 'Sszorak',                 iconUrl: 'https://wow.zamimg.com/images/wow/icons/large/inv_121_raid_achievement_brute.jpg' },
+                    { id: 'twinfangs',   name: 'The Twin Fangs',          iconUrl: 'https://wow.zamimg.com/images/wow/icons/large/inv_121_raid_achievement_twins.jpg' },
+                    { id: 'coiledaltar', name: 'The Coiled Altar',        iconUrl: 'https://wow.zamimg.com/images/wow/icons/large/inv_121_raid_achievement_zuljinmalacrass.jpg' },
+                    { id: 'ulatek',      name: "Ula'tek",                 iconUrl: 'https://wow.zamimg.com/images/wow/icons/large/inv_121_raid_achievement_ulatek.jpg' }
                 ]
             }
         ];
@@ -295,6 +333,19 @@
         // ─── State ─────────────────────────────────────────────────────────────
         let isAdmin = false;
         let progressionData = {}; // raidId → { kills: { diff: { bossId: bool } } }
+        let activeSeason = SEASONS[SEASONS.length - 1].id; // saison la plus récente par défaut
+
+        function selectSeason(seasonId) {
+            activeSeason = seasonId;
+            render();
+        }
+
+        function renderSeasonTabs() {
+            const wrap = document.getElementById('seasonTabs');
+            wrap.innerHTML = SEASONS.map(s => `
+                <button type="button" class="season-tab${s.id === activeSeason ? ' active' : ''}" onclick="selectSeason('${s.id}')">${s.label}</button>
+            `).join('');
+        }
 
         // ─── Firestore ─────────────────────────────────────────────────────────
         function listenProgression() {
@@ -384,9 +435,12 @@
         }
 
         function render() {
-            const grid = document.getElementById('raidsGrid');
+            renderSeasonTabs();
 
-            grid.innerHTML = RAIDS.map(raid => {
+            const grid = document.getElementById('raidsGrid');
+            const raids = RAIDS.filter(r => r.season === activeSeason);
+
+            grid.innerHTML = raids.map(raid => {
                 const total = raid.bosses.length;
 
                 const diffsHtml = DIFFICULTIES.map(diff => {
@@ -397,7 +451,7 @@
                     // Icônes boss — toujours visibles
                     const iconsHtml = raid.bosses.map(boss => {
                         const isKilled = getKills(raid.id, diff.id)[boss.id] || false;
-                        const iconUrl = `https://wow.zamimg.com/images/wow/journal/${boss.icon}.png`;
+                        const iconUrl = boss.iconUrl || `https://wow.zamimg.com/images/wow/journal/${boss.icon}.png`;
                         let stateClass = '';
                         if (isKilled) stateClass = isFull ? 'state-full' : 'state-partial';
                         const clickAttr = isAdmin
