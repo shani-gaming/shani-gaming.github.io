@@ -255,8 +255,8 @@
             align-items: center;
             gap: 0.4rem;
             padding: 0.5rem 1rem;
-            background: rgba(212,175,55,0.08);
-            border: 1px solid rgba(212,175,55,0.35);
+            background: rgba(var(--primary-rgb),0.08);
+            border: 1px solid rgba(var(--primary-rgb),0.35);
             border-radius: 6px;
             color: var(--primary);
             cursor: pointer;
@@ -266,7 +266,7 @@
         }
 
         .load-event-btn:hover {
-            background: rgba(212,175,55,0.16);
+            background: rgba(var(--primary-rgb),0.16);
             border-color: var(--primary);
         }
 
@@ -278,8 +278,8 @@
         /* Event Banner */
         .event-banner {
             display: none;
-            background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.04));
-            border: 1px solid rgba(212,175,55,0.3);
+            background: linear-gradient(135deg, rgba(var(--primary-rgb),0.1), rgba(var(--primary-rgb),0.04));
+            border: 1px solid rgba(var(--primary-rgb),0.3);
             border-radius: 8px;
             padding: 0.75rem 1rem;
             font-size: 0.85rem;
@@ -419,7 +419,7 @@
 
         .role-section.drag-over {
             border-color: var(--primary);
-            background: rgba(238, 187, 85, 0.05);
+            background: rgba(var(--primary-rgb), 0.05);
         }
 
         .role-header {

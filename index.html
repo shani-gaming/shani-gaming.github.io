@@ -91,7 +91,7 @@
         .hero-logo {
             width: 350px;
             height: auto;
-            filter: drop-shadow(0 0 50px rgba(238, 187, 85, 0.4)); /* Aura dorée (or Pandarie) */
+            filter: drop-shadow(0 0 50px rgba(var(--primary-rgb), 0.4)); /* Aura dorée (or Pandarie) */
             animation: float 6s ease-in-out infinite;
         }
 
@@ -117,7 +117,7 @@
             align-items: center;
             gap: 1rem;
             background: rgba(13, 17, 23, 0.7);
-            border: 1px solid rgba(238,187,85,0.25);
+            border: 1px solid rgba(var(--primary-rgb),0.25);
             border-radius: 10px;
             padding: 0.75rem 1.25rem;
             backdrop-filter: blur(8px);
@@ -125,7 +125,7 @@
             transition: border-color 0.2s;
             max-width: 480px;
         }
-        .hero-event-encart:hover { border-color: rgba(238,187,85,0.6); }
+        .hero-event-encart:hover { border-color: rgba(var(--primary-rgb),0.6); }
         .hero-event-pulse {
             width: 8px; height: 8px;
             border-radius: 50%;

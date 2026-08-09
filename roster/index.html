@@ -27,14 +27,14 @@
         :root {
             --bg-elevated: #2a2f38;
             --text-secondary: #b1bac4;
-            --border-glow: rgba(238, 187, 85, 0.3);
+            --border-glow: rgba(var(--primary-rgb), 0.3);
 
-            /* Legacy aliases for JS compatibility */
+            /* Legacy aliases for JS compatibility — pointent vers le thème actif */
             --text-primary: #ffffff;
             --text: #ffffff;
             --bg-dark: #0d1117;
-            --gold: #eebb55;
-            --gold-dim: #c4920a;
+            --gold: var(--primary);
+            --gold-dim: color-mix(in srgb, var(--primary) 65%, black);
 
             /* WoW Role Colors */
             --tank: #C41E3A;
@@ -304,10 +304,10 @@
         .availability-badge {
             display: inline-block;
             padding: 0.15rem 0.4rem;
-            background: rgba(212, 175, 55, 0.1);
-            border: 1px solid rgba(212, 175, 55, 0.25);
+            background: rgba(var(--primary-rgb), 0.1);
+            border: 1px solid rgba(var(--primary-rgb), 0.25);
             border-radius: 3px;
-            color: rgba(212, 175, 55, 0.8);
+            color: rgba(var(--primary-rgb), 0.8);
             font-size: 0.7rem;
             font-weight: 500;
             white-space: nowrap;
@@ -333,7 +333,7 @@
 
         .table-action-btn:hover { border-color: var(--border); }
         .table-action-btn.btn-refresh:hover { color: #60a5fa; border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.08); }
-        .table-action-btn.btn-edit:hover { color: var(--gold); border-color: rgba(212,175,55,0.4); background: rgba(212,175,55,0.08); }
+        .table-action-btn.btn-edit:hover { color: var(--gold); border-color: rgba(var(--primary-rgb),0.4); background: rgba(var(--primary-rgb),0.08); }
         .table-action-btn.btn-delete:hover { color: #f87171; border-color: rgba(248,113,113,0.4); background: rgba(248,113,113,0.08); }
 
         /* Admin button (inline, like progression.html) */
@@ -350,7 +350,7 @@
             font-family: inherit;
         }
         .admin-btn:hover { border-color: var(--gold); color: var(--gold); }
-        .admin-btn.connected { border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.08); }
+        .admin-btn.connected { border-color: var(--gold); color: var(--gold); background: rgba(var(--primary-rgb),0.08); }
 
         /* Equipment badges */
         .equipment-badges {
@@ -569,7 +569,7 @@
         }
 
         .availability-checkbox input[type="checkbox"]:checked ~ .checkbox-label {
-            background: linear-gradient(135deg, rgba(248, 183, 0, 0.15), rgba(212, 175, 55, 0.15));
+            background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.15), rgba(var(--primary-rgb), 0.15));
             border-color: var(--gold);
             color: var(--gold);
             font-weight: 600;
@@ -758,7 +758,7 @@
             padding: 1.25rem;
             min-width: 280px;
             max-width: 320px;
-            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.8), 0 0 30px rgba(var(--primary-rgb), 0.3);
         }
 
         .tooltip-header {

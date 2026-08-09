@@ -49,7 +49,7 @@
 
         .news-card:hover {
             transform: translateY(-4px);
-            border-color: rgba(212,175,55,0.4);
+            border-color: rgba(var(--primary-rgb),0.4);
         }
 
         /* Hero image */
@@ -158,8 +158,8 @@
         /* ── Admin notice ── */
         .admin-notice {
             display: none;
-            background: rgba(212,175,55,0.07);
-            border: 1px solid rgba(212,175,55,0.28);
+            background: rgba(var(--primary-rgb),0.07);
+            border: 1px solid rgba(var(--primary-rgb),0.28);
             border-radius: 8px;
             padding: 0.6rem 1rem;
             font-size: 0.85rem;
@@ -171,8 +171,8 @@
         /* ── "Nouvelle actu" button ── */
         .new-news-btn {
             padding: 0.5rem 1.1rem;
-            background: rgba(212,175,55,0.08);
-            border: 1px solid rgba(212,175,55,0.4);
+            background: rgba(var(--primary-rgb),0.08);
+            border: 1px solid rgba(var(--primary-rgb),0.4);
             border-radius: 8px;
             color: var(--primary);
             font-weight: 700;
@@ -182,7 +182,7 @@
             transition: all 0.2s;
             display: none;
         }
-        .new-news-btn:hover { background: rgba(212,175,55,0.16); border-color: var(--primary); }
+        .new-news-btn:hover { background: rgba(var(--primary-rgb),0.16); border-color: var(--primary); }
         .new-news-btn.visible { display: inline-flex; align-items: center; gap: 0.4rem; }
 
         /* ── Form ── */

@@ -367,12 +367,18 @@
     ];
 
     // ── ApexCharts base config ────────────────────────────────────────────────
+    function getPrimaryColor() {
+        return getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#eebb55';
+    }
+    function getPrimaryRgb() {
+        return getComputedStyle(document.body).getPropertyValue('--primary-rgb').trim() || '238, 187, 85';
+    }
     const BASE = {
         chart:   { background: 'transparent', toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
         theme:   { mode: 'dark' },
         grid:    { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 3 },
         tooltip: { theme: 'dark' },
-        colors:  ['#eebb55']
+        get colors() { return [getPrimaryColor()]; }
     };
 
     // ── Data ──────────────────────────────────────────────────────────────────
@@ -457,7 +463,7 @@
             ...BASE,
             chart: { ...BASE.chart, type: 'area', height: 240 },
             series: [{ name: 'Membres', data }],
-            colors: ['#eebb55'],
+            colors: [getPrimaryColor()],
             fill: {
                 type: 'gradient',
                 gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.02, stops: [0, 95] }
@@ -485,11 +491,11 @@
                 points: [{
                     x: data[data.length - 1].x,
                     y: data[data.length - 1].y,
-                    marker: { size: 5, fillColor: '#eebb55', strokeColor: '#0d1117', strokeWidth: 2 },
+                    marker: { size: 5, fillColor: getPrimaryColor(), strokeColor: '#0d1117', strokeWidth: 2 },
                     label: {
                         text: `${data[data.length-1].y} membres`,
-                        style: { background: '#21262d', color: '#eebb55', fontSize: '11px', fontWeight: 600, padding: { top:4,bottom:4,left:8,right:8 } },
-                        borderColor: 'rgba(238,187,85,0.3)', offsetY: -12
+                        style: { background: '#21262d', color: getPrimaryColor(), fontSize: '11px', fontWeight: 600, padding: { top:4,bottom:4,left:8,right:8 } },
+                        borderColor: `rgba(${getPrimaryRgb()}, 0.3)`, offsetY: -12
                     }
                 }]
             } : {}
@@ -676,6 +682,11 @@
     init().catch(err => {
         console.error('Erreur chargement stats:', err);
         document.getElementById('lastUpdate').textContent = 'Erreur de chargement';
+    });
+
+    // Redessine le graphique d'évolution avec la couleur du nouveau thème
+    document.body.addEventListener('seasonchange', () => {
+        if (snapshots.length) renderEvolution();
     });
     </script>
 
