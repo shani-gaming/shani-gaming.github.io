@@ -49,6 +49,68 @@ function showToast(message, type = 'info') {
     }, 4000);
 }
 
+// Confirmation modale (remplace confirm() natif)
+function customConfirm(message, { danger = false } = {}) {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay visible';
+        overlay.innerHTML = `
+            <div class="modal-box" style="max-width:420px">
+                <div class="modal-header"><h3>Confirmation</h3></div>
+                <div class="modal-form"><p class="confirm-message">${escHtml(message)}</p></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" data-action="cancel">Annuler</button>
+                    <button type="button" class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-action="confirm">Confirmer</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        function close(result) {
+            overlay.remove();
+            document.removeEventListener('keydown', onKey);
+            resolve(result);
+        }
+        function onKey(e) { if (e.key === 'Escape') close(false); }
+        document.addEventListener('keydown', onKey);
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) return close(false);
+            const btn = e.target.closest('[data-action]');
+            if (btn) close(btn.dataset.action === 'confirm');
+        });
+    });
+}
+
+// Affiche un texte à copier manuellement (remplace prompt() natif, fallback si Clipboard API échoue)
+function showCopyableText(message, text) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay visible';
+    overlay.innerHTML = `
+        <div class="modal-box" style="max-width:480px">
+            <div class="modal-header"><h3>${escHtml(message)}</h3></div>
+            <div class="modal-form">
+                <textarea class="confirm-textarea" readonly></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-action="close">Fermer</button>
+            </div>
+        </div>
+    `;
+    const textarea = overlay.querySelector('textarea');
+    textarea.value = text;
+    document.body.appendChild(overlay);
+    function close() {
+        overlay.remove();
+        document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    document.addEventListener('keydown', onKey);
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay || e.target.closest('[data-action="close"]')) close();
+    });
+    textarea.focus();
+    textarea.select();
+}
+
 // Listen for auth state changes
 auth.onAuthStateChanged(async user => {
     currentUser = user;
@@ -838,7 +900,7 @@ async function removePlayer(section, index) {
     const player = roster[section][index];
     if (!player || !player.id) return;
 
-    if (confirm(`Retirer ${player.name} du roster ?`)) {
+    if (await customConfirm(`Retirer ${player.name} du roster ?`, { danger: true })) {
         try {
             const discordUser = DiscordAuth.getUserInfo();
             const response = await fetch(`${FUNCTIONS_BASE_URL}/deleteRosterEntry`, {
@@ -884,7 +946,7 @@ document.addEventListener('keydown', (e) => {
 async function toggleAdminMode() {
     if (currentUser) {
         // Logout
-        if (confirm('Se déconnecter du mode admin ?')) {
+        if (await customConfirm('Se déconnecter du mode admin ?')) {
             try {
                 await auth.signOut();
                 showToast('Déconnecté du mode admin', 'success');
@@ -1063,7 +1125,7 @@ async function refreshAllPlayers() {
     }
 
     // Confirm action
-    if (!confirm(`Actualiser ${allPlayers.length} joueur(s) ? Cela peut prendre quelques minutes.`)) {
+    if (!await customConfirm(`Actualiser ${allPlayers.length} joueur(s) ? Cela peut prendre quelques minutes.`)) {
         return;
     }
 
@@ -1253,7 +1315,7 @@ function exportToDiscord() {
         showToast('Roster copié dans le presse-papier ! Vous pouvez le coller sur Discord.', 'success');
     }).catch(err => {
         // Fallback: show in alert
-        prompt('Copiez ce texte pour Discord:', output);
+        showCopyableText('Copiez ce texte pour Discord', output);
     });
 }
 

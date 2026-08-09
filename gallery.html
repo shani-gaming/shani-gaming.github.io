@@ -420,6 +420,36 @@
             }, ms);
         }
 
+        function customConfirm(message, { danger = false } = {}) {
+            return new Promise(resolve => {
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay visible';
+                overlay.innerHTML = `
+                    <div class="modal-box" style="max-width:420px">
+                        <div class="modal-header"><h3>Confirmation</h3></div>
+                        <div class="modal-form"><p class="confirm-message">${escHtml(message)}</p></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline" data-action="cancel">Annuler</button>
+                            <button type="button" class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-action="confirm">Confirmer</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+                function close(result) {
+                    overlay.remove();
+                    document.removeEventListener('keydown', onKey);
+                    resolve(result);
+                }
+                function onKey(e) { if (e.key === 'Escape') close(false); }
+                document.addEventListener('keydown', onKey);
+                overlay.addEventListener('click', e => {
+                    if (e.target === overlay) return close(false);
+                    const btn = e.target.closest('[data-action]');
+                    if (btn) close(btn.dataset.action === 'confirm');
+                });
+            });
+        }
+
         function formatDateShort(ts) {
             const d = ts?.toDate ? ts.toDate() : new Date(ts);
             return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -679,7 +709,7 @@
 
         // ── Admin delete ──────────────────────────────────────────────────────
         async function confirmDelete(id) {
-            if (!confirm('Supprimer cette image définitivement ?')) return;
+            if (!await customConfirm('Supprimer cette image définitivement ?', { danger: true })) return;
             try {
                 const entry = galleryEntries.find(e => e.id === id);
                 await db.collection('gallery').doc(id).delete();
