@@ -917,6 +917,179 @@ exports.syncGuildRoster = onSchedule(
 );
 
 /**
+ * Calcule le timestamp (ms) du dernier reset hebdomadaire EU (mardi 5h UTC).
+ */
+function getLastEuResetTimestamp(now = new Date()) {
+  const d = new Date(now);
+  d.setUTCHours(5, 0, 0, 0);
+  const day = d.getUTCDay(); // 0=dim, 1=lun, 2=mar...
+  let daysSinceReset = (day - 2 + 7) % 7;
+  if (daysSinceReset === 0 && now < d) daysSinceReset = 7;
+  d.setUTCDate(d.getUTCDate() - daysSinceReset);
+  return d.getTime();
+}
+
+/**
+ * Great Vault : seuils de déblocage (nb d'activités → nb de slots débloqués).
+ * PvP repose sur la même logique 1/4/8 que M+, à ajuster si l'observation en
+ * prod montre des seuils Blizzard différents pour cette saison.
+ */
+const VAULT_THRESHOLDS = {
+  mythicPlus: [1, 4, 8],
+  raid: [2, 4, 6],
+  pvp: [1, 4, 8]
+};
+
+function slotsFromCount(count, thresholds) {
+  let slots = 0;
+  for (const t of thresholds) if (count >= t) slots++;
+  return slots;
+}
+
+/**
+ * Calcule la progression Great Vault (M+/Raid/PvP) d'un personnage pour la
+ * semaine en cours, via l'API Blizzard (client_credentials, pas de consentement
+ * utilisateur nécessaire — données de profil publiques).
+ */
+async function computeVaultProgress(realm, name, accessToken, resetTimestamp) {
+  const region = 'eu';
+  const headers = { Authorization: `Bearer ${accessToken}` };
+  const params = { namespace: `profile-${region}`, locale: 'fr_FR' };
+  const base = `https://${region}.api.blizzard.com/profile/wow/character/${realm}/${name.toLowerCase()}`;
+
+  // ── Mythique+ ──
+  let mythicPlusDungeons = [];
+  try {
+    const res = await axios.get(`${base}/mythic-keystone-profile`, { headers, params, timeout: 8000 });
+    const runs = res.data.current_period?.best_runs || [];
+    const seenDungeons = new Set();
+    mythicPlusDungeons = runs.filter(r => {
+      if (seenDungeons.has(r.dungeon.id)) return false;
+      seenDungeons.add(r.dungeon.id);
+      return true;
+    }).map(r => ({ name: r.dungeon.name, level: r.keystone_level, timestamp: r.completed_timestamp }));
+  } catch (err) {
+    if (err.response?.status !== 404) throw err; // 404 = aucune clé cette semaine, pas une erreur
+  }
+
+  // ── Raid ── (dernière extension listée = saison active, robuste au changement de tier)
+  let raidBossesKilled = 0;
+  let raidDifficulty = null;
+  const difficultyRank = { NORMAL: 1, HEROIC: 2, MYTHIC: 3 };
+  try {
+    const res = await axios.get(`${base}/encounters/raids`, { headers, params, timeout: 8000 });
+    const expansions = res.data.expansions || [];
+    const current = expansions[expansions.length - 1];
+    const killedThisWeek = new Map(); // encounterId -> meilleure difficulté tuée cette semaine
+    (current?.instances || []).forEach(inst => {
+      (inst.modes || []).forEach(mode => {
+        const rank = difficultyRank[mode.difficulty.type] || 0;
+        (mode.progress?.encounters || []).forEach(enc => {
+          if (enc.last_kill_timestamp >= resetTimestamp) {
+            const prevRank = killedThisWeek.get(enc.encounter.id) || 0;
+            if (rank > prevRank) killedThisWeek.set(enc.encounter.id, rank);
+          }
+        });
+      });
+    });
+    raidBossesKilled = killedThisWeek.size;
+    const maxRank = Math.max(0, ...killedThisWeek.values());
+    raidDifficulty = Object.keys(difficultyRank).find(k => difficultyRank[k] === maxRank) || null;
+  } catch (err) {
+    if (err.response?.status !== 404) throw err;
+  }
+
+  // ── PvP ── (somme des victoires classées de la semaine, tous brackets)
+  let pvpWins = 0;
+  try {
+    const summary = await axios.get(`${base}/pvp-summary`, { headers, params, timeout: 8000 });
+    const brackets = summary.data.brackets || [];
+    const results = await Promise.allSettled(
+      brackets.map(b => axios.get(b.href, { headers, params: { locale: 'fr_FR' }, timeout: 8000 }))
+    );
+    results.forEach(r => {
+      if (r.status === 'fulfilled') {
+        pvpWins += r.value.data.weekly_match_statistics?.won || 0;
+      }
+    });
+  } catch (err) {
+    if (err.response?.status !== 404) throw err;
+  }
+
+  return {
+    mythicPlusDungeons,
+    mythicPlusSlots: slotsFromCount(mythicPlusDungeons.length, VAULT_THRESHOLDS.mythicPlus),
+    raidBossesKilled,
+    raidDifficulty,
+    raidSlots: slotsFromCount(raidBossesKilled, VAULT_THRESHOLDS.raid),
+    pvpWins,
+    pvpSlots: slotsFromCount(pvpWins, VAULT_THRESHOLDS.pvp)
+  };
+}
+
+/**
+ * Scheduled function: synchro quotidienne de la progression Great Vault
+ * de tous les membres actifs (M+, raid, pvp). Best-effort par membre : un
+ * personnage en échec (profil privé, renommé...) n'interrompt pas les autres.
+ */
+exports.syncVaultProgress = onSchedule(
+  {
+    schedule: '0 3 * * *',
+    timeZone: 'Europe/Paris',
+    region: 'europe-west1',
+    secrets: [blizzardClientId, blizzardClientSecret],
+    timeoutSeconds: 300
+  },
+  async (event) => {
+    console.log('Starting daily vault progress sync...');
+
+    const clientId = blizzardClientId.value();
+    const clientSecret = blizzardClientSecret.value();
+
+    const tokenResponse = await axios.post(
+      'https://oauth.battle.net/token',
+      new URLSearchParams({ grant_type: 'client_credentials' }),
+      { auth: { username: clientId, password: clientSecret } }
+    );
+    const accessToken = tokenResponse.data.access_token;
+    const resetTimestamp = getLastEuResetTimestamp();
+
+    const membersSnap = await db.collection('guild-members').where('active', '==', true).get();
+    const members = membersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const BATCH_SIZE = 5;
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (let i = 0; i < members.length; i += BATCH_SIZE) {
+      const batch = members.slice(i, i + BATCH_SIZE);
+      const results = await Promise.allSettled(
+        batch.map(m => computeVaultProgress(m.realm, m.name, accessToken, resetTimestamp))
+      );
+
+      const writeBatch = db.batch();
+      results.forEach((result, idx) => {
+        const member = batch[idx];
+        if (result.status === 'fulfilled') {
+          writeBatch.set(db.collection('vault-progress').doc(member.id), {
+            ...result.value,
+            lastSynced: new Date()
+          });
+          successCount++;
+        } else {
+          console.error(`Vault sync failed for ${member.id}:`, result.reason?.message);
+          errorCount++;
+        }
+      });
+      await writeBatch.commit();
+    }
+
+    console.log(`Vault progress sync complete: ${successCount} ok, ${errorCount} failed`);
+    return { success: true, successCount, errorCount };
+  }
+);
+
+/**
  * Temporary function to create yesterday's snapshot without Thallyium and Osmondo
  */
 exports.createYesterdaySnapshot = onRequest(

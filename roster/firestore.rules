@@ -67,6 +67,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Progression Great Vault — lecture publique, écriture Cloud Functions uniquement (Admin SDK)
+    match /vault-progress/{memberId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Default : tout refuser
     match /{document=**} {
       allow read, write: if false;
