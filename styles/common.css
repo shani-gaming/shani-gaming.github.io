@@ -3,14 +3,20 @@
     --bg-deep: #0d1117; /* Bleu nuit adouci (moins noir) */
     --bg-surface: #161b22;
     --bg-card: #21262d; /* Carte légèrement plus claire */
-    --primary: #eebb55; /* Or Pandarie (Couleur Principale) */
-    --primary-dim: rgba(238, 187, 85, 0.1);
+    --primary: #8ec63f; /* Vert Curse of Ula'tek (Couleur Principale Saison 2) */
+    --primary-dim: rgba(142, 198, 63, 0.12);
     --accent: #33ffaa; /* Jade en accent secondaire */
     --accent-dim: rgba(51, 255, 170, 0.1);
     --text-main: #ffffff;
     --text-muted: #b1bac4; /* Gris plus clair pour l'accessibilité */
     --border: rgba(255, 255, 255, 0.1);
     --gradient-hero: linear-gradient(180deg, rgba(3,4,5,0) 0%, #030405 100%);
+}
+
+/* Thème Saison 1 : on repasse sur l'ancienne couleur Or Pandarie */
+body[data-season="s1"] {
+    --primary: #eebb55;
+    --primary-dim: rgba(238, 187, 85, 0.1);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -150,6 +156,36 @@ h1, h2, h3 { font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
     background: rgba(238, 187, 85, 0.1);
 }
 
+/* Sélecteur de thème Saison 1 / Saison 2 */
+.nav-season-toggle {
+    display: flex;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.nav-season-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nav-season-btn:hover { color: var(--text-main); }
+
+.nav-season-btn.active {
+    background: var(--primary);
+    color: #030405;
+}
+
 /* Hamburger */
 .nav-hamburger {
     display: none;
@@ -187,8 +223,9 @@ h1, h2, h3 { font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
         flex-wrap: wrap;
     }
 
-    /* Le bouton CTA "Rejoindre" */
-    .navbar > .btn {
+    /* Le bouton CTA "Rejoindre" et le sélecteur de saison passent dans le menu mobile */
+    .navbar > .btn,
+    .navbar > .nav-season-toggle {
         display: none;
     }
 

@@ -5,6 +5,12 @@
  * Les changements seront appliqués à toutes les pages automatiquement.
  */
 
+// Applique le thème de saison stocké le plus tôt possible pour éviter le flash
+(function() {
+    const savedSeason = localStorage.getItem('siteSeason') || 's2';
+    document.body.setAttribute('data-season', savedSeason);
+})();
+
 const navConfig = {
     // Logo et lien accueil
     logo: {
@@ -112,6 +118,14 @@ function initNavbar() {
 
     html += `</div>`;
 
+    // Sélecteur de thème Saison 1 / Saison 2
+    html += `
+        <div class="nav-season-toggle">
+            <button type="button" class="nav-season-btn" data-season="s1" title="Thème Saison 1">S1</button>
+            <button type="button" class="nav-season-btn" data-season="s2" title="Thème Saison 2">S2</button>
+        </div>
+    `;
+
     // Bouton CTA
     if (navConfig.cta) {
         html += `<a href="${basePath}${navConfig.cta.href}" class="btn btn-primary">${navConfig.cta.text}</a>`;
@@ -129,6 +143,33 @@ function initNavbar() {
     // Initialise les événements dropdown
     initDropdownEvents();
     initHamburgerEvents();
+    initSeasonToggle();
+}
+
+/**
+ * Initialise le sélecteur de thème Saison 1 / Saison 2
+ */
+function initSeasonToggle() {
+    const buttons = document.querySelectorAll('.nav-season-btn');
+    if (!buttons.length) return;
+
+    function updateActiveState() {
+        const current = document.body.getAttribute('data-season') || 's2';
+        buttons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.season === current);
+        });
+    }
+
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const season = btn.dataset.season;
+            document.body.setAttribute('data-season', season);
+            localStorage.setItem('siteSeason', season);
+            updateActiveState();
+        });
+    });
+
+    updateActiveState();
 }
 
 /**
