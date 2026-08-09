@@ -847,9 +847,8 @@
         // Escape key
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-        // ── Cloudinary upload ─────────────────────────────────────────────────
+        // ── Cloudinary upload (signé via getCloudinarySignatureAdmin) ────────────
         const CLOUDINARY_CLOUD  = 'dcgb4bhvh';
-        const CLOUDINARY_PRESET = 'guild_news';
 
         async function handleFileSelect(file) {
             if (!file || !file.type.startsWith('image/')) {
@@ -871,11 +870,22 @@
             fill.style.width = '0%';
             label.textContent = 'Upload en cours…';
 
-            const formData = new FormData();
-            formData.append('file',           file);
-            formData.append('upload_preset',  CLOUDINARY_PRESET);
-
             try {
+                const idToken = await firebase.auth().currentUser.getIdToken();
+                const sigRes = await fetch('https://europe-west1-guild-roster-67da7.cloudfunctions.net/getCloudinarySignatureAdmin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idToken })
+                });
+                if (!sigRes.ok) throw new Error(`Signature HTTP ${sigRes.status}`);
+                const { signature, timestamp, apiKey } = await sigRes.json();
+
+                const formData = new FormData();
+                formData.append('file',      file);
+                formData.append('api_key',   apiKey);
+                formData.append('timestamp', timestamp);
+                formData.append('signature', signature);
+
                 // XMLHttpRequest pour avoir la progression réelle
                 await new Promise((resolve, reject) => {
                     const xhr = new XMLHttpRequest();

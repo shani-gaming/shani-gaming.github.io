@@ -3,6 +3,7 @@ const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { defineSecret } = require('firebase-functions/params');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
+const { getAuth } = require('firebase-admin/auth');
 const axios = require('axios');
 const cors = require('cors');
 const crypto = require('crypto');
@@ -1406,6 +1407,67 @@ exports.getCloudinarySignature = onRequest(
         });
       } catch (error) {
         console.error('Error generating Cloudinary signature:', error);
+        res.status(500).json({ error: 'Failed to generate signature' });
+      }
+    });
+  }
+);
+
+/**
+ * Génère une signature Cloudinary pour un upload signé (actualités, admin uniquement).
+ * Vérifie un vrai ID token Firebase (Google Sign-in) + appartenance à la collection
+ * admins, même logique que isAdmin() dans firestore.rules.
+ */
+exports.getCloudinarySignatureAdmin = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10,
+    secrets: [cloudinaryApiKey, cloudinaryApiSecret]
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        if (req.method !== 'POST') {
+          return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        const { idToken } = req.body;
+        if (!idToken) {
+          return res.status(401).json({ error: 'Missing ID token' });
+        }
+
+        let email;
+        try {
+          const decoded = await getAuth().verifyIdToken(idToken);
+          email = decoded.email;
+        } catch (err) {
+          return res.status(401).json({ error: 'Invalid ID token' });
+        }
+
+        if (!email) {
+          return res.status(401).json({ error: 'Invalid ID token' });
+        }
+
+        const adminDoc = await db.collection('admins').doc(email).get();
+        if (!adminDoc.exists) {
+          return res.status(403).json({ error: 'Admin access required' });
+        }
+
+        const timestamp = Math.floor(Date.now() / 1000);
+        const apiSecret = cloudinaryApiSecret.value();
+
+        const signature = crypto
+          .createHash('sha1')
+          .update(`timestamp=${timestamp}${apiSecret}`)
+          .digest('hex');
+
+        res.json({
+          signature,
+          timestamp,
+          apiKey: cloudinaryApiKey.value()
+        });
+      } catch (error) {
+        console.error('Error generating admin Cloudinary signature:', error);
         res.status(500).json({ error: 'Failed to generate signature' });
       }
     });
