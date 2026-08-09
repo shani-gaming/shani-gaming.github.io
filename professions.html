@@ -336,6 +336,10 @@
             return `https://www.wowhead.com/search?q=${encodeURIComponent(r.name)}`;
         }
 
+        function wowheadDomain() {
+            return currentLang === 'fr' ? 'domain=fr&' : '';
+        }
+
         async function loadProfessions() {
             try {
                 const snapshot = await db.collection('guild-members')
@@ -434,7 +438,7 @@
                 html += `
                     <div class="recipe-result-card">
                         <div class="recipe-name">
-                            <a href="${wowheadLink(recipe)}" data-wowhead="domain=fr&recipe=${recipe.id}" target="_blank" rel="noopener">${recipeName(recipe)}</a>
+                            <a href="${wowheadLink(recipe)}" data-wowhead="${wowheadDomain()}recipe=${recipe.id}" target="_blank" rel="noopener">${recipeName(recipe)}</a>
                         </div>
                         <div class="recipe-crafters">${crafterBadges}</div>
                     </div>
@@ -477,7 +481,7 @@
 
                     const recipesHtml = preview.map(r => `
                         <div class="recipe-item">
-                            <a href="${wowheadLink(r)}" data-wowhead="domain=fr&recipe=${r.id}" target="_blank" rel="noopener">${recipeName(r)}</a>
+                            <a href="${wowheadLink(r)}" data-wowhead="${wowheadDomain()}recipe=${r.id}" target="_blank" rel="noopener">${recipeName(r)}</a>
                         </div>
                     `).join('');
 
@@ -485,7 +489,7 @@
                         <div id="more-${id}" style="display:none">
                             ${prof.recipes.slice(RECIPES_PREVIEW).map(r => `
                                 <div class="recipe-item">
-                                    <a href="${wowheadLink(r)}" data-wowhead="domain=fr&recipe=${r.id}" target="_blank" rel="noopener">${recipeName(r)}</a>
+                                    <a href="${wowheadLink(r)}" data-wowhead="${wowheadDomain()}recipe=${r.id}" target="_blank" rel="noopener">${recipeName(r)}</a>
                                 </div>
                             `).join('')}
                         </div>
