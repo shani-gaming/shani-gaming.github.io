@@ -528,6 +528,13 @@ h1, h2, h3 { font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
 .load-bar-wrap { flex: 1; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; }
 .load-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 2px; transition: width 0.3s ease; }
 
+/* ── Couleurs des labels d'actualité (partagé) ── */
+.news-label.progression  { color: var(--primary); }
+.news-label.organisation { color: var(--accent); }
+.news-label.recrutement  { color: #7289da; }
+.news-label.communaute   { color: #f48cba; }
+.news-label.default      { color: var(--primary); }
+
 /* ── Formulaire de modale (partagé : champs, zone d'upload, boutons) ── */
 .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
 
