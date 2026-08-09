@@ -165,6 +165,7 @@ function initSeasonToggle() {
             const season = btn.dataset.season;
             document.body.setAttribute('data-season', season);
             localStorage.setItem('siteSeason', season);
+            document.body.dispatchEvent(new CustomEvent('seasonchange', { detail: { season } }));
             updateActiveState();
         });
     });

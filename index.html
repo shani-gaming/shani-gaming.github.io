@@ -1131,11 +1131,18 @@
             drawVisualizer(W);
         }
 
+        function getVizColorRgb() {
+            const hex = getComputedStyle(document.body).getPropertyValue('--primary').trim();
+            const m = hex.replace('#', '').match(/.{1,2}/g);
+            return m ? m.map(h => parseInt(h, 16)).join(', ') : '238, 187, 85';
+        }
+
         function drawVisualizer(W) {
             const bins = analyser.frequencyBinCount;
             const data = new Uint8Array(bins);
             const H = 36;
             const barW = (W / bins) - 1;
+            let vizColorRgb = getVizColorRgb();
 
             function draw() {
                 animFrameId = requestAnimationFrame(draw);
@@ -1146,13 +1153,15 @@
                     const barH = Math.max(2, ratio * H);
                     const x = i * (barW + 1);
                     const alpha = 0.3 + ratio * 0.7;
-                    vizCtx.fillStyle = `rgba(238, 187, 85, ${alpha})`;
+                    vizCtx.fillStyle = `rgba(${vizColorRgb}, ${alpha})`;
                     vizCtx.beginPath();
                     vizCtx.roundRect(x, H - barH, barW, barH, 2);
                     vizCtx.fill();
                 }
             }
             draw();
+
+            document.body.addEventListener('seasonchange', () => { vizColorRgb = getVizColorRgb(); });
         }
 
         function togglePlay() {
