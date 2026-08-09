@@ -606,7 +606,8 @@ exports.syncGuildRoster = onSchedule(
     schedule: '0 2 * * *',
     timeZone: 'Europe/Paris',
     region: 'europe-west1',
-    secrets: [blizzardClientId, blizzardClientSecret]
+    secrets: [blizzardClientId, blizzardClientSecret],
+    timeoutSeconds: 300
   },
   async (event) => {
     try {
@@ -798,7 +799,43 @@ exports.syncGuildRoster = onSchedule(
         }
       }
 
-      // Enrichissement via Wowhead tooltip API : nom FR + spell ID pour lien direct
+      // Détecter les membres qui ont quitté la guilde
+      const currentMemberKeys = new Set(currentMembersList.map(m => `${m.name}-${m.realm}`));
+      const allMembersSnapshot = await db.collection('guild-members').where('active', '==', true).get();
+
+      const departedMembers = [];
+      const batch = db.batch();
+
+      allMembersSnapshot.forEach(doc => {
+        const memberId = doc.id;
+        if (!currentMemberKeys.has(memberId)) {
+          // Ce membre n'est plus dans le roster API = il a quitté
+          departedMembers.push(memberId);
+          batch.update(doc.ref, {
+            active: false,
+            leftAt: Date.now()
+          });
+          console.log('Member departed:', memberId);
+        }
+      });
+
+      if (departedMembers.length > 0) {
+        await batch.commit();
+        console.log('Marked', departedMembers.length, 'members as departed');
+      }
+
+      // Écrire le snapshot du jour AVANT l'enrichissement Wowhead (best-effort, peut échouer/traîner
+      // sans empêcher le reste de la sync de réussir — cf. incidents de timeout de juillet/août 2026)
+      const todayKey = new Date().toISOString().split('T')[0];
+      await db.collection('guild-roster-snapshots').doc(todayKey).set({
+        timestamp: Date.now(),
+        memberCount: currentRoster.length,
+        members: currentMembersList
+      });
+
+      console.log('Roster sync complete:', currentRoster.length, 'members,', newMembers.length, 'new,', departedMembers.length, 'departed');
+
+      // Enrichissement via Wowhead tooltip API : nom FR + spell ID pour lien direct (best-effort)
       try {
         const allRecipeIds = new Set();
         currentMembersList.forEach(member => {
@@ -812,13 +849,15 @@ exports.syncGuildRoster = onSchedule(
           // Map: recipeId → { nameFr, spellId }
           const wowheadMap = new Map();
           const BATCH_SIZE = 5;
+          const WOWHEAD_TIMEOUT_MS = 5000;
 
           for (let i = 0; i < recipeIdArray.length; i += BATCH_SIZE) {
             const batchIds = recipeIdArray.slice(i, i + BATCH_SIZE);
             const results = await Promise.allSettled(
               batchIds.map(id =>
                 axios.get(`https://nether.wowhead.com/tooltip/recipe/${id}`, {
-                  params: { locale: 'frFR' }
+                  params: { locale: 'frFR' },
+                  timeout: WOWHEAD_TIMEOUT_MS
                 })
               )
             );
@@ -857,40 +896,6 @@ exports.syncGuildRoster = onSchedule(
       } catch (whError) {
         console.error('Failed to enrich via Wowhead:', whError.message);
       }
-
-      // Détecter les membres qui ont quitté la guilde
-      const currentMemberKeys = new Set(currentMembersList.map(m => `${m.name}-${m.realm}`));
-      const allMembersSnapshot = await db.collection('guild-members').where('active', '==', true).get();
-
-      const departedMembers = [];
-      const batch = db.batch();
-
-      allMembersSnapshot.forEach(doc => {
-        const memberId = doc.id;
-        if (!currentMemberKeys.has(memberId)) {
-          // Ce membre n'est plus dans le roster API = il a quitté
-          departedMembers.push(memberId);
-          batch.update(doc.ref, {
-            active: false,
-            leftAt: Date.now()
-          });
-          console.log('Member departed:', memberId);
-        }
-      });
-
-      if (departedMembers.length > 0) {
-        await batch.commit();
-        console.log('Marked', departedMembers.length, 'members as departed');
-      }
-
-      const todayKey = new Date().toISOString().split('T')[0];
-      await db.collection('guild-roster-snapshots').doc(todayKey).set({
-        timestamp: Date.now(),
-        memberCount: currentRoster.length,
-        members: currentMembersList
-      });
-
-      console.log('Roster sync complete:', currentRoster.length, 'members,', newMembers.length, 'new,', departedMembers.length, 'departed');
 
       return {
         success: true,
