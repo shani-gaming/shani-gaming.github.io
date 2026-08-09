@@ -21,7 +21,7 @@ export default [
                 "vars": "all",
                 "args": "none",
                 "caughtErrorsIgnorePattern": "^_",
-                "varsIgnorePattern": "^(DiscordAuth|NEWS|classSpecs|getClassName|getSpecIcon|showTooltip|hideTooltip|toggleManualForm|updateSpecs|updateFlexRole|submitForm|removePlayer|toggleAdminMode|editPlayer|refreshPlayerArmory|refreshAllPlayers|exportToCSV|exportToDiscord|startBattleNetAuth|togglePlay|seekAudio|openForm|closeForm)$"
+                "varsIgnorePattern": "^(DiscordAuth|AdminAuth|classIcons|NEWS|classSpecs|getClassName|getSpecIcon|showTooltip|hideTooltip|toggleManualForm|updateSpecs|updateFlexRole|submitForm|removePlayer|toggleAdminMode|editPlayer|refreshPlayerArmory|refreshAllPlayers|exportToCSV|exportToDiscord|startBattleNetAuth|togglePlay|seekAudio|openForm|closeForm)$"
             }],
             "no-undef": "error",
             "no-console": "off",
