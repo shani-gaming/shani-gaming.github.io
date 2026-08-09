@@ -703,17 +703,20 @@
             save.disabled = true;
 
             try {
-                await db.collection('gallery').add({
-                    imageUrl:   pendingImgUrl,
-                    authorName: user?.username || 'Membre',
-                    authorId:   user?.userId   || '',
-                    title:      caption || null,
-                    uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+                const res = await fetch('https://europe-west1-guild-roster-67da7.cloudfunctions.net/submitGalleryEntry', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        imageUrl: pendingImgUrl,
+                        title: caption || null,
+                        discordUser: { userId: user?.userId || '', username: user?.username || 'Membre' }
+                    })
                 });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 showToast('Création publiée ! 🎉', 'success');
                 closeUploadModal();
             } catch (err) {
-                console.error('Firestore save:', err);
+                console.error('Gallery submit:', err);
                 showToast('Erreur lors de la publication.', 'error');
                 save.disabled = false;
             }

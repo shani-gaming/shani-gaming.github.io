@@ -1365,6 +1365,57 @@ exports.deleteRosterEntry = onRequest(
 );
 
 /**
+ * Soumettre une entrée dans la galerie (upload déjà fait côté client vers Cloudinary,
+ * on écrit juste le document Firestore ici pour fermer l'écriture directe côté client)
+ */
+exports.submitGalleryEntry = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        if (req.method !== 'POST') {
+          return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        const { imageUrl, title, discordUser } = req.body;
+
+        if (!discordUser || !discordUser.userId || !discordUser.username) {
+          return res.status(401).json({ error: 'Discord authentication required' });
+        }
+
+        if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.startsWith('https://res.cloudinary.com/')) {
+          return res.status(400).json({ error: 'Invalid imageUrl' });
+        }
+
+        const galleryEntry = {
+          imageUrl,
+          authorName: discordUser.username,
+          authorId: discordUser.userId,
+          title: (typeof title === 'string' && title.trim()) ? title.trim().slice(0, 200) : null,
+          uploadedAt: new Date()
+        };
+
+        const docRef = await db.collection('gallery').add(galleryEntry);
+
+        console.log('Gallery entry submitted:', {
+          docId: docRef.id,
+          author: discordUser.username
+        });
+
+        res.json({ success: true, id: docRef.id });
+
+      } catch (error) {
+        console.error('Error submitting gallery entry:', error);
+        res.status(500).json({ error: 'Failed to submit entry', details: error.message });
+      }
+    });
+  }
+);
+
+/**
  * Récupère les events Raid-Helper à venir pour le serveur Discord
  */
 exports.getRaidHelperEvents = onRequest(

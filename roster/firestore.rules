@@ -47,10 +47,10 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Galerie membres — lecture publique, création ouverte (gate Discord côté client), suppression admin
+    // Galerie membres — lecture publique, écriture via submitGalleryEntry Cloud Function (Admin SDK), suppression admin
     match /gallery/{docId} {
       allow read: if true;
-      allow create: if true;
+      allow create: if false;
       allow delete: if isAdmin();
       allow update: if false;
     }
