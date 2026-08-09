@@ -459,9 +459,8 @@
     <script>
         const db = firebase.firestore();
 
-        // ── Cloudinary ────────────────────────────────────────────────────────
+        // ── Cloudinary (upload signé via getCloudinarySignature) ────────────────
         const CLOUD  = 'dcgb4bhvh';
-        const PRESET = 'guild_gallery';
 
         // ── Helpers ───────────────────────────────────────────────────────────
         function escHtml(s) {
@@ -635,6 +634,8 @@
                 return;
             }
 
+            const user = DiscordAuth.getUserInfo();
+
             const progress = document.getElementById('galleryUploadProgress');
             const fill     = document.getElementById('galleryProgressFill');
             const label    = document.getElementById('galleryProgressLabel');
@@ -654,11 +655,21 @@
             };
             reader.readAsDataURL(file);
 
-            const formData = new FormData();
-            formData.append('file',          file);
-            formData.append('upload_preset', PRESET);
-
             try {
+                const sigRes = await fetch('https://europe-west1-guild-roster-67da7.cloudfunctions.net/getCloudinarySignature', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ discordUser: { userId: user?.userId || '', username: user?.username || 'Membre' } })
+                });
+                if (!sigRes.ok) throw new Error(`Signature HTTP ${sigRes.status}`);
+                const { signature, timestamp, apiKey } = await sigRes.json();
+
+                const formData = new FormData();
+                formData.append('file',      file);
+                formData.append('api_key',   apiKey);
+                formData.append('timestamp', timestamp);
+                formData.append('signature', signature);
+
                 await new Promise((resolve, reject) => {
                     const xhr = new XMLHttpRequest();
                     xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`);

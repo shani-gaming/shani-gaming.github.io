@@ -5,6 +5,7 @@ const { initializeApp } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 const axios = require('axios');
 const cors = require('cors');
+const crypto = require('crypto');
 
 // Initialize Firebase Admin
 initializeApp();
@@ -19,6 +20,8 @@ const discordGuildId = defineSecret('DISCORD_GUILD_ID');
 const discordWebhookUrl = defineSecret('DISCORD_WEBHOOK_URL');
 const raidHelperApiKey = defineSecret('RAIDHELPER_API_KEY');
 const wclCredentials = defineSecret('WCL_CREDENTIALS');
+const cloudinaryApiKey = defineSecret('CLOUDINARY_API_KEY');
+const cloudinaryApiSecret = defineSecret('CLOUDINARY_API_SECRET');
 // CORS configuration - Allow GitHub Pages and custom domain
 const corsOptions = {
   origin: [
@@ -1359,6 +1362,51 @@ exports.deleteRosterEntry = onRequest(
       } catch (error) {
         console.error('Error deleting roster entry:', error);
         res.status(500).json({ error: 'Failed to delete entry', details: error.message });
+      }
+    });
+  }
+);
+
+/**
+ * Génère une signature Cloudinary pour un upload signé (galerie membres).
+ * Empêche l'upload direct non authentifié — seul un client ayant une session
+ * Discord peut obtenir une signature valide, à usage unique (timestamp figé).
+ */
+exports.getCloudinarySignature = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10,
+    secrets: [cloudinaryApiKey, cloudinaryApiSecret]
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        if (req.method !== 'POST') {
+          return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        const { discordUser } = req.body;
+        if (!discordUser || !discordUser.userId || !discordUser.username) {
+          return res.status(401).json({ error: 'Discord authentication required' });
+        }
+
+        const timestamp = Math.floor(Date.now() / 1000);
+        const apiSecret = cloudinaryApiSecret.value();
+
+        // Seuls les paramètres effectivement envoyés à Cloudinary doivent être signés
+        const signature = crypto
+          .createHash('sha1')
+          .update(`timestamp=${timestamp}${apiSecret}`)
+          .digest('hex');
+
+        res.json({
+          signature,
+          timestamp,
+          apiKey: cloudinaryApiKey.value()
+        });
+      } catch (error) {
+        console.error('Error generating Cloudinary signature:', error);
+        res.status(500).json({ error: 'Failed to generate signature' });
       }
     });
   }
