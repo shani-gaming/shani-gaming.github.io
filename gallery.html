@@ -178,47 +178,6 @@
         .empty-state { grid-column: 1 / -1; }
 
         /* ── Upload Modal ── */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.75);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-        .modal-overlay.visible { display: flex; }
-
-        .modal-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            width: 100%;
-            max-width: 520px;
-            max-height: 92vh;
-            overflow-y: auto;
-            box-shadow: 0 24px 60px rgba(0,0,0,0.6);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem 1.5rem 1rem;
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            background: var(--bg-card);
-            z-index: 1;
-            border-radius: 14px 14px 0 0;
-        }
-        .modal-header h3 { font-size: 1.15rem; color: var(--primary); margin: 0; }
-        .modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; padding: 0.25rem; transition: color 0.2s; }
-        .modal-close:hover { color: #ff6b6b; }
-
-        .modal-form { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.1rem; }
-
         /* Upload zone */
         .upload-zone {
             display: flex;
@@ -282,18 +241,6 @@
         .form-group input:focus { outline: none; border-color: #7289da; }
         .form-group input::placeholder { color: var(--text-muted); opacity: 0.6; }
 
-        /* Modal footer */
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.75rem;
-            padding: 1.25rem 1.5rem;
-            border-top: 1px solid var(--border);
-            position: sticky;
-            bottom: 0;
-            background: var(--bg-card);
-            border-radius: 0 0 14px 14px;
-        }
         .btn-cancel { padding: 0.6rem 1.2rem; background: transparent; border: 1px solid var(--border); border-radius: 7px; color: var(--text-muted); cursor: pointer; font-family: inherit; font-size: 0.9rem; transition: all 0.2s; }
         .btn-cancel:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
         .btn-save { padding: 0.6rem 1.5rem; background: rgba(88,101,242,0.12); border: 1px solid #7289da; border-radius: 7px; color: #7289da; cursor: pointer; font-family: inherit; font-size: 0.9rem; font-weight: 700; transition: all 0.2s; }
