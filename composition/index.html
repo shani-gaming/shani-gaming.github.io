@@ -613,38 +613,10 @@
 
         .tab-icon { font-size: 1.4rem; line-height: 1; }
 
-        /* ── Toast ── */
-        .toast-container {
-            position: fixed;
-            bottom: 5rem;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            align-items: center;
-            pointer-events: none;
+        /* Toast : décalé au-dessus de la barre d'onglets mobile (voir .mobile-tab-bar) */
+        @media (max-width: 768px) {
+            .toast-container { bottom: calc(64px + 1rem); }
         }
-
-        .toast {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.65rem 1.1rem;
-            font-size: 0.85rem;
-            white-space: nowrap;
-            animation: toast-in 0.25s ease;
-        }
-
-        @keyframes toast-in {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .toast.success { border-color: var(--healer); color: var(--healer); }
-        .toast.error   { border-color: #ff6b6b; color: #ff6b6b; }
-        .toast.info    { border-color: rgba(238,187,85,0.4); color: var(--primary); }
 
         /* Loader */
         .loader-container {
@@ -956,12 +928,19 @@
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            toast.textContent = msg;
+            const icons = { success: '✓', error: '✕', info: 'ℹ' };
+            const iconEl = document.createElement('div');
+            iconEl.className = 'toast-icon';
+            iconEl.textContent = icons[type] || icons.info;
+            const msgEl = document.createElement('div');
+            msgEl.className = 'toast-message';
+            msgEl.textContent = msg;
+            toast.appendChild(iconEl);
+            toast.appendChild(msgEl);
             container.appendChild(toast);
             setTimeout(() => {
-                toast.style.transition = 'opacity 0.3s';
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 350);
+                toast.classList.add('removing');
+                setTimeout(() => toast.remove(), 300);
             }, duration);
         }
 

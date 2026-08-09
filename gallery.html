@@ -353,14 +353,6 @@
         }
         .lightbox-close:hover { background: rgba(255,107,107,0.3); }
 
-        /* ── Toast ── */
-        .toast-container { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; align-items: center; pointer-events: none; }
-        .toast { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem 1.2rem; font-size: 0.85rem; white-space: nowrap; animation: toast-in 0.25s ease; }
-        @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .toast.success { border-color: #4caf50; color: #4caf50; }
-        .toast.error   { border-color: #ff6b6b; color: #ff6b6b; }
-        .toast.info    { border-color: rgba(212,175,55,0.5); color: var(--primary); }
-
         /* ── Responsive ── */
         @media (max-width: 768px) {
             .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
@@ -471,9 +463,20 @@
             const c = document.getElementById('toastContainer');
             const t = document.createElement('div');
             t.className = `toast ${type}`;
-            t.textContent = msg;
+            const icons = { success: '✓', error: '✕', info: 'ℹ' };
+            const iconEl = document.createElement('div');
+            iconEl.className = 'toast-icon';
+            iconEl.textContent = icons[type] || icons.info;
+            const msgEl = document.createElement('div');
+            msgEl.className = 'toast-message';
+            msgEl.textContent = msg;
+            t.appendChild(iconEl);
+            t.appendChild(msgEl);
             c.appendChild(t);
-            setTimeout(() => { t.style.transition = 'opacity 0.3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 350); }, ms);
+            setTimeout(() => {
+                t.classList.add('removing');
+                setTimeout(() => t.remove(), 300);
+            }, ms);
         }
 
         function formatDateShort(ts) {
