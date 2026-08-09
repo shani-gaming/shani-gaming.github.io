@@ -1414,6 +1414,45 @@ exports.getCloudinarySignature = onRequest(
 );
 
 /**
+ * Vérifie un ID token Firebase (Google Sign-in) et son appartenance à la
+ * collection admins — même logique que isAdmin() dans firestore.rules.
+ * Retourne l'email si admin, lève une erreur { status, message } sinon.
+ */
+async function verifyAdminToken(idToken) {
+  if (!idToken) {
+    throw { status: 401, message: 'Missing ID token' };
+  }
+
+  let email;
+  try {
+    const decoded = await getAuth().verifyIdToken(idToken);
+    email = decoded.email;
+  } catch (err) {
+    throw { status: 401, message: 'Invalid ID token' };
+  }
+
+  if (!email) {
+    throw { status: 401, message: 'Invalid ID token' };
+  }
+
+  const adminDoc = await db.collection('admins').doc(email).get();
+  if (!adminDoc.exists) {
+    throw { status: 403, message: 'Admin access required' };
+  }
+
+  return email;
+}
+
+/**
+ * Extrait le public_id Cloudinary d'une secure_url, ex:
+ * https://res.cloudinary.com/cloud/image/upload/v123/folder/name.jpg -> folder/name
+ */
+function extractCloudinaryPublicId(imageUrl) {
+  const m = imageUrl.match(/\/upload\/(?:[^/]+\/)*?v\d+\/(.+)\.[a-zA-Z0-9]+$/);
+  return m ? m[1] : null;
+}
+
+/**
  * Génère une signature Cloudinary pour un upload signé (actualités, admin uniquement).
  * Vérifie un vrai ID token Firebase (Google Sign-in) + appartenance à la collection
  * admins, même logique que isAdmin() dans firestore.rules.
@@ -1431,26 +1470,10 @@ exports.getCloudinarySignatureAdmin = onRequest(
           return res.status(405).json({ error: 'Method not allowed' });
         }
 
-        const { idToken } = req.body;
-        if (!idToken) {
-          return res.status(401).json({ error: 'Missing ID token' });
-        }
-
-        let email;
         try {
-          const decoded = await getAuth().verifyIdToken(idToken);
-          email = decoded.email;
+          await verifyAdminToken(req.body.idToken);
         } catch (err) {
-          return res.status(401).json({ error: 'Invalid ID token' });
-        }
-
-        if (!email) {
-          return res.status(401).json({ error: 'Invalid ID token' });
-        }
-
-        const adminDoc = await db.collection('admins').doc(email).get();
-        if (!adminDoc.exists) {
-          return res.status(403).json({ error: 'Admin access required' });
+          return res.status(err.status || 500).json({ error: err.message || 'Auth failed' });
         }
 
         const timestamp = Math.floor(Date.now() / 1000);
@@ -1469,6 +1492,65 @@ exports.getCloudinarySignatureAdmin = onRequest(
       } catch (error) {
         console.error('Error generating admin Cloudinary signature:', error);
         res.status(500).json({ error: 'Failed to generate signature' });
+      }
+    });
+  }
+);
+
+/**
+ * Supprime un asset Cloudinary (admin uniquement) — appelée en complément de la
+ * suppression du document Firestore (gallery/news), pour éviter d'accumuler des
+ * fichiers orphelins sur le quota Cloudinary.
+ */
+exports.destroyCloudinaryAsset = onRequest(
+  {
+    region: 'europe-west1',
+    maxInstances: 10,
+    secrets: [cloudinaryApiKey, cloudinaryApiSecret]
+  },
+  (req, res) => {
+    corsMiddleware(req, res, async () => {
+      try {
+        if (req.method !== 'POST') {
+          return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        try {
+          await verifyAdminToken(req.body.idToken);
+        } catch (err) {
+          return res.status(err.status || 500).json({ error: err.message || 'Auth failed' });
+        }
+
+        const { imageUrl } = req.body;
+        if (!imageUrl) {
+          return res.json({ success: true, skipped: 'no imageUrl' });
+        }
+
+        const publicId = extractCloudinaryPublicId(imageUrl);
+        if (!publicId) {
+          console.warn('Could not extract public_id from', imageUrl);
+          return res.json({ success: true, skipped: 'unrecognized URL format' });
+        }
+
+        const timestamp = Math.floor(Date.now() / 1000);
+        const apiSecret = cloudinaryApiSecret.value();
+        const apiKey = cloudinaryApiKey.value();
+        const signature = crypto
+          .createHash('sha1')
+          .update(`public_id=${publicId}&timestamp=${timestamp}${apiSecret}`)
+          .digest('hex');
+
+        const cloudinaryRes = await axios.post(
+          'https://api.cloudinary.com/v1_1/dcgb4bhvh/image/destroy',
+          new URLSearchParams({ public_id: publicId, timestamp, api_key: apiKey, signature }),
+          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        );
+
+        console.log('Cloudinary destroy:', publicId, cloudinaryRes.data.result);
+        res.json({ success: true, result: cloudinaryRes.data.result });
+      } catch (error) {
+        console.error('Error destroying Cloudinary asset:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Failed to destroy asset' });
       }
     });
   }

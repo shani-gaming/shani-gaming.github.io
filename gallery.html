@@ -737,7 +737,18 @@
         async function confirmDelete(id) {
             if (!confirm('Supprimer cette image définitivement ?')) return;
             try {
+                const entry = galleryEntries.find(e => e.id === id);
                 await db.collection('gallery').doc(id).delete();
+
+                if (entry?.imageUrl) {
+                    const idToken = await firebase.auth().currentUser.getIdToken();
+                    fetch('https://europe-west1-guild-roster-67da7.cloudfunctions.net/destroyCloudinaryAsset', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idToken, imageUrl: entry.imageUrl })
+                    }).catch(err => console.error('Cloudinary destroy:', err));
+                }
+
                 showToast('Image supprimée.', 'success');
             } catch (err) {
                 console.error('Delete:', err);

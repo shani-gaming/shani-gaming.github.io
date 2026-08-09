@@ -988,7 +988,18 @@
         async function confirmDelete(id) {
             if (!confirm('Supprimer cette actualité définitivement ?')) return;
             try {
+                const news = allNews.find(n => n.id === id);
                 await db.collection('news').doc(id).delete();
+
+                if (news?.imageUrl) {
+                    const idToken = await firebase.auth().currentUser.getIdToken();
+                    fetch('https://europe-west1-guild-roster-67da7.cloudfunctions.net/destroyCloudinaryAsset', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idToken, imageUrl: news.imageUrl })
+                    }).catch(err => console.error('Cloudinary destroy:', err));
+                }
+
                 showToast('Actualité supprimée.', 'success');
             } catch (err) {
                 console.error('deleteNews:', err);
