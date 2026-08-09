@@ -516,6 +516,18 @@ h1, h2, h3 { font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
     background: rgba(var(--primary-rgb), 0.08);
 }
 
+/* ── Barre de chargement (partagé) ── */
+.load-progress {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+.load-bar-wrap { flex: 1; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; }
+.load-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 2px; transition: width 0.3s ease; }
+
 /* ── Formulaire de modale (partagé : champs, zone d'upload, boutons) ── */
 .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
 
