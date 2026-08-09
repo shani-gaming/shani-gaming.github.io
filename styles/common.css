@@ -4,6 +4,7 @@
     --bg-surface: #161b22;
     --bg-card: #21262d; /* Carte légèrement plus claire */
     --primary: #8ec63f; /* Vert Curse of Ula'tek (Couleur Principale Saison 2) */
+    --primary-rgb: 142, 198, 63; /* Composantes de --primary, pour rgba(var(--primary-rgb), X) à opacité variable */
     --primary-dim: rgba(142, 198, 63, 0.12);
     --accent: #33ffaa; /* Jade en accent secondaire */
     --accent-dim: rgba(51, 255, 170, 0.1);
@@ -16,6 +17,7 @@
 /* Thème Saison 1 : on repasse sur l'ancienne couleur Or Pandarie */
 body[data-season="s1"] {
     --primary: #eebb55;
+    --primary-rgb: 238, 187, 85;
     --primary-dim: rgba(238, 187, 85, 0.1);
 }
 
@@ -487,6 +489,170 @@ h1, h2, h3 { font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
     font-size: 0.85rem;
     resize: vertical;
 }
+
+/* ── Formulaire de modale (partagé : champs, zone d'upload, boutons) ── */
+.form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.form-group label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+}
+
+.form-hint {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.72rem;
+    opacity: 0.7;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    background: var(--bg-elevated, #2a2f38);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 0.65rem 0.85rem;
+    color: var(--text-main, #e6edf3);
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder { color: var(--text-muted); opacity: 0.6; }
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.form-group textarea { resize: vertical; min-height: 110px; }
+
+.form-group select option { background: #1a1f28; }
+
+/* Zone d'upload */
+.upload-zone {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+    border-color: var(--primary);
+    background: rgba(var(--primary-rgb), 0.05);
+}
+
+.upload-zone-btn {
+    padding: 0.45rem 0.9rem;
+    background: rgba(var(--primary-rgb), 0.08);
+    border: 1px solid rgba(var(--primary-rgb), 0.35);
+    border-radius: 6px;
+    color: var(--primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.upload-zone-btn:hover { background: rgba(var(--primary-rgb), 0.16); }
+
+.upload-zone-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Barre de progression d'upload */
+.upload-progress-wrap {
+    display: none;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-top: 0.4rem;
+}
+
+.upload-progress-wrap.visible { display: flex; }
+
+.upload-progress-track {
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.upload-progress-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.15s;
+}
+
+.upload-progress-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Prévisualisation d'image */
+.image-preview {
+    margin-top: 0.4rem;
+    border-radius: 7px;
+    overflow: hidden;
+    height: 0;
+    transition: height 0.25s;
+}
+
+.image-preview.has-image { height: 140px; }
+
+.image-preview img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+}
+
+.btn-cancel {
+    padding: 0.6rem 1.2rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+.btn-cancel:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
+
+.btn-save {
+    padding: 0.6rem 1.5rem;
+    background: rgba(var(--primary-rgb), 0.12);
+    border: 1px solid var(--primary);
+    border-radius: 7px;
+    color: var(--primary);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    transition: all 0.2s;
+}
+.btn-save:hover { background: rgba(var(--primary-rgb), 0.22); }
+.btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Dashboard Grid (Bento Box Style) */
 .dashboard {
