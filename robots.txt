@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin-attendance.html
+Disallow: /roster/discord-callback.html
+
+Sitemap: https://www.sagesdepandarie.ovh/sitemap.xml
