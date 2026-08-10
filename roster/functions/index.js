@@ -951,7 +951,7 @@ function slotsFromCount(count, thresholds) {
  * semaine en cours, via l'API Blizzard (client_credentials, pas de consentement
  * utilisateur nécessaire — données de profil publiques).
  */
-async function computeVaultProgress(realm, name, accessToken, resetTimestamp) {
+async function computeVaultProgress(realm, name, accessToken, resetTimestamp, previousPvpBaseline) {
   const region = 'eu';
   const headers = { Authorization: `Bearer ${accessToken}` };
   const params = { namespace: `profile-${region}`, locale: 'fr_FR' };
@@ -999,18 +999,34 @@ async function computeVaultProgress(realm, name, accessToken, resetTimestamp) {
     if (err.response?.status !== 404) throw err;
   }
 
-  // ── PvP ── (somme des victoires classées de la semaine, tous brackets)
+  // ── PvP ──
+  // `weekly_match_statistics` ne se réinitialise pas correctement pour le bracket
+  // SHUFFLE côté API Blizzard (il reflète les totaux de la saison, pas la semaine —
+  // vérifié en direct sur plusieurs personnages, `weekly.won === season.won` en
+  // permanence). On calcule donc le delta hebdo nous-mêmes à partir de
+  // `season_match_statistics` (strictement croissant, fiable), en gardant un
+  // baseline par type de bracket capturé au premier sync suivant chaque reset.
   let pvpWins = 0;
+  const pvpBaselineBrackets = {};
   try {
     const summary = await axios.get(`${base}/pvp-summary`, { headers, params, timeout: 8000 });
     const brackets = summary.data.brackets || [];
     const results = await Promise.allSettled(
       brackets.map(b => axios.get(b.href, { headers, params: { locale: 'fr_FR' }, timeout: 8000 }))
     );
+    const isNewWeek = !previousPvpBaseline || previousPvpBaseline.resetTimestamp !== resetTimestamp;
+
     results.forEach(r => {
-      if (r.status === 'fulfilled') {
-        pvpWins += r.value.data.weekly_match_statistics?.won || 0;
-      }
+      if (r.status !== 'fulfilled') return;
+      const data = r.value.data;
+      const type = data.bracket?.type;
+      if (!type) return;
+      const seasonWon = data.season_match_statistics?.won || 0;
+      const baselineWon = isNewWeek
+        ? seasonWon
+        : (previousPvpBaseline.brackets?.[type] ?? seasonWon);
+      pvpWins += Math.max(0, seasonWon - baselineWon);
+      pvpBaselineBrackets[type] = baselineWon;
     });
   } catch (err) {
     if (err.response?.status !== 404) throw err;
@@ -1023,7 +1039,8 @@ async function computeVaultProgress(realm, name, accessToken, resetTimestamp) {
     raidDifficulty,
     raidSlots: slotsFromCount(raidBossesKilled, VAULT_THRESHOLDS.raid),
     pvpWins,
-    pvpSlots: slotsFromCount(pvpWins, VAULT_THRESHOLDS.pvp)
+    pvpSlots: slotsFromCount(pvpWins, VAULT_THRESHOLDS.pvp),
+    pvpBaseline: { resetTimestamp, brackets: pvpBaselineBrackets }
   };
 }
 
@@ -1054,8 +1071,14 @@ exports.syncVaultProgress = onSchedule(
     const accessToken = tokenResponse.data.access_token;
     const resetTimestamp = getLastEuResetTimestamp();
 
-    const membersSnap = await db.collection('guild-members').where('active', '==', true).get();
+    const [membersSnap, vaultSnap] = await Promise.all([
+      db.collection('guild-members').where('active', '==', true).get(),
+      db.collection('vault-progress').get()
+    ]);
     const members = membersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const previousPvpBaselineById = new Map(
+      vaultSnap.docs.map(d => [d.id, d.data().pvpBaseline])
+    );
 
     const BATCH_SIZE = 5;
     let successCount = 0;
@@ -1064,7 +1087,9 @@ exports.syncVaultProgress = onSchedule(
     for (let i = 0; i < members.length; i += BATCH_SIZE) {
       const batch = members.slice(i, i + BATCH_SIZE);
       const results = await Promise.allSettled(
-        batch.map(m => computeVaultProgress(m.realm, m.name, accessToken, resetTimestamp))
+        batch.map(m => computeVaultProgress(
+          m.realm, m.name, accessToken, resetTimestamp, previousPvpBaselineById.get(m.id)
+        ))
       );
 
       const writeBatch = db.batch();
