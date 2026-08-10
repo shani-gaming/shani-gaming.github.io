@@ -931,14 +931,22 @@ function getLastEuResetTimestamp(now = new Date()) {
 
 /**
  * Great Vault : seuils de déblocage (nb d'activités → nb de slots débloqués).
- * PvP repose sur la même logique 1/4/8 que M+, à ajuster si l'observation en
- * prod montre des seuils Blizzard différents pour cette saison.
+ * Depuis Midnight, le Grand Coffre n'a plus de rangée PvP : elle est remplacée
+ * par une rangée "Monde" (Failles, Traques, Sites rituels, activités
+ * mondiales — seuils 2/4/8 comme M+/PvP avant). Note : seules les Failles
+ * sont trackées ci-dessous, Traques et Sites rituels n'ont aucun compteur
+ * exposé par l'API Blizzard (vérifié : aucune catégorie de statistiques
+ * dédiée). Le total "Monde" est donc une approximation par défaut.
  */
 const VAULT_THRESHOLDS = {
   mythicPlus: [1, 4, 8],
   raid: [2, 4, 6],
-  pvp: [1, 4, 8]
+  world: [2, 4, 8]
 };
+
+// Statistique cumulative "Total delves completed" (id stable, indépendant de la
+// locale — le nom affiché change selon fr_FR/en_US mais l'id reste le même).
+const DELVE_STAT_ID = 40734;
 
 function slotsFromCount(count, thresholds) {
   let slots = 0;
@@ -946,12 +954,22 @@ function slotsFromCount(count, thresholds) {
   return slots;
 }
 
+function findStatById(categories, statId) {
+  for (const cat of categories || []) {
+    const stat = (cat.statistics || []).find(s => s.id === statId);
+    if (stat) return stat.quantity;
+    const nested = findStatById(cat.sub_categories, statId);
+    if (nested != null) return nested;
+  }
+  return null;
+}
+
 /**
- * Calcule la progression Great Vault (M+/Raid/PvP) d'un personnage pour la
+ * Calcule la progression Great Vault (M+/Raid/Monde) d'un personnage pour la
  * semaine en cours, via l'API Blizzard (client_credentials, pas de consentement
  * utilisateur nécessaire — données de profil publiques).
  */
-async function computeVaultProgress(realm, name, accessToken, resetTimestamp, previousPvpBaseline) {
+async function computeVaultProgress(realm, name, accessToken, resetTimestamp, previousWorldBaseline) {
   const region = 'eu';
   const headers = { Authorization: `Bearer ${accessToken}` };
   const params = { namespace: `profile-${region}`, locale: 'fr_FR' };
@@ -999,35 +1017,20 @@ async function computeVaultProgress(realm, name, accessToken, resetTimestamp, pr
     if (err.response?.status !== 404) throw err;
   }
 
-  // ── PvP ──
-  // `weekly_match_statistics` ne se réinitialise pas correctement pour le bracket
-  // SHUFFLE côté API Blizzard (il reflète les totaux de la saison, pas la semaine —
-  // vérifié en direct sur plusieurs personnages, `weekly.won === season.won` en
-  // permanence). On calcule donc le delta hebdo nous-mêmes à partir de
-  // `season_match_statistics` (strictement croissant, fiable), en gardant un
-  // baseline par type de bracket capturé au premier sync suivant chaque reset.
-  let pvpWins = 0;
-  const pvpBaselineBrackets = {};
+  // ── Monde (Failles) ── delta hebdo calculé à partir du compteur cumulatif
+  // "Total delves completed", avec un baseline capturé au premier sync suivant
+  // chaque reset (même principe que le fix appliqué précédemment au PvP).
+  let worldActivities = 0;
+  let worldBaseline = null;
   try {
-    const summary = await axios.get(`${base}/pvp-summary`, { headers, params, timeout: 8000 });
-    const brackets = summary.data.brackets || [];
-    const results = await Promise.allSettled(
-      brackets.map(b => axios.get(b.href, { headers, params: { locale: 'fr_FR' }, timeout: 8000 }))
-    );
-    const isNewWeek = !previousPvpBaseline || previousPvpBaseline.resetTimestamp !== resetTimestamp;
-
-    results.forEach(r => {
-      if (r.status !== 'fulfilled') return;
-      const data = r.value.data;
-      const type = data.bracket?.type;
-      if (!type) return;
-      const seasonWon = data.season_match_statistics?.won || 0;
-      const baselineWon = isNewWeek
-        ? seasonWon
-        : (previousPvpBaseline.brackets?.[type] ?? seasonWon);
-      pvpWins += Math.max(0, seasonWon - baselineWon);
-      pvpBaselineBrackets[type] = baselineWon;
-    });
+    const res = await axios.get(`${base}/achievements/statistics`, { headers, params, timeout: 8000 });
+    const totalDelves = findStatById(res.data.categories, DELVE_STAT_ID);
+    if (totalDelves != null) {
+      const isNewWeek = !previousWorldBaseline || previousWorldBaseline.resetTimestamp !== resetTimestamp;
+      const baselineCount = isNewWeek ? totalDelves : (previousWorldBaseline.totalDelves ?? totalDelves);
+      worldActivities = Math.max(0, totalDelves - baselineCount);
+      worldBaseline = { resetTimestamp, totalDelves: baselineCount };
+    }
   } catch (err) {
     if (err.response?.status !== 404) throw err;
   }
@@ -1038,15 +1041,15 @@ async function computeVaultProgress(realm, name, accessToken, resetTimestamp, pr
     raidBossesKilled,
     raidDifficulty,
     raidSlots: slotsFromCount(raidBossesKilled, VAULT_THRESHOLDS.raid),
-    pvpWins,
-    pvpSlots: slotsFromCount(pvpWins, VAULT_THRESHOLDS.pvp),
-    pvpBaseline: { resetTimestamp, brackets: pvpBaselineBrackets }
+    worldActivities,
+    worldSlots: slotsFromCount(worldActivities, VAULT_THRESHOLDS.world),
+    worldBaseline
   };
 }
 
 /**
  * Scheduled function: synchro quotidienne de la progression Great Vault
- * de tous les membres actifs (M+, raid, pvp). Best-effort par membre : un
+ * de tous les membres actifs (M+, raid, monde). Best-effort par membre : un
  * personnage en échec (profil privé, renommé...) n'interrompt pas les autres.
  */
 exports.syncVaultProgress = onSchedule(
@@ -1076,8 +1079,8 @@ exports.syncVaultProgress = onSchedule(
       db.collection('vault-progress').get()
     ]);
     const members = membersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const previousPvpBaselineById = new Map(
-      vaultSnap.docs.map(d => [d.id, d.data().pvpBaseline])
+    const previousWorldBaselineById = new Map(
+      vaultSnap.docs.map(d => [d.id, d.data().worldBaseline])
     );
 
     const BATCH_SIZE = 5;
@@ -1088,7 +1091,7 @@ exports.syncVaultProgress = onSchedule(
       const batch = members.slice(i, i + BATCH_SIZE);
       const results = await Promise.allSettled(
         batch.map(m => computeVaultProgress(
-          m.realm, m.name, accessToken, resetTimestamp, previousPvpBaselineById.get(m.id)
+          m.realm, m.name, accessToken, resetTimestamp, previousWorldBaselineById.get(m.id)
         ))
       );
 
