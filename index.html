@@ -551,17 +551,20 @@
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 0.5rem 0.85rem;
+            padding: 0.55rem 0.85rem;
             width: 260px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             transition: border-color 0.2s;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.55rem;
+            flex-direction: column;
+            gap: 0.4rem;
         }
         .affix-fab:hover { border-color: var(--primary); }
-        .affix-fab-items { display: flex; align-items: center; gap: 0.4rem; }
+        .affix-fab-label {
+            font-size: 0.66rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+            color: var(--primary);
+        }
+        .affix-fab-items { display: flex; align-items: center; justify-content: center; gap: 0.4rem; }
         .affix-fab-item {
             position: relative;
             display: flex;
@@ -1134,6 +1137,7 @@
     <div class="floating-widgets">
         <!-- Affixes de la semaine -->
         <div class="affix-fab" id="affixFab" style="display:none">
+            <div class="affix-fab-label">Affixes de la semaine</div>
             <div class="affix-fab-items" id="affixFabItems"></div>
         </div>
 
