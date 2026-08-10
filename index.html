@@ -175,53 +175,6 @@
         }
         @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
 
-        /* Affixes de la semaine — ruban sous le hero */
-        .affix-ribbon-wrap { border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02); }
-        .affix-ribbon {
-            display: flex; align-items: center; gap: 0.7rem;
-            padding: 0.65rem 0;
-            font-size: 0.82rem;
-            flex-wrap: wrap;
-        }
-        .affix-ribbon-label {
-            font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-            color: var(--primary); white-space: nowrap;
-        }
-        .affix-ribbon-sep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
-        .affix-items { display: flex; align-items: center; gap: 0.15rem; flex-wrap: wrap; }
-        .affix-item {
-            position: relative;
-            display: inline-flex; align-items: center; gap: 0.35rem;
-            padding: 0.25rem 0.5rem; border-radius: 6px;
-            cursor: default; transition: background 0.15s;
-        }
-        .affix-item:hover, .affix-item:focus-visible { background: rgba(var(--primary-rgb), 0.12); outline: none; }
-        .affix-item img { width: 18px; height: 18px; border-radius: 4px; }
-        .affix-item-dot-sep { color: var(--text-muted); opacity: 0.5; font-size: 0.75rem; }
-        .affix-tip {
-            position: absolute; bottom: calc(100% + 9px); left: 50%;
-            transform: translateX(-50%) translateY(4px);
-            width: 230px;
-            background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px;
-            padding: 0.65rem 0.75rem; font-size: 0.74rem; line-height: 1.45; color: var(--text-muted);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.45);
-            opacity: 0; visibility: hidden;
-            transition: opacity 0.15s ease, transform 0.15s ease;
-            z-index: 10; text-align: left; white-space: normal;
-        }
-        .affix-tip b { display: block; color: var(--text-main); font-size: 0.78rem; margin-bottom: 0.25rem; }
-        .affix-tip::after {
-            content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-            border: 6px solid transparent; border-top-color: var(--bg-surface);
-        }
-        .affix-item:hover .affix-tip, .affix-item:focus-visible .affix-tip {
-            opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0);
-        }
-        .affix-ribbon-reset { margin-left: auto; font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
-        @media (max-width: 640px) {
-            .affix-ribbon-reset { margin-left: 0; width: 100%; }
-        }
-
         /* Recruitment List (Detailed) */
         .recruitment-list {
             display: grid;
@@ -568,12 +521,20 @@
             .hero-text h1 { font-size: 2.5rem; }
         }
 
-        /* Floating Audio Player */
-        .audio-player {
+        /* Widgets flottants (bas-droite) : affixes + lecteur audio, empilés */
+        .floating-widgets {
             position: fixed;
             bottom: 1.5rem;
             right: 1.5rem;
             z-index: 500;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: stretch;
+        }
+
+        /* Floating Audio Player */
+        .audio-player {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -584,6 +545,51 @@
         }
 
         .audio-player:hover { border-color: var(--primary); }
+
+        /* Affixes de la semaine — même carte que le lecteur, plus fine, icônes seules */
+        .affix-fab {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.5rem 0.85rem;
+            width: 260px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: border-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+        }
+        .affix-fab:hover { border-color: var(--primary); }
+        .affix-fab-items { display: flex; align-items: center; gap: 0.4rem; }
+        .affix-fab-item {
+            position: relative;
+            display: flex;
+            padding: 0.15rem;
+            border-radius: 6px;
+            transition: background 0.15s;
+        }
+        .affix-fab-item:hover, .affix-fab-item:focus-visible { background: rgba(var(--primary-rgb), 0.14); outline: none; }
+        .affix-fab-item img { width: 26px; height: 26px; border-radius: 6px; display: block; }
+        .affix-fab-tip {
+            position: absolute; bottom: calc(100% + 10px); right: -8px;
+            transform: translateY(4px);
+            width: 200px;
+            background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px;
+            padding: 0.6rem 0.7rem; font-size: 0.74rem; line-height: 1.45; color: var(--text-muted);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.15s ease, transform 0.15s ease;
+            z-index: 10; text-align: left; white-space: normal;
+        }
+        .affix-fab-tip b { display: block; color: var(--text-main); font-size: 0.78rem; margin-bottom: 0.25rem; }
+        .affix-fab-tip::after {
+            content: ''; position: absolute; top: 100%; right: 14px;
+            border: 6px solid transparent; border-top-color: var(--bg-surface);
+        }
+        .affix-fab-item:hover .affix-fab-tip, .affix-fab-item:focus-visible .affix-fab-tip {
+            opacity: 1; visibility: visible; transform: translateY(0);
+        }
 
         .audio-player-top {
             display: flex;
@@ -788,59 +794,6 @@
             </div>
         </div>
     </section>
-
-    <div class="affix-ribbon-wrap">
-        <div class="container">
-            <div class="affix-ribbon" id="affixRibbon" style="display:none">
-                <span class="affix-ribbon-label">Affixes de la semaine</span>
-                <span class="affix-ribbon-sep"></span>
-                <div class="affix-items" id="affixItems"></div>
-                <span class="affix-ribbon-reset" id="affixReset"></span>
-            </div>
-        </div>
-    </div>
-    <script>
-        function escHtmlAffix(s) {
-            return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        }
-
-        function nextResetShortLabel() {
-            const now = new Date();
-            const next = new Date(now);
-            next.setUTCHours(5, 0, 0, 0);
-            const day = next.getUTCDay();
-            let daysUntil = (2 - day + 7) % 7;
-            if (daysUntil === 0 && now >= next) daysUntil = 7;
-            next.setUTCDate(next.getUTCDate() + daysUntil);
-            const weekday = next.toLocaleDateString('fr-FR', { weekday: 'short', timeZone: 'Europe/Paris' });
-            const time = next.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
-            return `${weekday}. ${time}`;
-        }
-
-        async function loadAffixes() {
-            try {
-                const res = await fetch('https://raider.io/api/v1/mythic-plus/affixes?region=eu&locale=fr');
-                if (!res.ok) return;
-                const data = await res.json();
-                const items = data.affix_details || [];
-                if (!items.length) return;
-
-                document.getElementById('affixItems').innerHTML = items.map((a, i) => `
-                    ${i > 0 ? '<span class="affix-item-dot-sep">·</span>' : ''}
-                    <span class="affix-item" tabindex="0">
-                        <img src="${escHtmlAffix(a.icon_url)}" alt="" loading="lazy">
-                        ${escHtmlAffix(a.name)}
-                        <span class="affix-tip"><b>${escHtmlAffix(a.name)}</b>${escHtmlAffix(a.description)}</span>
-                    </span>
-                `).join('');
-                document.getElementById('affixReset').textContent = `Reset ${nextResetShortLabel()}`;
-                document.getElementById('affixRibbon').style.display = 'flex';
-            } catch (err) {
-                console.error('Erreur chargement affixes:', err);
-            }
-        }
-        loadAffixes();
-    </script>
 
     <script src="scripts/news.js"></script>
     <section class="news-section" id="actualites">
@@ -1178,26 +1131,59 @@
         </div>
     </footer>
 
-    <!-- Lecteur Audio Flottant -->
-    <div class="audio-player" id="audioPlayer">
-        <audio id="audioEl" src="audio/theme.mp3" preload="metadata"></audio>
-        <div class="audio-player-top">
-            <button class="audio-play-btn" id="playBtn" onclick="togglePlay()" title="Lecture / Pause">
-                <!-- Icône Play -->
-                <svg id="iconPlay" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                <!-- Icône Pause -->
-                <svg id="iconPause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-            </button>
-            <div class="audio-info">
-                <div class="audio-label">Thème de guilde</div>
-                <div class="audio-title">Les Sages de Pandarie</div>
+    <div class="floating-widgets">
+        <!-- Affixes de la semaine -->
+        <div class="affix-fab" id="affixFab" style="display:none">
+            <div class="affix-fab-items" id="affixFabItems"></div>
+        </div>
+
+        <!-- Lecteur Audio Flottant -->
+        <div class="audio-player" id="audioPlayer">
+            <audio id="audioEl" src="audio/theme.mp3" preload="metadata"></audio>
+            <div class="audio-player-top">
+                <button class="audio-play-btn" id="playBtn" onclick="togglePlay()" title="Lecture / Pause">
+                    <!-- Icône Play -->
+                    <svg id="iconPlay" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <!-- Icône Pause -->
+                    <svg id="iconPause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+                <div class="audio-info">
+                    <div class="audio-label">Thème de guilde</div>
+                    <div class="audio-title">Les Sages de Pandarie</div>
+                </div>
+            </div>
+            <canvas class="audio-visualizer" id="vizCanvas"></canvas>
+            <div class="audio-progress-bar" id="progressBar" onclick="seekAudio(event)">
+                <div class="audio-progress-fill" id="progressFill"></div>
             </div>
         </div>
-        <canvas class="audio-visualizer" id="vizCanvas"></canvas>
-        <div class="audio-progress-bar" id="progressBar" onclick="seekAudio(event)">
-            <div class="audio-progress-fill" id="progressFill"></div>
-        </div>
     </div>
+    <script>
+        function escHtmlAffix(s) {
+            return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        async function loadAffixes() {
+            try {
+                const res = await fetch('https://raider.io/api/v1/mythic-plus/affixes?region=eu&locale=fr');
+                if (!res.ok) return;
+                const data = await res.json();
+                const items = data.affix_details || [];
+                if (!items.length) return;
+
+                document.getElementById('affixFabItems').innerHTML = items.map(a => `
+                    <span class="affix-fab-item" tabindex="0">
+                        <img src="${escHtmlAffix(a.icon_url)}" alt="${escHtmlAffix(a.name)}" loading="lazy">
+                        <span class="affix-fab-tip"><b>${escHtmlAffix(a.name)}</b>${escHtmlAffix(a.description)}</span>
+                    </span>
+                `).join('');
+                document.getElementById('affixFab').style.display = 'flex';
+            } catch (err) {
+                console.error('Erreur chargement affixes:', err);
+            }
+        }
+        loadAffixes();
+    </script>
     <script>
         const audioEl = document.getElementById('audioEl');
         const iconPlay = document.getElementById('iconPlay');
