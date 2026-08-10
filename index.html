@@ -175,6 +175,53 @@
         }
         @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
 
+        /* Affixes de la semaine — ruban sous le hero */
+        .affix-ribbon-wrap { border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+        .affix-ribbon {
+            display: flex; align-items: center; gap: 0.7rem;
+            padding: 0.65rem 0;
+            font-size: 0.82rem;
+            flex-wrap: wrap;
+        }
+        .affix-ribbon-label {
+            font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--primary); white-space: nowrap;
+        }
+        .affix-ribbon-sep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+        .affix-items { display: flex; align-items: center; gap: 0.15rem; flex-wrap: wrap; }
+        .affix-item {
+            position: relative;
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            padding: 0.25rem 0.5rem; border-radius: 6px;
+            cursor: default; transition: background 0.15s;
+        }
+        .affix-item:hover, .affix-item:focus-visible { background: rgba(var(--primary-rgb), 0.12); outline: none; }
+        .affix-item img { width: 18px; height: 18px; border-radius: 4px; }
+        .affix-item-dot-sep { color: var(--text-muted); opacity: 0.5; font-size: 0.75rem; }
+        .affix-tip {
+            position: absolute; bottom: calc(100% + 9px); left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            width: 230px;
+            background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px;
+            padding: 0.65rem 0.75rem; font-size: 0.74rem; line-height: 1.45; color: var(--text-muted);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.15s ease, transform 0.15s ease;
+            z-index: 10; text-align: left; white-space: normal;
+        }
+        .affix-tip b { display: block; color: var(--text-main); font-size: 0.78rem; margin-bottom: 0.25rem; }
+        .affix-tip::after {
+            content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+            border: 6px solid transparent; border-top-color: var(--bg-surface);
+        }
+        .affix-item:hover .affix-tip, .affix-item:focus-visible .affix-tip {
+            opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0);
+        }
+        .affix-ribbon-reset { margin-left: auto; font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
+        @media (max-width: 640px) {
+            .affix-ribbon-reset { margin-left: 0; width: 100%; }
+        }
+
         /* Recruitment List (Detailed) */
         .recruitment-list {
             display: grid;
@@ -741,6 +788,59 @@
             </div>
         </div>
     </section>
+
+    <div class="affix-ribbon-wrap">
+        <div class="container">
+            <div class="affix-ribbon" id="affixRibbon" style="display:none">
+                <span class="affix-ribbon-label">Affixes de la semaine</span>
+                <span class="affix-ribbon-sep"></span>
+                <div class="affix-items" id="affixItems"></div>
+                <span class="affix-ribbon-reset" id="affixReset"></span>
+            </div>
+        </div>
+    </div>
+    <script>
+        function escHtmlAffix(s) {
+            return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function nextResetShortLabel() {
+            const now = new Date();
+            const next = new Date(now);
+            next.setUTCHours(5, 0, 0, 0);
+            const day = next.getUTCDay();
+            let daysUntil = (2 - day + 7) % 7;
+            if (daysUntil === 0 && now >= next) daysUntil = 7;
+            next.setUTCDate(next.getUTCDate() + daysUntil);
+            const weekday = next.toLocaleDateString('fr-FR', { weekday: 'short', timeZone: 'Europe/Paris' });
+            const time = next.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
+            return `${weekday}. ${time}`;
+        }
+
+        async function loadAffixes() {
+            try {
+                const res = await fetch('https://raider.io/api/v1/mythic-plus/affixes?region=eu&locale=fr');
+                if (!res.ok) return;
+                const data = await res.json();
+                const items = data.affix_details || [];
+                if (!items.length) return;
+
+                document.getElementById('affixItems').innerHTML = items.map((a, i) => `
+                    ${i > 0 ? '<span class="affix-item-dot-sep">·</span>' : ''}
+                    <span class="affix-item" tabindex="0">
+                        <img src="${escHtmlAffix(a.icon_url)}" alt="" loading="lazy">
+                        ${escHtmlAffix(a.name)}
+                        <span class="affix-tip"><b>${escHtmlAffix(a.name)}</b>${escHtmlAffix(a.description)}</span>
+                    </span>
+                `).join('');
+                document.getElementById('affixReset').textContent = `Reset ${nextResetShortLabel()}`;
+                document.getElementById('affixRibbon').style.display = 'flex';
+            } catch (err) {
+                console.error('Erreur chargement affixes:', err);
+            }
+        }
+        loadAffixes();
+    </script>
 
     <script src="scripts/news.js"></script>
     <section class="news-section" id="actualites">
