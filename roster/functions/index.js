@@ -748,7 +748,9 @@ exports.syncGuildRoster = onSchedule(
                     id: r.id,
                     name: r.name,
                     nameFr: r.name,  // sera enrichi par Wowhead ci-dessous
-                    spellId: null
+                    spellId: null,
+                    icon: null,
+                    quality: null
                   }))
                 };
               })
@@ -851,7 +853,7 @@ exports.syncGuildRoster = onSchedule(
 
         if (allRecipeIds.size > 0) {
           const recipeIdArray = [...allRecipeIds];
-          // Map: recipeId → { nameFr, spellId }
+          // Map: recipeId → { nameFr, spellId, icon, quality }
           const wowheadMap = new Map();
           const BATCH_SIZE = 5;
           const WOWHEAD_TIMEOUT_MS = 5000;
@@ -869,15 +871,24 @@ exports.syncGuildRoster = onSchedule(
             results.forEach((result, idx) => {
               if (result.status === 'fulfilled') {
                 const data = result.value.data;
+                const tooltip = data.tooltip || '';
                 const nameFr = data.name || null;
-                const spellMatch = (data.tooltip || '').match(/\/spell=(\d+)/);
+                const spellMatch = tooltip.match(/\/spell=(\d+)/);
                 const spellId = spellMatch ? parseInt(spellMatch[1]) : null;
-                wowheadMap.set(batchIds[idx], { nameFr, spellId });
+                const icon = data.icon || null;
+                const quality = typeof data.quality === 'number' ? data.quality : null;
+                // Décoration de maison (housing, Midnight) : pas de champ dédié dans l'API,
+                // seul indicateur fiable = l'icône de coût "budget déco" dans le HTML du tooltip
+                // (le texte "Élément de décoration intérieure" est lui traduit donc moins robuste).
+                const isHousingDecor = /house-decor-budget-icon/.test(tooltip);
+                const budgetMatch = tooltip.match(/house-decor-budget-icon\.webp"[^>]*>\s*<b>(\d+)<\/b>/);
+                const housingBudget = budgetMatch ? parseInt(budgetMatch[1]) : null;
+                wowheadMap.set(batchIds[idx], { nameFr, spellId, icon, quality, isHousingDecor, housingBudget });
               }
             });
           }
 
-          // Mettre à jour nameFr + spellId dans Firestore
+          // Mettre à jour nameFr + spellId + icon + quality dans Firestore
           const whBatch = db.batch();
           currentMembersList.forEach(member => {
             if (!member.midnightProfessions?.length) return;
@@ -887,6 +898,10 @@ exports.syncGuildRoster = onSchedule(
                 if (wh) {
                   if (wh.nameFr) r.nameFr = wh.nameFr;
                   if (wh.spellId) r.spellId = wh.spellId;
+                  if (wh.icon) r.icon = wh.icon;
+                  if (wh.quality !== null) r.quality = wh.quality;
+                  if (wh.isHousingDecor) r.isHousingDecor = true;
+                  if (wh.housingBudget !== null) r.housingBudget = wh.housingBudget;
                 }
               });
             });
@@ -896,7 +911,7 @@ exports.syncGuildRoster = onSchedule(
             });
           });
           await whBatch.commit();
-          console.log(`Wowhead enrichment done: ${wowheadMap.size} unique recipes (FR + spellId)`);
+          console.log(`Wowhead enrichment done: ${wowheadMap.size} unique recipes (FR + spellId + icon + quality + housing)`);
         }
       } catch (whError) {
         console.error('Failed to enrich via Wowhead:', whError.message);
