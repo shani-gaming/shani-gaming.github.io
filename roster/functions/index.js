@@ -11,6 +11,7 @@ const crypto = require('crypto');
 // Initialize Firebase Admin
 initializeApp();
 const db = getFirestore();
+db.settings({ ignoreUndefinedProperties: true });
 
 // Définir les secrets
 const blizzardClientId = defineSecret('BLIZZARD_CLIENT_ID');
@@ -1930,11 +1931,11 @@ exports.getEventDetails = onRequest(
         });
 
         const mapPlayer = s => ({
-          name:   s.name,
+          name:   s.name || null,
           userId: s.userId || null,
-          class:  s.className,
-          spec:   s.specName,
-          role:   s.roleName,
+          class:  s.className || null,
+          spec:   s.specName || null,
+          role:   s.roleName || null,
           note:   s.note || null,
         });
 
