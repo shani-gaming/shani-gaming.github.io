@@ -2200,9 +2200,22 @@ exports.triggerWclSync = onRequest(
 
 /**
  * Lecture des données WCL depuis Firestore (aucun appel WCL API côté client).
- * GET ?type=reports   → 3 derniers reports (metadata + kills)
- * GET ?type=rankings  → matrice joueur × boss (meilleur parse sur 3 derniers reports)
+ * GET ?type=reports   → 3 derniers reports de raid valides (metadata + kills)
+ * GET ?type=rankings  → matrice joueur × boss (meilleur parse sur ces 3 reports)
+ *
+ * On ne garde que les reports de raid (pas les logs Mythic+ d'un membre qui log
+ * ses donjons perso) et avec au moins un kill (WCL crée parfois des reports
+ * vides quand le logging est ouvert puis jamais utilisé) — la perf de guilde
+ * doit porter sur du raid réel, pas sur des coquilles vides ou du M+ perso.
  */
+const WCL_REPORTS_SCAN_LIMIT = 30; // marge pour retrouver 3 reports de raid valides malgré le bruit (M+, logs vides)
+
+function isValidRaidReport(d) {
+  const hasKills = Array.isArray(d.kills) && d.kills.length > 0;
+  const isMythicPlus = (d.zoneName || '').startsWith('Mythic+');
+  return hasKills && !isMythicPlus;
+}
+
 exports.getWclData = onRequest(
   {
     region:      'europe-west1',
@@ -2219,16 +2232,36 @@ exports.getWclData = onRequest(
           return res.status(400).json({ error: 'Invalid type. Use reports or rankings.' });
         }
 
-        // Récupère les 3 derniers reports depuis Firestore
-        const snapshot = await db.collection('wcl-reports')
-          .orderBy('startTime', 'desc')
-          .limit(3)
-          .get();
-
-        if (snapshot.empty) {
+        if ((await db.collection('wcl-reports').limit(1).get()).empty) {
           return res.json(type === 'reports'
             ? { reports: [], syncing: true }
             : { players: [], bosses: [], syncing: true }
+          );
+        }
+
+        // Récupère un lot plus large que 3 pour pouvoir filtrer M+/logs vides
+        // et ne garder que les 3 derniers reports de raid réellement exploitables
+        const scanSnapshot = await db.collection('wcl-reports')
+          .orderBy('startTime', 'desc')
+          .limit(WCL_REPORTS_SCAN_LIMIT)
+          .get();
+
+        const validDocs = scanSnapshot.docs.filter(doc => isValidRaidReport(doc.data()));
+
+        // Isolation par saison : on ne mélange jamais deux raids différents dans
+        // le même tableau. Le report valide le plus récent définit la zone
+        // "courante" — dès que la guilde loggue le nouveau raid d'une saison,
+        // les anciens reports (autre zoneId) sortent automatiquement du calcul,
+        // sans configuration manuelle.
+        const currentZoneId = validDocs[0]?.data().zoneId ?? null;
+        const snapshot = {
+          docs: validDocs.filter(doc => doc.data().zoneId === currentZoneId).slice(0, 3)
+        };
+
+        if (snapshot.docs.length === 0) {
+          return res.json(type === 'reports'
+            ? { reports: [] }
+            : { players: [], bosses: [] }
           );
         }
 

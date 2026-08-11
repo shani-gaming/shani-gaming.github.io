@@ -25,126 +25,69 @@
     <style>
         body { padding-top: 70px; background: var(--bg-deep); }
 
-
         .admin-bar {
             display: none; align-items: center; gap: 0.75rem;
             margin-top: 0.75rem; padding: 0.6rem 1rem;
             background: rgba(51,255,170,0.06); border: 1px solid rgba(51,255,170,0.2);
             border-radius: 8px; font-size: 0.82rem; color: var(--accent);
         }
-        .admin-bar a {
-            color: var(--primary); font-weight: 700; text-decoration: none;
-        }
+        .admin-bar a { color: var(--primary); font-weight: 700; text-decoration: none; }
         .admin-bar a:hover { text-decoration: underline; }
 
         /* ── Content ── */
         .content { padding: 2.5rem 0 5rem; }
 
-        /* ── Matrix table ── */
-        .matrix-wrap {
-            overflow-x: auto;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
+        /* ── Controls bar ── */
+        .controls-bar {
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+            gap: 0.75rem; margin-bottom: 1.5rem;
         }
-
-        table.att-matrix {
-            border-collapse: collapse;
-            width: 100%;
-            min-width: 600px;
-            table-layout: auto;
+        .control-group {
+            display: inline-flex; gap: 0.2rem; padding: 0.2rem;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
         }
-
-        /* Header row */
-        .att-matrix thead th {
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border);
-            padding: 0;
-            font-weight: 600;
-            font-size: 0.72rem;
-            white-space: nowrap;
-            position: sticky;
-            top: 0;
-            z-index: 2;
-        }
-        .att-matrix thead th.col-name {
-            text-align: left;
-            padding: 0.75rem 1.25rem;
-            min-width: 140px;
-            position: sticky;
-            left: 0;
-            z-index: 3;
-            background: var(--bg-surface);
-            border-right: 1px solid var(--border);
-        }
-        .att-matrix thead th.col-summary {
-            padding: 0.75rem 1rem;
-            text-align: center;
-            min-width: 80px;
-            position: sticky;
-            right: 0;
-            background: var(--bg-surface);
-            border-left: 1px solid var(--border);
-            z-index: 3;
-        }
-        .th-event {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 0.5rem 0.6rem;
-            gap: 0.15rem;
-            min-width: 52px;
-            text-align: center;
-        }
-        .th-event-date { font-size: 0.68rem; color: var(--text-muted); font-weight: 500; }
-        .th-event-title {
-            font-size: 0.7rem; font-weight: 700; color: var(--text);
-            max-width: 50px; overflow: hidden; text-overflow: ellipsis;
+        .control-btn {
+            border: none; background: none; color: var(--text-muted);
+            font-size: 0.78rem; font-weight: 600; padding: 0.4rem 0.85rem;
+            border-radius: 6px; cursor: pointer; transition: background 0.15s, color 0.15s;
             white-space: nowrap;
         }
+        .control-btn:hover { color: var(--text); }
+        .control-btn.active { background: var(--primary); color: #0a0a0f; }
 
-        /* Body rows */
-        .att-matrix tbody tr:hover td { background: rgba(255,255,255,0.02); }
-        .att-matrix tbody tr:hover td.col-name,
-        .att-matrix tbody tr:hover td.col-summary {
-            background: var(--bg-surface);
+        /* ── Stat tiles ── */
+        .stat-tiles {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.9rem; margin-bottom: 1.75rem;
+        }
+        .stat-tile {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+            padding: 1rem 1.1rem;
+        }
+        .stat-value {
+            font-size: 1.6rem; font-weight: 800; color: var(--text);
+            font-variant-numeric: tabular-nums; line-height: 1.1;
+        }
+        .stat-value .stat-sub { font-size: 0.95rem; font-weight: 600; color: var(--text-muted); }
+        .stat-label {
+            font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+            color: var(--text-muted); margin-top: 0.35rem;
         }
 
-        .att-matrix tbody td {
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            padding: 0;
-            text-align: center;
+        /* ── Summary view : player rows ── */
+        .player-list {
+            display: flex; flex-direction: column; gap: 0.4rem;
         }
-        .att-matrix tbody td.col-name {
-            text-align: left;
-            padding: 0.6rem 1.25rem;
-            position: sticky;
-            left: 0;
-            background: var(--bg-card);
-            border-right: 1px solid var(--border);
-            z-index: 1;
+        .player-row {
+            display: flex; align-items: center; gap: 1rem;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+            padding: 0.75rem 1.1rem;
         }
-        .att-matrix tbody td.col-summary {
-            padding: 0.6rem 1rem;
-            position: sticky;
-            right: 0;
-            background: var(--bg-card);
-            border-left: 1px solid var(--border);
-            font-size: 0.78rem;
-            font-weight: 700;
-            white-space: nowrap;
-            z-index: 1;
-        }
-        .att-matrix tbody tr:last-child td { border-bottom: none; }
+        .player-row-id { width: 190px; flex-shrink: 0; min-width: 0; }
+        .player-name { font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 0.45rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .player-name .class-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        .player-discord { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .player-name { font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 0.45rem; }
-        .player-name .class-dot {
-            display: inline-block; width: 7px; height: 7px;
-            border-radius: 50%; flex-shrink: 0;
-        }
-        .player-discord { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.05rem; }
-
-        /* Alts badge */
         .alts-badge {
             display: inline-flex; align-items: center;
             font-size: 0.62rem; font-weight: 700; color: var(--text-muted);
@@ -154,7 +97,69 @@
         }
         .alts-badge:hover { border-color: var(--primary); color: var(--primary); }
 
-        /* Global tooltip (position:fixed, escapes overflow containers) */
+        .sparkline {
+            flex: 1; display: flex; flex-wrap: wrap; align-content: center;
+            gap: 4px; min-width: 0;
+        }
+        .spark-dot {
+            width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+            cursor: default;
+        }
+        .spark-dot.present   { background: var(--accent); }
+        .spark-dot.late      { background: #fb923c; }
+        .spark-dot.absent    { background: #f87171; }
+        .spark-dot.bench     { background: #facc15; }
+        .spark-dot.tentative { background: #94a3b8; }
+        .spark-dot.none      { background: transparent; border: 1px solid rgba(255,255,255,0.14); }
+
+        .player-pct { width: 74px; flex-shrink: 0; text-align: right; }
+        .player-pct .pct-value { font-size: 1rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+        .player-pct .pct-frac { display: block; font-size: 0.65rem; color: var(--text-muted); font-weight: 500; margin-top: 0.1rem; }
+        .pct-value.high { color: var(--accent); }
+        .pct-value.mid  { color: #facc15; }
+        .pct-value.low  { color: #f87171; }
+
+        @media (max-width: 640px) {
+            .player-row { flex-wrap: wrap; }
+            .player-row-id { width: 100%; }
+            .player-pct { width: auto; margin-left: auto; text-align: right; }
+        }
+
+        /* ── Collapsible sections (ponctuels / non mappés) ── */
+        .collapsible-section {
+            margin-top: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .collapsible-header {
+            padding: 0.85rem 1.25rem;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.78rem; font-weight: 700;
+            letter-spacing: 0.04em; text-transform: uppercase;
+            color: var(--text-muted);
+            cursor: pointer; user-select: none;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .collapsible-header .chevron { transition: transform 0.15s; font-size: 0.7rem; }
+        .collapsible-section.open .collapsible-header .chevron { transform: rotate(180deg); }
+        .collapsible-body { padding: 0.75rem 1.25rem 1rem; display: none; }
+        .collapsible-section.open .collapsible-body { display: block; }
+
+        .collapsible-body .player-list { margin-top: 0.25rem; }
+
+        .unmapped-note { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .unmapped-note a { color: var(--primary); }
+        .unmapped-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+        .unmapped-chip {
+            padding: 0.2rem 0.65rem; background: var(--bg-surface);
+            border: 1px solid var(--border); border-radius: 4px;
+            font-size: 0.75rem; color: var(--text-muted);
+        }
+
+        /* ── Global tooltip (position:fixed, escapes overflow containers) ── */
         .global-tooltip {
             position: fixed;
             background: var(--bg-surface);
@@ -177,70 +182,82 @@
         }
         .global-tooltip-item { padding: 0.1rem 0; }
 
-        /* Cells */
-        .cell {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 44px;
-            font-size: 0.9rem;
-            transition: background 0.1s;
-        }
-        .cell.present  { color: var(--accent); }
-        .cell.absent   { color: #f87171; }
-        .cell.bench    { color: #facc15; }
-        .cell.tentative{ color: #94a3b8; }
-        .cell.late     { color: #fb923c; }
-        .cell.none     { color: rgba(255,255,255,0.1); }
-
-        .summary-pct   { color: var(--accent); }
-        .summary-pct.mid { color: #facc15; }
-        .summary-pct.low { color: #f87171; }
-        .summary-frac  { display: block; font-size: 0.65rem; color: var(--text-muted); font-weight: 400; margin-top: 0.05rem; }
-
-        /* Unmapped section */
-        .unmapped-section {
-            margin-top: 1.5rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
+        /* ── Matrix view (vue détaillée) ── */
+        .matrix-wrap {
+            overflow-x: auto;
             border-radius: 12px;
-            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
         }
-        .unmapped-header {
-            padding: 0.85rem 1.25rem;
+        table.att-matrix { border-collapse: collapse; width: 100%; min-width: 600px; table-layout: auto; }
+
+        .att-matrix thead th {
             background: var(--bg-surface);
             border-bottom: 1px solid var(--border);
-            font-size: 0.78rem; font-weight: 700;
-            letter-spacing: 0.06em; text-transform: uppercase;
-            color: var(--text-muted);
-            cursor: pointer; user-select: none;
-            display: flex; align-items: center; justify-content: space-between;
+            padding: 0;
+            font-weight: 600;
+            font-size: 0.72rem;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 2;
         }
-        .unmapped-body { padding: 0.75rem 1.25rem 1rem; display: none; }
-        .unmapped-section.open .unmapped-body { display: block; }
-        .unmapped-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
-        .unmapped-chip {
-            padding: 0.2rem 0.65rem; background: var(--bg-surface);
-            border: 1px solid var(--border); border-radius: 4px;
-            font-size: 0.75rem; color: var(--text-muted);
+        .att-matrix thead th.col-name {
+            text-align: left; padding: 0.75rem 1.25rem; min-width: 140px;
+            position: sticky; left: 0; z-index: 3;
+            background: var(--bg-surface); border-right: 1px solid var(--border);
+        }
+        .att-matrix thead th.col-summary {
+            padding: 0.75rem 1rem; text-align: center; min-width: 80px;
+            position: sticky; right: 0;
+            background: var(--bg-surface); border-left: 1px solid var(--border);
+            z-index: 3;
+        }
+        .th-event {
+            display: flex; align-items: center; justify-content: center;
+            padding: 0.65rem 0.5rem; min-width: 46px; text-align: center;
+            font-size: 0.72rem; color: var(--text-muted); font-weight: 600;
         }
 
-        /* Legend */
-        .legend {
-            display: flex; flex-wrap: wrap; gap: 1rem;
-            margin-bottom: 1.25rem; font-size: 0.78rem; color: var(--text-muted);
-        }
-        .legend-item { display: flex; align-items: center; gap: 0.35rem; }
-        .legend-dot { font-size: 1rem; line-height: 1; }
+        .att-matrix tbody tr:hover td { background: rgba(255,255,255,0.02); }
+        .att-matrix tbody tr:hover td.col-name,
+        .att-matrix tbody tr:hover td.col-summary { background: var(--bg-surface); }
 
-        /* Loading */
-        .loading-state {
-            text-align: center; padding: 4rem; color: var(--text-muted);
+        .att-matrix tbody td { border-bottom: 1px solid rgba(255,255,255,0.04); padding: 0; text-align: center; }
+        .att-matrix tbody td.col-name {
+            text-align: left; padding: 0.6rem 1.25rem;
+            position: sticky; left: 0; background: var(--bg-card);
+            border-right: 1px solid var(--border); z-index: 1;
         }
-        .loading-state .progress {
-            margin-top: 1rem; font-size: 0.8rem; color: var(--primary);
+        .att-matrix tbody td.col-summary {
+            padding: 0.6rem 1rem; position: sticky; right: 0;
+            background: var(--bg-card); border-left: 1px solid var(--border);
+            font-size: 0.78rem; font-weight: 700; white-space: nowrap; z-index: 1;
         }
-        /* Tooltip */
+        .att-matrix tbody tr:last-child td { border-bottom: none; }
+
+        .cell { display: flex; align-items: center; justify-content: center; height: 44px; font-size: 0.9rem; }
+        .cell.present   { color: var(--accent); }
+        .cell.absent    { color: #f87171; }
+        .cell.bench     { color: #facc15; }
+        .cell.tentative { color: #94a3b8; }
+        .cell.late      { color: #fb923c; }
+        .cell.none      { color: rgba(255,255,255,0.1); }
+
+        .summary-pct { color: var(--accent); }
+        .summary-pct.mid { color: #facc15; }
+        .summary-pct.low { color: #f87171; }
+        .summary-frac { display: block; font-size: 0.65rem; color: var(--text-muted); font-weight: 400; margin-top: 0.05rem; }
+
+        /* ── Legend ── */
+        .legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; font-size: 0.78rem; color: var(--text-muted); }
+        .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+        .legend-dot-icon { width: 10px; height: 10px; border-radius: 50%; }
+
+        /* ── Loading / empty ── */
+        .loading-state { text-align: center; padding: 4rem; color: var(--text-muted); }
+        .loading-state .progress { margin-top: 1rem; font-size: 0.8rem; color: var(--primary); }
+        .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
         [title] { cursor: default; }
     </style>
 </head>
@@ -287,6 +304,19 @@
     const EVENTS_API  = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getRaidHelperEvents';
     const DETAILS_API = 'https://europe-west1-guild-roster-67da7.cloudfunctions.net/getEventDetails';
 
+    // Nombre d'events chargés au total : au-delà, les fenêtres "8 semaines" / "Tout"
+    // n'ont plus assez de matière. Les events passés sont mis en cache Firestore
+    // côté serveur donc en recharger plusieurs dizaines ne coûte quasi rien.
+    const FETCH_LIMIT = 30;
+
+    // Fenêtres temporelles disponibles (en jours, null = tout l'historique chargé)
+    const WINDOWS = [
+        { key: '28',  label: '4 semaines', days: 28 },
+        { key: '56',  label: '8 semaines', days: 56 },
+        { key: 'all', label: 'Tout',       days: null },
+    ];
+    const REGULAR_THRESHOLD_PCT = 25; // en dessous : rangé dans "Ponctuels"
+
     const MONTHS_SHORT = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
     const CLASS_COLORS = {
         warrior:'#C69B6D', paladin:'#F48CBA', hunter:'#AAD372', rogue:'#FFF468',
@@ -296,6 +326,15 @@
         dk:'#C41E3A', 'death knight':'#C41E3A',
     };
     function classColor(c) { return CLASS_COLORS[(c||'').toLowerCase()] || '#888'; }
+
+    const CELL_ICONS = {
+        present:   { icon: '✓', label: 'Présent' },
+        absent:    { icon: '✗', label: 'Absent' },
+        bench:     { icon: '⏸', label: 'Bench' },
+        late:      { icon: '⌚', label: 'En retard' },
+        tentative: { icon: '?', label: 'Incertain' },
+        none:      { icon: '·', label: 'Pas inscrit' },
+    };
 
     // ── Admin auth ────────────────────────────────────────────────────────────
     document.getElementById('adminBtn').addEventListener('click', () => AdminAuth.toggle());
@@ -319,7 +358,16 @@
         }
     });
 
-    // ── Main data load ────────────────────────────────────────────────────────
+    // ── State ────────────────────────────────────────────────────────────────
+    let state = {
+        events: [],           // tous les events chargés (triés récent → ancien)
+        mappedPlayers: [],     // { userId, discordName, wowName, wowRealm, alts, class, events: {idx:status} }
+        unmappedPlayers: [],
+        failedEvents: new Set(),
+        windowKey: '28',
+        view: 'summary',       // 'summary' | 'matrix'
+    };
+
     function setProgress(msg) {
         const el = document.getElementById('loadProgress');
         if (el) el.textContent = msg;
@@ -331,10 +379,10 @@
         return line.replace(/^[\p{Emoji}\s\[\]]+/u,'').replace(/\s*[—–-]\s*.*/,'').trim() || 'Event';
     }
 
+    // ── Main data load (une seule fois) ─────────────────────────────────────────
     async function loadAttendance() {
         const container = document.getElementById('att-container');
         try {
-            // 1. Fetch past events
             setProgress('Récupération des events…');
             const evRes = await fetch(`${EVENTS_API}?past=true`);
             const { events } = await evRes.json();
@@ -344,16 +392,13 @@
                 return;
             }
 
-            // Limit to last 20 events
-            const recentEvents = events.slice(0, 20);
+            const recentEvents = events.slice(0, FETCH_LIMIT);
 
-            // 2. Fetch mappings from Firestore
             setProgress('Chargement du mapping Discord ↔ WoW…');
             const mapSnap = await db.collection('attendance-mapping').get();
-            const mapping = {};  // discordUserId → { discordName, characters: [{wow, wowName, wowRealm}] }
+            const mapping = {};
             mapSnap.forEach(doc => {
                 const d = doc.data();
-                // Compat: ancien format { wow, wowName } → nouveau { characters: [...] }
                 if (d.wow && !d.characters) {
                     mapping[doc.id] = {
                         discordName: d.discordName,
@@ -364,20 +409,17 @@
                 }
             });
 
-            // 3. Fetch guild members for class colors
             const memberSnap = await db.collection('guild-members').where('active', '==', true).get();
-            const memberByName = {};  // lowercase name → { class }
+            const memberByName = {};
             memberSnap.forEach(doc => {
                 const d = doc.data();
                 memberByName[(d.name||'').toLowerCase()] = d;
             });
 
-            // 4. Fetch details for all events
-            // BATCH réduit + pause entre lots : RaidHelper renvoie des 5xx si on
-            // enchaîne trop de requêtes d'un coup (vu en pratique au-delà de ~10).
+            // Détails par event, par lots réduits + pause (cf. rate-limit RaidHelper)
             setProgress(`Chargement des détails (0/${recentEvents.length})…`);
             const eventDetails = new Array(recentEvents.length).fill(null);
-            const failedEvents = new Set(); // idx des events dont le chargement a échoué (≠ "personne inscrit")
+            const failedEvents = new Set();
             const BATCH = 3;
             let done = 0;
             for (let i = 0; i < recentEvents.length; i += BATCH) {
@@ -399,12 +441,7 @@
                 if (i + BATCH < recentEvents.length) await new Promise(r => setTimeout(r, 400));
             }
 
-            // 5. Build player attendance map
-            // For each event: userId → status
             const playerEventMap = new Map();
-            // playerEventMap: userId → { name, statusByEventIdx }
-            // status: 'present' | 'absent' | 'bench' | 'late' | 'tentative'
-
             eventDetails.forEach((det, idx) => {
                 if (!det) return;
                 const add = (arr, status) => arr.forEach(p => {
@@ -413,7 +450,6 @@
                         playerEventMap.set(p.userId, { discordName: p.name, events: {} });
                     }
                     playerEventMap.get(p.userId).events[idx] = status;
-                    // Update name if empty
                     if (!playerEventMap.get(p.userId).discordName) {
                         playerEventMap.get(p.userId).discordName = p.name;
                     }
@@ -425,7 +461,6 @@
                 add(det.tentative  || [], 'tentative');
             });
 
-            // 6. Separate mapped vs unmapped players
             const mappedPlayers  = [];
             const unmappedPlayers = [];
 
@@ -446,31 +481,17 @@
                         events:      data.events,
                     });
                 } else {
-                    unmappedPlayers.push({
-                        userId,
-                        discordName: data.discordName,
-                        events:      data.events,
-                    });
+                    unmappedPlayers.push({ userId, discordName: data.discordName, events: data.events });
                 }
             });
 
-            // Sort mapped players by attendance % desc, then name
-            mappedPlayers.sort((a, b) => {
-                const pctA = attendancePct(a.events, recentEvents.length);
-                const pctB = attendancePct(b.events, recentEvents.length);
-                return pctB - pctA || (a.wowName || '').localeCompare(b.wowName || '');
-            });
+            state.events          = recentEvents;
+            state.mappedPlayers    = mappedPlayers;
+            state.unmappedPlayers  = unmappedPlayers;
+            state.failedEvents     = failedEvents;
 
-            // 7. Render
-            container.innerHTML = renderMatrix(recentEvents, mappedPlayers, unmappedPlayers, failedEvents);
-
-            // Unmapped toggle
-            const unmapHeader = document.getElementById('unmapHeader');
-            if (unmapHeader) {
-                unmapHeader.addEventListener('click', () => {
-                    document.getElementById('unmapSection').classList.toggle('open');
-                });
-            }
+            renderShell();
+            render();
 
         } catch(err) {
             console.error(err);
@@ -478,61 +499,209 @@
         }
     }
 
-    function attendancePct(events, total) {
-        const present = Object.values(events).filter(s => s === 'present' || s === 'late').length;
-        return total > 0 ? Math.round(present / total * 100) : 0;
+    // ── Fenêtre temporelle : prefix des events (déjà triés récent → ancien) ────
+    function windowEventCount(windowKey) {
+        const w = WINDOWS.find(w => w.key === windowKey);
+        if (!w || w.days === null) return state.events.length;
+        const cutoff = Date.now() - w.days * 86400000;
+        let count = 0;
+        for (const e of state.events) {
+            if (e.startTime * 1000 < cutoff) break; // trié desc → on peut s'arrêter dès qu'on sort de la fenêtre
+            count++;
+        }
+        return count;
     }
 
-    const CELL_ICONS = {
-        present:   { icon: '✓', label: 'Présent' },
-        absent:    { icon: '✗', label: 'Absent' },
-        bench:     { icon: '⏸', label: 'Bench' },
-        late:      { icon: '⌚', label: 'En retard' },
-        tentative: { icon: '?', label: 'Incertain' },
-        none:      { icon: '·', label: '' },
-    };
+    function playerStatsInWindow(events, windowCount) {
+        const inWindow = Object.entries(events).filter(([idx]) => Number(idx) < windowCount);
+        const present = inWindow.filter(([, s]) => s === 'present' || s === 'late').length;
+        const pct = windowCount > 0 ? Math.round(present / windowCount * 100) : 0;
+        return { present, total: windowCount, pct, trackedEvents: inWindow.length };
+    }
 
-    function renderMatrix(events, players, unmapped, failedEvents = new Set()) {
-        // Legend
-        let html = `<div class="legend">
-            <span class="legend-item"><span class="legend-dot" style="color:var(--accent)">✓</span> Présent</span>
-            <span class="legend-item"><span class="legend-dot" style="color:#f87171">✗</span> Absent</span>
-            <span class="legend-item"><span class="legend-dot" style="color:#facc15">⏸</span> Bench</span>
-            <span class="legend-item"><span class="legend-dot" style="color:#fb923c">⌚</span> En retard</span>
-            <span class="legend-item"><span class="legend-dot" style="color:#94a3b8">?</span> Incertain</span>
-            <span class="legend-item"><span class="legend-dot" style="color:rgba(255,255,255,0.15)">·</span> Pas inscrit</span>
-            <span class="legend-item"><span class="legend-dot" style="color:#f87171">⚠</span> Erreur de chargement</span>
+    // ── Shell (controls + stat tiles + body container) — construit une seule fois ──
+    function renderShell() {
+        const container = document.getElementById('att-container');
+        container.innerHTML = `
+            <div class="controls-bar">
+                <div class="control-group" id="windowGroup">
+                    ${WINDOWS.map(w => `<button class="control-btn${w.key === state.windowKey ? ' active' : ''}" data-window="${w.key}">${w.label}</button>`).join('')}
+                </div>
+                <div class="control-group" id="viewGroup">
+                    <button class="control-btn${state.view === 'summary' ? ' active' : ''}" data-view="summary">Résumé</button>
+                    <button class="control-btn${state.view === 'matrix' ? ' active' : ''}" data-view="matrix">Matrice détaillée</button>
+                </div>
+            </div>
+            <div id="statTiles" class="stat-tiles"></div>
+            <div id="attBody"></div>
+            <div id="unmappedHolder"></div>
+        `;
+
+        document.getElementById('windowGroup').addEventListener('click', e => {
+            const btn = e.target.closest('.control-btn');
+            if (!btn) return;
+            state.windowKey = btn.dataset.window;
+            render();
+        });
+        document.getElementById('viewGroup').addEventListener('click', e => {
+            const btn = e.target.closest('.control-btn');
+            if (!btn) return;
+            state.view = btn.dataset.view;
+            render();
+        });
+    }
+
+    // ── Render (appelé à chaque changement de fenêtre/vue, pas de refetch) ─────
+    function render() {
+        document.querySelectorAll('#windowGroup .control-btn').forEach(b => b.classList.toggle('active', b.dataset.window === state.windowKey));
+        document.querySelectorAll('#viewGroup .control-btn').forEach(b => b.classList.toggle('active', b.dataset.view === state.view));
+
+        const windowCount = windowEventCount(state.windowKey);
+        const windowEvents = state.events.slice(0, windowCount);
+
+        const withStats = state.mappedPlayers
+            .map(p => ({ ...p, stats: playerStatsInWindow(p.events, windowCount) }))
+            .filter(p => p.stats.trackedEvents > 0); // pas de trace sur la période → hors sujet ici
+
+        withStats.sort((a, b) => b.stats.pct - a.stats.pct || (a.wowName||'').localeCompare(b.wowName||''));
+
+        const regulars  = withStats.filter(p => p.stats.pct >= REGULAR_THRESHOLD_PCT);
+        const ponctuels = withStats.filter(p => p.stats.pct <  REGULAR_THRESHOLD_PCT);
+
+        renderStatTiles(windowEvents, regulars);
+
+        const body = document.getElementById('attBody');
+        body.innerHTML = state.view === 'summary'
+            ? renderSummaryView(windowEvents, regulars, ponctuels)
+            : renderMatrixView(windowEvents, withStats);
+
+        const ponctuelsHeader = document.getElementById('ponctuelsHeader');
+        if (ponctuelsHeader) {
+            ponctuelsHeader.addEventListener('click', () => {
+                document.getElementById('ponctuelsSection').classList.toggle('open');
+            });
+        }
+
+        renderUnmapped();
+    }
+
+    function renderStatTiles(windowEvents, regulars) {
+        const el = document.getElementById('statTiles');
+        const avgPct = regulars.length
+            ? Math.round(regulars.reduce((s, p) => s + p.stats.pct, 0) / regulars.length)
+            : null;
+        const top = regulars[0] || null;
+
+        el.innerHTML = `
+            <div class="stat-tile">
+                <div class="stat-value">${windowEvents.length}</div>
+                <div class="stat-label">Raids sur la période</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-value">${avgPct !== null ? avgPct + '%' : '—'}</div>
+                <div class="stat-label">Présence moyenne (réguliers)</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-value">${top ? escHtml(top.wowName) : '—'}${top ? ` <span class="stat-sub">${top.stats.pct}%</span>` : ''}</div>
+                <div class="stat-label">Joueur le plus assidu</div>
+            </div>
+        `;
+    }
+
+    function legendHtml() {
+        return `<div class="legend">
+            <span class="legend-item"><span class="legend-dot-icon" style="background:var(--accent)"></span> Présent</span>
+            <span class="legend-item"><span class="legend-dot-icon" style="background:#fb923c"></span> En retard</span>
+            <span class="legend-item"><span class="legend-dot-icon" style="background:#f87171"></span> Absent</span>
+            <span class="legend-item"><span class="legend-dot-icon" style="background:#facc15"></span> Bench</span>
+            <span class="legend-item"><span class="legend-dot-icon" style="background:#94a3b8"></span> Incertain</span>
+            <span class="legend-item"><span class="legend-dot-icon" style="border:1px solid rgba(255,255,255,0.2)"></span> Pas inscrit</span>
         </div>`;
+    }
 
-        // Table
+    function playerRowHtml(p, windowEvents) {
+        const color = classColor(p.class);
+        const { pct, present, total } = p.stats;
+        const pctClass = pct >= 75 ? 'high' : pct >= 50 ? 'mid' : 'low';
+        const altsBadge = p.alts && p.alts.length
+            ? `<span class="alts-badge" data-alts="${escHtml(p.alts.join('|'))}">+${p.alts.length}</span>`
+            : '';
+
+        const dots = windowEvents.map((e, idx) => {
+            const status = p.events[idx] || 'none';
+            const info = CELL_ICONS[status];
+            const d = new Date(e.startTime * 1000);
+            const dateLabel = `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
+            return `<span class="spark-dot ${status}" title="${escHtml(dateLabel)} — ${escHtml(extractTitle(e))} — ${info.label}"></span>`;
+        }).join('');
+
+        return `<div class="player-row">
+            <div class="player-row-id">
+                <div class="player-name">
+                    <span class="class-dot" style="background:${color}"></span>
+                    ${escHtml(p.wowName)}
+                    ${altsBadge}
+                </div>
+                <div class="player-discord">${escHtml(p.discordName)}</div>
+            </div>
+            <div class="sparkline">${dots}</div>
+            <div class="player-pct">
+                <span class="pct-value ${pctClass}">${pct}%</span>
+                <span class="pct-frac">${present}/${total}</span>
+            </div>
+        </div>`;
+    }
+
+    function renderSummaryView(windowEvents, regulars, ponctuels) {
+        let html = legendHtml();
+
+        if (!regulars.length && !ponctuels.length) {
+            html += `<div class="empty-state">Aucun joueur mappé pour cette période. <a href="admin-attendance.html" style="color:var(--primary)">Configurer le mapping →</a></div>`;
+            return html;
+        }
+
+        html += `<div class="player-list">${regulars.map(p => playerRowHtml(p, windowEvents)).join('')}</div>`;
+
+        if (ponctuels.length) {
+            html += `<div class="collapsible-section" id="ponctuelsSection">
+                <div class="collapsible-header" id="ponctuelsHeader">
+                    <span>Ponctuels — moins de ${REGULAR_THRESHOLD_PCT}% de présence (${ponctuels.length})</span>
+                    <span class="chevron">▾</span>
+                </div>
+                <div class="collapsible-body">
+                    <div class="player-list">${ponctuels.map(p => playerRowHtml(p, windowEvents)).join('')}</div>
+                </div>
+            </div>`;
+        }
+
+        return html;
+    }
+
+    function renderMatrixView(windowEvents, withStats) {
+        let html = legendHtml();
+
         html += `<div class="matrix-wrap"><table class="att-matrix"><thead><tr>`;
         html += `<th class="col-name">Joueur</th>`;
 
-        events.forEach((e, idx) => {
-            const d      = new Date(e.startTime * 1000);
-            const label  = `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
-            const title  = extractTitle(e).substring(0, 12);
-            const failed = failedEvents.has(idx);
-            html += `<th><div class="th-event">
-                <div class="th-event-title" title="${escHtml(extractTitle(e))}${failed ? ' — échec du chargement, réessayez plus tard' : ''}">${failed ? '⚠ ' : ''}${escHtml(title)}</div>
-                <div class="th-event-date">${label}</div>
-            </div></th>`;
+        windowEvents.forEach((e, idx) => {
+            const d = new Date(e.startTime * 1000);
+            const label = `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
+            const failed = state.failedEvents.has(idx);
+            html += `<th title="${escHtml(extractTitle(e))}${failed ? ' — échec du chargement, réessayez plus tard' : ''}"><div class="th-event">${failed ? '⚠ ' : ''}${label}</div></th>`;
         });
 
         html += `<th class="col-summary">Présence</th></tr></thead><tbody>`;
 
-        if (!players.length) {
-            html += `<tr><td class="col-name" colspan="${events.length + 2}" style="padding:2rem;text-align:center;color:var(--text-muted);">
-                Aucun joueur mappé. <a href="admin-attendance.html" style="color:var(--primary)">Configurer le mapping →</a>
+        if (!withStats.length) {
+            html += `<tr><td class="col-name" colspan="${windowEvents.length + 2}" style="padding:2rem;text-align:center;color:var(--text-muted);">
+                Aucun joueur mappé pour cette période. <a href="admin-attendance.html" style="color:var(--primary)">Configurer le mapping →</a>
             </td></tr>`;
         }
 
-        players.forEach(p => {
-            const color  = classColor(p.class);
-            const present = Object.values(p.events).filter(s => s === 'present' || s === 'late').length;
-            const pct    = events.length > 0 ? Math.round(present / events.length * 100) : 0;
+        withStats.forEach(p => {
+            const color = classColor(p.class);
+            const { pct, present, total } = p.stats;
             const pctClass = pct >= 75 ? 'summary-pct' : pct >= 50 ? 'summary-pct mid' : 'summary-pct low';
-
             const altsBadge = p.alts && p.alts.length
                 ? `<span class="alts-badge" data-alts="${escHtml(p.alts.join('|'))}">+${p.alts.length}</span>`
                 : '';
@@ -547,42 +716,45 @@
                 <div class="player-discord">${escHtml(p.discordName)}</div>
             </td>`;
 
-            events.forEach((e, idx) => {
+            windowEvents.forEach((e, idx) => {
                 const status = p.events[idx] || 'none';
-                const info   = CELL_ICONS[status];
-                html += `<td title="${escHtml(extractTitle(e))} — ${info.label}">
-                    <div class="cell ${status}">${info.icon}</div>
-                </td>`;
+                const info = CELL_ICONS[status];
+                html += `<td title="${escHtml(extractTitle(e))} — ${info.label}"><div class="cell ${status}">${info.icon}</div></td>`;
             });
 
             html += `<td class="col-summary">
                 <span class="${pctClass}">${pct}%</span>
-                <span class="summary-frac">${present}/${events.length}</span>
+                <span class="summary-frac">${present}/${total}</span>
             </td></tr>`;
         });
 
         html += `</tbody></table></div>`;
-
-        // Unmapped section
-        if (unmapped.length) {
-            html += `<div class="unmapped-section" id="unmapSection">
-                <div class="unmapped-header" id="unmapHeader">
-                    <span>Joueurs non mappés (${unmapped.length})</span>
-                    <span>▼</span>
-                </div>
-                <div class="unmapped-body">
-                    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem;">
-                        Ces joueurs Discord n'ont pas encore de correspondance WoW.
-                        <a href="admin-attendance.html" style="color:var(--primary)">Configurer →</a>
-                    </p>
-                    <div class="unmapped-chips">
-                        ${unmapped.map(u => `<span class="unmapped-chip">${escHtml(u.discordName)}</span>`).join('')}
-                    </div>
-                </div>
-            </div>`;
-        }
-
         return html;
+    }
+
+    function renderUnmapped() {
+        const holder = document.getElementById('unmappedHolder');
+        if (!state.unmappedPlayers.length) { holder.innerHTML = ''; return; }
+
+        holder.innerHTML = `<div class="collapsible-section" id="unmapSection">
+            <div class="collapsible-header" id="unmapHeader">
+                <span>Joueurs non mappés (${state.unmappedPlayers.length})</span>
+                <span class="chevron">▾</span>
+            </div>
+            <div class="collapsible-body">
+                <p class="unmapped-note">
+                    Ces joueurs Discord n'ont pas encore de correspondance WoW.
+                    <a href="admin-attendance.html">Configurer →</a>
+                </p>
+                <div class="unmapped-chips">
+                    ${state.unmappedPlayers.map(u => `<span class="unmapped-chip">${escHtml(u.discordName)}</span>`).join('')}
+                </div>
+            </div>
+        </div>`;
+
+        document.getElementById('unmapHeader').addEventListener('click', () => {
+            document.getElementById('unmapSection').classList.toggle('open');
+        });
     }
 
     function escHtml(s) {
@@ -593,7 +765,7 @@
 
     loadAttendance();
 
-    // ── Rerolls tooltip ───────────────────────────────────────────────────────
+    // ── Rerolls tooltip (alts-badge) ────────────────────────────────────────────
     const tooltip = document.getElementById('globalTooltip');
 
     document.addEventListener('mouseover', e => {
@@ -609,9 +781,7 @@
     });
 
     document.addEventListener('mouseout', e => {
-        if (e.target.closest('.alts-badge')) {
-            tooltip.classList.remove('visible');
-        }
+        if (e.target.closest('.alts-badge')) tooltip.classList.remove('visible');
     });
 
     document.addEventListener('scroll', () => tooltip.classList.remove('visible'), true);
@@ -620,7 +790,6 @@
         const rect = el.getBoundingClientRect();
         let top  = rect.bottom + 6;
         let left = rect.left;
-        // Keep inside viewport
         if (left + 160 > window.innerWidth) left = window.innerWidth - 165;
         tooltip.style.top  = top  + 'px';
         tooltip.style.left = left + 'px';
