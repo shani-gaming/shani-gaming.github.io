@@ -1231,6 +1231,14 @@ async function refreshAllPlayers() {
     }, 2000);
 }
 
+// Build export-safe notes: ilvl Armory (champ player.ilvl, actualisé via le bouton ↻)
+// fait foi, le reste du texte (enchants/gemmes) vient des notes d'origine.
+function getExportNotes(player) {
+    const rest = player.notes ? player.notes.replace(/^ilvl\s*\d+\s*/i, '').trim() : '';
+    if (!player.ilvl) return player.notes || '';
+    return rest ? `ilvl ${player.ilvl} ${rest}` : `ilvl ${player.ilvl}`;
+}
+
 // Export to CSV
 function exportToCSV() {
     let csv = 'Pseudo,Classe,Spécialisation,Rôle,Rôle Flex,Notes,Disponibilité\n';
@@ -1246,7 +1254,8 @@ function exportToCSV() {
         roster[section.key].forEach(player => {
             if (player) {
                 const flexRole = player.flexRole ? player.flexRole : '';
-                const notes = player.notes ? `"${player.notes}"` : '';
+                const exportNotes = getExportNotes(player);
+                const notes = exportNotes ? `"${exportNotes}"` : '';
                 const availability = player.availability ? `"${player.availability}"` : '';
                 csv += `${player.name},${getClassName(player.class)},${player.spec},${section.label},${flexRole},${notes},${availability}\n`;
             }
@@ -1267,7 +1276,7 @@ function exportToCSV() {
 
 // Export to Discord format
 function exportToDiscord() {
-    let output = '**🛡️ ROSTER RAID 10 - THE WAR WITHIN**\n\n';
+    let output = '**🛡️ ROSTER RAID 10 - MIDNIGHT**\n\n';
 
     const allSections = [
         { key: 'tanks', label: '🛡️ **TANKS**', emoji: '🛡️' },
@@ -1286,8 +1295,9 @@ function exportToDiscord() {
                     const roleNames = { tank: 'Tank', healer: 'Healer', melee: 'Mêlée', ranged: 'Distance' };
                     output += ` (Flex: ${roleNames[player.flexRole]})`;
                 }
-                if (player.notes) {
-                    output += ` • ${player.notes}`;
+                const exportNotes = getExportNotes(player);
+                if (exportNotes) {
+                    output += ` • ${exportNotes}`;
                 }
                 output += '\n';
                 count++;
