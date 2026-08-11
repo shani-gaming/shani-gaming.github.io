@@ -1882,6 +1882,15 @@ exports.getEventDetails = onRequest(
         const { eventId } = req.query;
         if (!eventId) return res.status(400).json({ error: 'Missing eventId' });
 
+        // Un event passé est figé (plus personne ne peut changer son statut) :
+        // on le sert depuis le cache Firestore une fois écrit, sans retaper
+        // RaidHelper à chaque visite d'attendance.html/composition.html.
+        const cacheRef = db.collection('raidhelper-cache').doc(String(eventId));
+        const cached = await cacheRef.get();
+        if (cached.exists) {
+          return res.json(cached.data());
+        }
+
         const apiKey = raidHelperApiKey.value();
 
         // Retry avec backoff : l'API RaidHelper renvoie des 5xx transitoires
@@ -1929,7 +1938,7 @@ exports.getEventDetails = onRequest(
           note:   s.note || null,
         });
 
-        res.json({
+        const result = {
           id:          e.id,
           title:       e.displayTitle || e.title,
           startTime:   e.startTime,
@@ -1941,7 +1950,14 @@ exports.getEventDetails = onRequest(
           bench:       bench.map(mapPlayer),
           late:        late.map(mapPlayer),
           tentative:   tentative.map(mapPlayer),
-        });
+        };
+
+        // Event clos (date passée) = données définitives → on les fige en cache
+        if (e.startTime * 1000 < Date.now()) {
+          await cacheRef.set(result);
+        }
+
+        res.json(result);
       } catch (error) {
         console.error('Error fetching event details:', error.message);
         res.status(500).json({ error: 'Failed to fetch event details', details: error.message });
