@@ -1291,6 +1291,46 @@
                 // 4. Build lookup: lowercase name → member
                 const memberMap = new Map(allMembers.map(m => [m.name.toLowerCase(), m]));
 
+                // 4b. Pseudo Discord ≠ nom de perso Armory la plupart du temps.
+                // Pont fiable : les inscriptions "roster" (auth Discord) lient
+                // discordUserId ↔ nom du perso soumis. RaidHelper fournit déjà
+                // le userId de chaque inscrit (voir getEventDetails).
+                const discordNameMap = new Map();
+                try {
+                    const rosterSnap = await db.collection('roster').get();
+                    rosterSnap.forEach(doc => {
+                        const d = doc.data();
+                        if (d.discordUserId && d.name) {
+                            discordNameMap.set(d.discordUserId, d.name.toLowerCase());
+                        }
+                    });
+                } catch (err) {
+                    console.warn('Liaison Discord -> perso indisponible:', err);
+                }
+
+                function resolveMember(su) {
+                    const rawName = (su.name || '').trim();
+
+                    // a) correspondance directe (pseudo Discord == nom du perso)
+                    let member = memberMap.get(rawName.toLowerCase());
+                    if (member) return member;
+
+                    // b) via l'ID Discord, résolu grâce aux inscriptions roster
+                    if (su.userId && discordNameMap.has(su.userId)) {
+                        member = memberMap.get(discordNameMap.get(su.userId));
+                        if (member) return member;
+                    }
+
+                    // c) convention "Pseudo(NomDuPerso)" utilisée par certains membres
+                    const paren = rawName.match(/\(([^)]+)\)/);
+                    if (paren) {
+                        member = memberMap.get(paren[1].trim().toLowerCase());
+                        if (member) return member;
+                    }
+
+                    return null;
+                }
+
                 // 5. Clear composition and populate from sign-ups
                 raidComposition = { tank: [], healer: [], dps: [] };
                 const matched   = [];
@@ -1299,7 +1339,7 @@
                 signUps.forEach(su => {
                     const role = ROLE_MAP[su.role];
                     if (!role) return; // skip absences/bench rows if they appear
-                    const member = memberMap.get((su.name || '').toLowerCase());
+                    const member = resolveMember(su);
                     if (member) {
                         // Avoid duplicates
                         const all = [...raidComposition.tank, ...raidComposition.healer, ...raidComposition.dps];
