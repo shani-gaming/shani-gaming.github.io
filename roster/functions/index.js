@@ -1882,11 +1882,27 @@ exports.getEventDetails = onRequest(
         const { eventId } = req.query;
         if (!eventId) return res.status(400).json({ error: 'Missing eventId' });
 
-        const apiKey   = raidHelperApiKey.value();
-        const response = await axios.get(
-          `https://raid-helper.xyz/api/v4/events/${eventId}`,
-          { headers: { Authorization: apiKey } }
-        );
+        const apiKey = raidHelperApiKey.value();
+
+        // Retry avec backoff : l'API RaidHelper renvoie des 5xx transitoires
+        // quand trop de requêtes arrivent en rafale (ex: attendance.html qui
+        // charge 20 events d'un coup).
+        let response;
+        let lastError;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            response = await axios.get(
+              `https://raid-helper.xyz/api/v4/events/${eventId}`,
+              { headers: { Authorization: apiKey }, timeout: 10000 }
+            );
+            lastError = null;
+            break;
+          } catch (err) {
+            lastError = err;
+            if (attempt < 2) await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+          }
+        }
+        if (lastError) throw lastError;
 
         const e = response.data;
         const signUps  = (e.signUps || []);

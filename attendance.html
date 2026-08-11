@@ -373,22 +373,30 @@
             });
 
             // 4. Fetch details for all events
+            // BATCH réduit + pause entre lots : RaidHelper renvoie des 5xx si on
+            // enchaîne trop de requêtes d'un coup (vu en pratique au-delà de ~10).
             setProgress(`Chargement des détails (0/${recentEvents.length})…`);
             const eventDetails = new Array(recentEvents.length).fill(null);
-            const BATCH = 5;
+            const failedEvents = new Set(); // idx des events dont le chargement a échoué (≠ "personne inscrit")
+            const BATCH = 3;
             let done = 0;
             for (let i = 0; i < recentEvents.length; i += BATCH) {
                 await Promise.all(recentEvents.slice(i, i + BATCH).map(async (e, j) => {
                     const idx = i + j;
                     try {
                         const r = await fetch(`${DETAILS_API}?eventId=${e.id}`);
-                        eventDetails[idx] = await r.json();
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        const data = await r.json();
+                        if (!data.signUps) throw new Error('Réponse invalide');
+                        eventDetails[idx] = data;
                     } catch(err) {
                         eventDetails[idx] = { signUps: [], absences: [], bench: [], late: [], tentative: [] };
+                        failedEvents.add(idx);
                     }
                     done++;
                     setProgress(`Chargement des détails (${done}/${recentEvents.length})…`);
                 }));
+                if (i + BATCH < recentEvents.length) await new Promise(r => setTimeout(r, 400));
             }
 
             // 5. Build player attendance map
@@ -423,6 +431,7 @@
 
             playerEventMap.forEach((data, userId) => {
                 const m = mapping[userId];
+                if (m && m.ignored) return; // joueur de passage, exclu du suivi
                 if (m) {
                     const chars  = m.characters || [];
                     const main   = chars[0] || {};
@@ -453,7 +462,7 @@
             });
 
             // 7. Render
-            container.innerHTML = renderMatrix(recentEvents, mappedPlayers, unmappedPlayers);
+            container.innerHTML = renderMatrix(recentEvents, mappedPlayers, unmappedPlayers, failedEvents);
 
             // Unmapped toggle
             const unmapHeader = document.getElementById('unmapHeader');
@@ -483,7 +492,7 @@
         none:      { icon: '·', label: '' },
     };
 
-    function renderMatrix(events, players, unmapped) {
+    function renderMatrix(events, players, unmapped, failedEvents = new Set()) {
         // Legend
         let html = `<div class="legend">
             <span class="legend-item"><span class="legend-dot" style="color:var(--accent)">✓</span> Présent</span>
@@ -492,18 +501,20 @@
             <span class="legend-item"><span class="legend-dot" style="color:#fb923c">⌚</span> En retard</span>
             <span class="legend-item"><span class="legend-dot" style="color:#94a3b8">?</span> Incertain</span>
             <span class="legend-item"><span class="legend-dot" style="color:rgba(255,255,255,0.15)">·</span> Pas inscrit</span>
+            <span class="legend-item"><span class="legend-dot" style="color:#f87171">⚠</span> Erreur de chargement</span>
         </div>`;
 
         // Table
         html += `<div class="matrix-wrap"><table class="att-matrix"><thead><tr>`;
         html += `<th class="col-name">Joueur</th>`;
 
-        events.forEach(e => {
-            const d     = new Date(e.startTime * 1000);
-            const label = `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
-            const title = extractTitle(e).substring(0, 12);
+        events.forEach((e, idx) => {
+            const d      = new Date(e.startTime * 1000);
+            const label  = `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
+            const title  = extractTitle(e).substring(0, 12);
+            const failed = failedEvents.has(idx);
             html += `<th><div class="th-event">
-                <div class="th-event-title" title="${escHtml(extractTitle(e))}">${escHtml(title)}</div>
+                <div class="th-event-title" title="${escHtml(extractTitle(e))}${failed ? ' — échec du chargement, réessayez plus tard' : ''}">${failed ? '⚠ ' : ''}${escHtml(title)}</div>
                 <div class="th-event-date">${label}</div>
             </div></th>`;
         });

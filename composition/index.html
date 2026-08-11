@@ -1296,10 +1296,12 @@
                 //  - attendance-mapping : table saisie à la main par un admin (admin-attendance.html)
                 //  - roster : lien automatique via les soumissions Discord-auth du sondage roster
                 const attendanceMap = new Map(); // userId → characters[] ({wow, wowName})
+                const ignoredGuests = new Set(); // userId marqués "invité" dans admin-attendance.html
                 try {
                     const attSnap = await db.collection('attendance-mapping').get();
                     attSnap.forEach(doc => {
                         const d = doc.data();
+                        if (d.ignored) ignoredGuests.add(doc.id);
                         const chars = d.characters || (d.wow ? [{ wow: d.wow, wowName: d.wowName || d.wow }] : []);
                         if (chars.length) attendanceMap.set(doc.id, chars);
                     });
@@ -1361,10 +1363,14 @@
                 raidComposition = { tank: [], healer: [], dps: [] };
                 const matched   = [];
                 const unmatched = [];
+                let trackedTotal = 0;
 
                 signUps.forEach(su => {
                     const role = ROLE_MAP[su.role];
                     if (!role) return; // skip absences/bench rows if they appear
+                    if (su.userId && ignoredGuests.has(su.userId)) return; // invité, non tracké
+
+                    trackedTotal++;
                     const member = resolveMember(su);
                     if (member) {
                         // Avoid duplicates
@@ -1379,7 +1385,7 @@
                 });
 
                 refresh();
-                showEventBanner(next, matched.length, signUps.length, unmatched);
+                showEventBanner(next, matched.length, trackedTotal, unmatched);
 
                 const msg = `${matched.length} joueur${matched.length !== 1 ? 's' : ''} chargé${matched.length !== 1 ? 's' : ''} depuis RaidHelper.`;
                 showToast(msg, matched.length > 0 ? 'success' : 'info');

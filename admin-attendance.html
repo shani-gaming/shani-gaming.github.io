@@ -108,6 +108,23 @@
         }
         .char-badge .remove-char:hover { opacity: 1; color: #f87171; }
 
+        .guest-badge {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.15rem 0.5rem; margin-top: 0.1rem;
+            background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3);
+            border-radius: 4px; font-size: 0.7rem; font-weight: 600; color: #c084fc;
+            width: fit-content;
+        }
+        .discord-row-actions {
+            display: flex; gap: 0.4rem; margin-top: 0.1rem;
+        }
+        .guest-toggle-btn {
+            font-size: 0.68rem; font-weight: 600; padding: 0.15rem 0.5rem;
+            background: transparent; border: 1px solid var(--border); border-radius: 4px;
+            color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+        }
+        .guest-toggle-btn:hover { border-color: #c084fc; color: #c084fc; }
+
         /* WoW rows */
         .wow-row {
             display: flex; align-items: center; justify-content: space-between;
@@ -187,6 +204,7 @@
 
                 <div class="hint">
                     <strong>Comment ça marche :</strong> cliquez un joueur Discord à gauche, puis cliquez ses personnages WoW à droite pour les ajouter ou retirer. Les modifications sont sauvegardées automatiquement.
+                    Pour un joueur de passage sans perso dans la guilde (invité), utilisez « Marquer invité » : il disparaît des listes "non mappés" au lieu de revenir sans arrêt.
                 </div>
 
                 <div class="mapping-layout">
@@ -307,11 +325,14 @@
             const res = await fetch(`${EVENTS_API}?past=true`);
             const { events } = await res.json();
             const userMap = new Map();
-            const BATCH = 5;
+            // BATCH réduit + pause entre lots : RaidHelper renvoie des 5xx si on
+            // enchaîne trop de requêtes d'un coup (vu en pratique au-delà de ~10).
+            const BATCH = 3;
             for (let i = 0; i < events.length; i += BATCH) {
                 await Promise.all(events.slice(i, i + BATCH).map(async e => {
                     try {
                         const r = await fetch(`${DETAILS_API}?eventId=${e.id}`);
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
                         const d = await r.json();
                         const all = [
                             ...(d.signUps||[]), ...(d.absences||[]),
@@ -324,6 +345,7 @@
                         });
                     } catch(err) {}
                 }));
+                if (i + BATCH < events.length) await new Promise(r => setTimeout(r, 400));
             }
             discordUsers = [...userMap.entries()].map(([userId, name]) => ({ userId, name }));
             discordUsers.sort((a, b) => a.name.localeCompare(b.name));
@@ -348,9 +370,10 @@
 
         list.innerHTML = '';
         items.forEach(u => {
-            const m     = mappings[u.userId];
-            const isSel = selectedUserId === u.userId;
-            const chars = m ? (m.characters || []) : [];
+            const m       = mappings[u.userId];
+            const isSel   = selectedUserId === u.userId;
+            const chars   = m ? (m.characters || []) : [];
+            const ignored = m ? !!m.ignored : false;
 
             const row = document.createElement('div');
             row.className    = 'discord-row' + (isSel ? ' selected' : '');
@@ -358,6 +381,10 @@
 
             let inner = `<div class="discord-name">${u.name}</div>
                          <div class="discord-uid">${u.userId}</div>`;
+
+            if (ignored) {
+                inner += '<div class="guest-badge">👤 Invité — non tracké</div>';
+            }
 
             if (chars.length) {
                 inner += '<div class="discord-chars">';
@@ -369,6 +396,12 @@
                 });
                 inner += '</div>';
             }
+
+            inner += `<div class="discord-row-actions">
+                <button class="guest-toggle-btn" data-userid="${u.userId}" data-guest-toggle="1">
+                    ${ignored ? 'Réactiver le suivi' : 'Marquer invité (ne pas tracker)'}
+                </button>
+            </div>`;
 
             row.innerHTML = inner;
             list.appendChild(row);
@@ -432,12 +465,42 @@
         });
     }
 
+    // ── Toggle guest (invité, non tracké) ────────────────────────────────────
+    async function toggleGuest(userId) {
+        const discordUser = discordUsers.find(u => u.userId === userId);
+        if (!discordUser) return;
+
+        const current = mappings[userId] || { discordName: discordUser.name, characters: [] };
+        const data = {
+            discordName: discordUser.name,
+            characters:  current.characters || [],
+            ignored:     !current.ignored
+        };
+
+        try {
+            await db.collection('attendance-mapping').doc(userId).set(data);
+            mappings[userId] = data;
+            renderDiscord(document.getElementById('discordSearch').value);
+            showToast(data.ignored
+                ? discordUser.name + ' marqué invité — plus tracké'
+                : 'Suivi réactivé pour ' + discordUser.name);
+        } catch(err) {
+            showToast('Erreur : ' + err.message, true);
+        }
+    }
+
     // ── Event delegation ──────────────────────────────────────────────────────
     document.getElementById('discordList').addEventListener('click', e => {
         const removeBtn = e.target.closest('.remove-char');
         if (removeBtn) {
             e.stopPropagation();
             removeChar(removeBtn.dataset.userid, removeBtn.dataset.wowid);
+            return;
+        }
+        const guestBtn = e.target.closest('[data-guest-toggle]');
+        if (guestBtn) {
+            e.stopPropagation();
+            toggleGuest(guestBtn.dataset.userid);
             return;
         }
         const row = e.target.closest('.discord-row');
