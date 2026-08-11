@@ -1292,9 +1292,21 @@
                 const memberMap = new Map(allMembers.map(m => [m.name.toLowerCase(), m]));
 
                 // 4b. Pseudo Discord ≠ nom de perso Armory la plupart du temps.
-                // Pont fiable : les inscriptions "roster" (auth Discord) lient
-                // discordUserId ↔ nom du perso soumis. RaidHelper fournit déjà
-                // le userId de chaque inscrit (voir getEventDetails).
+                // Deux ponts fiables, tous deux basés sur su.userId (fourni par RaidHelper) :
+                //  - attendance-mapping : table saisie à la main par un admin (admin-attendance.html)
+                //  - roster : lien automatique via les soumissions Discord-auth du sondage roster
+                const attendanceMap = new Map(); // userId → characters[] ({wow, wowName})
+                try {
+                    const attSnap = await db.collection('attendance-mapping').get();
+                    attSnap.forEach(doc => {
+                        const d = doc.data();
+                        const chars = d.characters || (d.wow ? [{ wow: d.wow, wowName: d.wowName || d.wow }] : []);
+                        if (chars.length) attendanceMap.set(doc.id, chars);
+                    });
+                } catch (err) {
+                    console.warn('attendance-mapping indisponible:', err);
+                }
+
                 const discordNameMap = new Map();
                 try {
                     const rosterSnap = await db.collection('roster').get();
@@ -1315,13 +1327,27 @@
                     let member = memberMap.get(rawName.toLowerCase());
                     if (member) return member;
 
-                    // b) via l'ID Discord, résolu grâce aux inscriptions roster
+                    // b) table admin attendance-mapping (la plus fiable : saisie à la main)
+                    if (su.userId && attendanceMap.has(su.userId)) {
+                        const chars = attendanceMap.get(su.userId);
+                        // Un même joueur peut avoir plusieurs persos mappés : on privilégie
+                        // celui dont la classe correspond à l'inscription RaidHelper.
+                        const byClass = su.class && chars.find(c => {
+                            const m = memberMap.get((c.wowName || '').toLowerCase());
+                            return m && m.class === su.class;
+                        });
+                        const chosen = byClass || chars[0];
+                        member = memberMap.get((chosen.wowName || '').toLowerCase());
+                        if (member) return member;
+                    }
+
+                    // c) via l'ID Discord, résolu grâce aux inscriptions roster
                     if (su.userId && discordNameMap.has(su.userId)) {
                         member = memberMap.get(discordNameMap.get(su.userId));
                         if (member) return member;
                     }
 
-                    // c) convention "Pseudo(NomDuPerso)" utilisée par certains membres
+                    // d) convention "Pseudo(NomDuPerso)" utilisée par certains membres
                     const paren = rawName.match(/\(([^)]+)\)/);
                     if (paren) {
                         member = memberMap.get(paren[1].trim().toLowerCase());
