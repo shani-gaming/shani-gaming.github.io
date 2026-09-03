@@ -127,7 +127,7 @@ jobs:
           }
 
           echo "Désactivation de https_enforced (requis pour retirer le domaine)..."
-          api_put '{"https_enforced":false}' >/dev/null
+          api_put '{"https_enforced":false}' >/dev/null || true
 
           echo "Retrait du domaine custom..."
           CODE=$(api_put '{"cname":null}')
@@ -192,16 +192,27 @@ jobs:
           echo "Soit $DAYS jours."
           [ "$DAYS" -gt 30 ]
 
-      - name: Enforce HTTPS
+      # Best-effort : le GH_PAT actuel est un fine-grained token sans la
+      # permission "Pages: write" (403 sur PUT /pages). Le renouvellement ne
+      # dépend pas de ce réglage, qui se coche à la main dans Settings > Pages —
+      # on ne fait donc pas échouer le job pour ça.
+      - name: Enforce HTTPS (best-effort)
         if: steps.check.outputs.skip == 'false'
+        continue-on-error: true
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          curl -sf -X PUT \
+          CODE=$(curl -s -o /tmp/enforce.out -w '%{http_code}' -X PUT \
             -H "Authorization: Bearer $GH_PAT" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/$REPO/pages" \
-            -d '{"https_enforced":true}' && echo "https_enforced activé."
+            -d '{"https_enforced":true}')
+          if [ "$CODE" -lt 300 ]; then
+            echo "https_enforced activé."
+          else
+            echo "::warning::https_enforced non modifié (HTTP $CODE) — à cocher manuellement dans Settings > Pages."
+            cat /tmp/enforce.out
+          fi
 
       # Étape isolée en if: always() — dans l'ancienne version la condition était
       # combinée au flag skip, ce qui la sautait quand la sonde elle-même plantait
