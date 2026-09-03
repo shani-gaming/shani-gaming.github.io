@@ -2,7 +2,7 @@ name: Renew GitHub Pages SSL Certificate
 
 on:
   schedule:
-    - cron: '0 3 1 * *'  # 1er de chaque mois
+    - cron: '0 3 * * 1'  # tous les lundis 03:00 UTC
   workflow_dispatch:
     inputs:
       force:
@@ -13,114 +13,226 @@ on:
 permissions:
   contents: read
 
+env:
+  REPO: shani-gaming/shani-gaming.github.io
+  DOMAIN: www.sagesdepandarie.ovh
+  ORIGIN_IP: 185.199.108.153
+
 jobs:
   renew-cert:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
-      - name: Check cert expiry
+      # Le cert qui compte est celui de l'ORIGINE (GitHub Pages), pas celui que
+      # sert Cloudflare. Derrière le proxy, un openssl s_client sur le nom public
+      # renvoie le cert edge de Cloudflare — c'est ce qui avait masqué la panne
+      # de septembre 2026. L'API Pages est la seule source d'autorité.
+      - name: Check certificate state (GitHub Pages API)
         id: check
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          EXPIRY=$(echo | openssl s_client -connect www.sagesdepandarie.ovh:443 \
-            -servername www.sagesdepandarie.ovh 2>/dev/null \
-            | openssl x509 -noout -enddate 2>/dev/null \
-            | cut -d= -f2)
-          echo "Expiry: $EXPIRY"
-          EXPIRY_TS=$(date -d "$EXPIRY" +%s)
-          echo "expiry_ts=$EXPIRY_TS" >> $GITHUB_OUTPUT
-          DAYS=$(( ( $EXPIRY_TS - $(date +%s) ) / 86400 ))
-          echo "Days remaining: $DAYS"
-          if [ "$DAYS" -gt 35 ] && [ "${{ inputs.force }}" != "true" ]; then
-            echo "skip=true" >> $GITHUB_OUTPUT
-            echo "Cert valid for $DAYS days — nothing to do."
+          set -euo pipefail
+          PAGES=$(curl -sf \
+            -H "Authorization: Bearer $GH_PAT" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/$REPO/pages")
+
+          STATE=$(echo "$PAGES" | jq -r '.https_certificate.state // "none"')
+          EXPIRES=$(echo "$PAGES" | jq -r '.https_certificate.expires_at // empty')
+          DESC=$(echo "$PAGES" | jq -r '.https_certificate.description // ""')
+          echo "State       : $STATE"
+          echo "Description : $DESC"
+          echo "Expires at  : ${EXPIRES:-inconnu}"
+
+          if [ -n "$EXPIRES" ]; then
+            DAYS=$(( ( $(date -d "$EXPIRES" +%s) - $(date +%s) ) / 86400 ))
           else
-            echo "skip=false" >> $GITHUB_OUTPUT
-            echo "Cert expires in $DAYS days — renewing (force=${{ inputs.force }})."
+            DAYS=-1
+          fi
+          echo "Days remaining: $DAYS"
+
+          if [ "${{ inputs.force }}" = "true" ]; then
+            REASON="force demandé"
+          elif [ "$STATE" != "approved" ]; then
+            REASON="état du cert = $STATE ($DESC)"
+          elif [ "$DAYS" -lt 30 ]; then
+            REASON="expire dans $DAYS jours"
+          else
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Cert approuvé et valide $DAYS jours — rien à faire."
+            exit 0
           fi
 
+          echo "skip=false" >> $GITHUB_OUTPUT
+          echo "Renouvellement : $REASON"
+
+      # HTTP-01 exige que Let's Encrypt joigne directement GitHub. Tant que le
+      # proxy Cloudflare est actif, la validation échoue et l'autorisation ACME
+      # finit en bad_authz.
       - name: Disable Cloudflare proxy
+        id: proxy_off
         if: steps.check.outputs.skip == 'false'
         env:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
         run: |
-          RECORDS=$(curl -s \
+          set -euo pipefail
+          echo "touched=true" >> $GITHUB_OUTPUT
+          RECORDS=$(curl -sf \
             "https://api.cloudflare.com/client/v4/zones/$CF_ZONE/dns_records?proxied=true&per_page=100" \
             -H "Authorization: Bearer $CF_TOKEN")
 
           echo "$RECORDS" | jq -r '.result[] | select(.content | test("github\\.io|185\\.199\\.")) | .id' \
-          | while read id; do
+          | while read -r id; do
             echo "Disabling proxy: $id"
-            curl -s -X PATCH \
+            curl -sf -X PATCH \
               "https://api.cloudflare.com/client/v4/zones/$CF_ZONE/dns_records/$id" \
               -H "Authorization: Bearer $CF_TOKEN" \
               -H "Content-Type: application/json" \
-              -d '{"proxied":false}'
+              -d '{"proxied":false}' | jq -r '.result.name + " -> proxied=" + (.result.proxied|tostring)'
           done
 
-      - name: Trigger GitHub Pages cert renewal
+      - name: Wait for DNS to point at GitHub
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          for i in $(seq 1 20); do
+            RES=$(dig +short A "$DOMAIN" @1.1.1.1 | tr '\n' ' ')
+            echo "[$i] $DOMAIN -> $RES"
+            case "$RES" in
+              *185.199.*) echo "DNS pointe sur GitHub Pages."; exit 0 ;;
+            esac
+            sleep 30
+          done
+          echo "DNS toujours pas propagé après 10 min."
+          exit 1
+
+      # Un PUT du CNAME avec un contenu identique ne change rien : Pages ne
+      # réévalue pas le domaine et ACME n'est jamais relancé (c'est le bug du
+      # run du 1er août 2026). Il faut réellement retirer puis remettre le
+      # domaine custom pour repartir de zéro.
+      - name: Restart ACME authorization
         if: steps.check.outputs.skip == 'false'
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          echo "Lecture du fichier CNAME..."
-          CNAME_INFO=$(curl -s \
-            -H "Authorization: Bearer $GH_PAT" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/shani-gaming/shani-gaming.github.io/contents/CNAME")
-          SHA=$(echo "$CNAME_INFO" | jq -r '.sha')
-          echo "SHA: $SHA"
+          set -euo pipefail
+          api_put() {
+            curl -s -o /tmp/put.out -w '%{http_code}' -X PUT \
+              -H "Authorization: Bearer $GH_PAT" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/$REPO/pages" -d "$1"
+          }
 
-          echo "Mise à jour du CNAME pour forcer un rebuild Pages..."
-          RESULT=$(curl -s -X PUT \
-            -H "Authorization: Bearer $GH_PAT" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/shani-gaming/shani-gaming.github.io/contents/CNAME" \
-            -d "{
-              \"message\": \"chore: trigger SSL cert renewal\",
-              \"content\": \"$(printf 'www.sagesdepandarie.ovh' | base64 -w0)\",
-              \"sha\": \"$SHA\"
-            }")
-          echo "$RESULT" | jq '.commit.sha // .message'
+          echo "Désactivation de https_enforced (requis pour retirer le domaine)..."
+          api_put '{"https_enforced":false}' >/dev/null
 
-          echo "Attente 15 min pour que GitHub émette le cert..."
-          sleep 900
+          echo "Retrait du domaine custom..."
+          CODE=$(api_put '{"cname":null}')
+          echo "HTTP $CODE"; cat /tmp/put.out
 
-      - name: Verify cert was renewed
-        if: steps.check.outputs.skip == 'false'
-        run: |
-          OLD_TS=${{ steps.check.outputs.expiry_ts }}
-          NEW_EXPIRY=$(echo | openssl s_client -connect www.sagesdepandarie.ovh:443 \
-            -servername www.sagesdepandarie.ovh 2>/dev/null \
-            | openssl x509 -noout -enddate 2>/dev/null \
-            | cut -d= -f2)
-          NEW_TS=$(date -d "$NEW_EXPIRY" +%s)
-          echo "Ancien cert : $(date -d @$OLD_TS)"
-          echo "Nouveau cert : $NEW_EXPIRY"
-          if [ "$NEW_TS" -gt "$OLD_TS" ]; then
-            echo "Cert renouvelé avec succès !"
+          if [ "$CODE" -ge 300 ]; then
+            echo "L'API a refusé cname:null — bascule sur le delete/create du fichier CNAME."
+            SHA=$(curl -sf -H "Authorization: Bearer $GH_PAT" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/contents/CNAME" | jq -r '.sha')
+            curl -sf -X DELETE \
+              -H "Authorization: Bearer $GH_PAT" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/contents/CNAME" \
+              -d "{\"message\":\"chore: remove CNAME to restart ACME\",\"sha\":\"$SHA\"}" >/dev/null
+            sleep 60
+            curl -sf -X PUT \
+              -H "Authorization: Bearer $GH_PAT" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/contents/CNAME" \
+              -d "{\"message\":\"chore: restore CNAME (trigger cert issuance)\",\"content\":\"$(printf '%s' "$DOMAIN" | base64 -w0)\"}" >/dev/null
           else
-            echo "ERREUR : le cert n'a pas été renouvelé. Intervention manuelle requise."
-            exit 1
+            sleep 30
+            echo "Remise du domaine custom..."
+            CODE=$(api_put "{\"cname\":\"$DOMAIN\"}")
+            echo "HTTP $CODE"; cat /tmp/put.out
+            [ "$CODE" -lt 300 ]
           fi
 
+      - name: Wait for certificate issuance
+        if: steps.check.outputs.skip == 'false'
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          for i in $(seq 1 60); do
+            PAGES=$(curl -sf \
+              -H "Authorization: Bearer $GH_PAT" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/pages" || echo '{}')
+            STATE=$(echo "$PAGES" | jq -r '.https_certificate.state // "none"')
+            DESC=$(echo "$PAGES" | jq -r '.https_certificate.description // ""')
+            echo "[$i/60] state=$STATE — $DESC"
+            if [ "$STATE" = "approved" ]; then
+              echo "Certificat émis."
+              exit 0
+            fi
+            sleep 60
+          done
+          echo "ERREUR : pas de certificat approuvé après 60 min."
+          exit 1
+
+      # Vérification sur l'ORIGINE, pas sur le nom public : sinon on comparerait
+      # à nouveau le cert edge de Cloudflare au cert GitHub.
+      - name: Verify origin certificate
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          END=$(echo | openssl s_client -connect "$ORIGIN_IP:443" -servername "$DOMAIN" 2>/dev/null \
+            | openssl x509 -noout -enddate | cut -d= -f2)
+          echo "Cert origine valable jusqu'au : $END"
+          DAYS=$(( ( $(date -d "$END" +%s) - $(date +%s) ) / 86400 ))
+          echo "Soit $DAYS jours."
+          [ "$DAYS" -gt 30 ]
+
+      - name: Enforce HTTPS
+        if: steps.check.outputs.skip == 'false'
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          curl -sf -X PUT \
+            -H "Authorization: Bearer $GH_PAT" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/pages" \
+            -d '{"https_enforced":true}' && echo "https_enforced activé."
+
+      # Étape isolée en if: always() — dans l'ancienne version la condition était
+      # combinée au flag skip, ce qui la sautait quand la sonde elle-même plantait
+      # et laissait le proxy coupé.
       - name: Re-enable Cloudflare proxy
-        if: steps.check.outputs.skip == 'false' && always()
+        if: always() && steps.proxy_off.outputs.touched == 'true'
         env:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
         run: |
-          RECORDS=$(curl -s \
+          set -euo pipefail
+          RECORDS=$(curl -sf \
             "https://api.cloudflare.com/client/v4/zones/$CF_ZONE/dns_records?per_page=100" \
             -H "Authorization: Bearer $CF_TOKEN")
 
           echo "$RECORDS" | jq -r '.result[] | select(.content | test("github\\.io|185\\.199\\.")) | .id' \
-          | while read id; do
+          | while read -r id; do
             echo "Re-enabling proxy: $id"
-            curl -s -X PATCH \
+            curl -sf -X PATCH \
               "https://api.cloudflare.com/client/v4/zones/$CF_ZONE/dns_records/$id" \
               -H "Authorization: Bearer $CF_TOKEN" \
               -H "Content-Type: application/json" \
-              -d '{"proxied":true}'
+              -d '{"proxied":true}' | jq -r '.result.name + " -> proxied=" + (.result.proxied|tostring)'
           done
+
+      - name: Notify Discord on failure
+        if: failure()
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          [ -n "${WEBHOOK:-}" ] || exit 0
+          curl -s -X POST "$WEBHOOK" -H "Content-Type: application/json" -d "$(jq -n \
+            --arg url "https://github.com/$REPO/actions/runs/${{ github.run_id }}" \
+            '{content: ("⚠️ Renouvellement du certificat SSL du site en échec — intervention requise.\n" + $url)}')"
